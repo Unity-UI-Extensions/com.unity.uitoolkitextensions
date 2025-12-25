@@ -1,0 +1,65 @@
+/* Action Bar Defaults */
+:root {
+	--quadrantStepper-background-color: #e6e6e6;
+	--quadrantStepper-label-color: #000000;
+	--quadrantStepper-label-selected-color: #ffffff;
+	--quadrantStepper-overlay-color: #458398;
+	--quadrantStepper-icon-size: 50px;
+	--quadrantStepper-border-radius-medium: 30px;
+}
+
+/* Quadrant Stepper */
+.quadrantStepper {
+	--quadrantStepper-animation-duration-ms: var(--quadrantStepper-animation-duration-ms-global);
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	/*justify-content: stretch;*/
+	flex-wrap: nowrap;
+
+	background-color: var(--quadrantStepper-background-color);
+	border-radius: var(--quadrantStepper-border-radius-medium);
+	overflow: hidden;
+}
+
+.quadrantStepper > .quadrantStepper__overlay {
+	position: absolute;
+	top: 5%;
+	bottom: 5%;
+	left: 0;
+
+	background-color: var(--quadrantStepper-overlay-color);
+	border-radius: var(--quadrantStepper-border-radius-medium);
+}
+
+.quadrantStepper > .quadrantStepper__segments {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	/*justify-content: stretch;*/
+	flex-wrap: nowrap;
+}
+
+.quadrantStepper > .quadrantStepper__segments > .quadrantStepper__segment {
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: 0;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.quadrantStepper > .quadrantStepper__segments > .quadrantStepper__segment > .quadrantStepper__label {
+	-unity-text-align: middle-center;
+	font-size: var(--normal-font-size);
+	-unity-font-style: bold;
+	color: var(--quadrantStepper-label-color);
+}
+
+.quadrantStepper > .quadrantStepper__segments > .quadrantStepper__segment.is-selected > .quadrantStepper__label {
+	color: var(--quadrantStepper-label-selected-color);
+}
