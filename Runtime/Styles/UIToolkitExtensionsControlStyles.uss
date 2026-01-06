@@ -8,6 +8,31 @@
 	--quadrantStepper-border-radius-medium: 30px;
 }
 
+/* ScrollSnap */
+.scrollSnap {
+	flex-grow: 1;
+	flex-shrink: 1;
+	min-width: 0;
+	min-height: 0;
+}
+
+.scrollSnap__scroll {
+	flex-grow: 1;
+	flex-shrink: 1;
+	min-width: 0;
+	min-height: 0;
+}
+
+.scrollSnap__content {
+	flex-direction: row;
+	flex-wrap: nowrap;
+}
+
+.scrollSnap__page {
+	flex-grow: 0;
+	flex-shrink: 0;
+}
+
 /* Quadrant Stepper */
 .quadrantStepper {
 	--quadrantStepper-animation-duration-ms: var(--quadrantStepper-animation-duration-ms-global);
