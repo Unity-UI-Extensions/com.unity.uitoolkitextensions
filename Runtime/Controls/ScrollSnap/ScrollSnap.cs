@@ -50,6 +50,7 @@ namespace UnityUIToolkit.Extensions
 		private ScrollSnapOrientation orientation = ScrollSnapOrientation.Horizontal;
 		private float explicitPageSize = 0f;
 		private bool manualMovementEnabled = true;
+		private bool allowTouchInput;
 		private float pagePaddingLeft;
 		private float pagePaddingRight;
 		private float pagePaddingTop;
@@ -148,6 +149,17 @@ namespace UnityUIToolkit.Extensions
 		{
 			get => manualMovementEnabled;
 			set => manualMovementEnabled = value;
+		}
+
+		/// <summary>
+		/// Enables or disables touch-driven page navigation. When false, pages only change via the
+		/// MoveNext/MovePrevious/GoToPage API and all touch gestures are ignored.
+		/// </summary>
+		[UxmlAttribute("allow-touch-input")]
+		public bool AllowTouchInput
+		{
+			get => allowTouchInput;
+			set => allowTouchInput = value;
 		}
 
 		/// <summary>
@@ -650,7 +662,7 @@ namespace UnityUIToolkit.Extensions
 
 		private void OnPointerDown(PointerDownEvent evt)
 		{
-			if (!manualMovementEnabled)
+			if (!allowTouchInput || !manualMovementEnabled)
 			{
 				return;
 			}
@@ -673,7 +685,7 @@ namespace UnityUIToolkit.Extensions
 
 		private void OnPointerMove(PointerMoveEvent evt)
 		{
-			if (!manualMovementEnabled || !isPointerDown || evt.pointerId != activePointerId)
+			if (!allowTouchInput || !manualMovementEnabled || !isPointerDown || evt.pointerId != activePointerId)
 			{
 				return;
 			}
@@ -741,7 +753,7 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			if (!manualMovementEnabled)
+			if (!allowTouchInput || !manualMovementEnabled)
 			{
 				// Disable ScrollSnap's own movement without affecting child perpendicular scrolling.
 				evt.StopImmediatePropagation();
@@ -754,7 +766,7 @@ namespace UnityUIToolkit.Extensions
 
 		private void OnScrollViewPointerUp(PointerUpEvent _)
 		{
-			if (!manualMovementEnabled)
+			if (!allowTouchInput || !manualMovementEnabled)
 			{
 				return;
 			}
@@ -765,7 +777,7 @@ namespace UnityUIToolkit.Extensions
 
 		private void OnScrollViewPointerCancel(PointerCancelEvent _)
 		{
-			if (!manualMovementEnabled)
+			if (!allowTouchInput || !manualMovementEnabled)
 			{
 				return;
 			}
