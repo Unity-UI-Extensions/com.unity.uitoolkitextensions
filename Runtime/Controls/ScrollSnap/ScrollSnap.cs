@@ -44,13 +44,13 @@ namespace UnityUIToolkit.Extensions
 		private static readonly CustomStyleProperty<string> PagePaddingTopStyleProperty = new("--scrollsnap-page-padding-top");
 		private static readonly CustomStyleProperty<string> PagePaddingBottomStyleProperty = new("--scrollsnap-page-padding-bottom");
 
-		private readonly ScrollView scrollView;
-		private readonly VisualElement pages;
+		private readonly VisualElement viewport;
+		private readonly VisualElement content;
+		private Vector2 scrollOffset = Vector2.zero;
 
 		private ScrollSnapOrientation orientation = ScrollSnapOrientation.Horizontal;
 		private float explicitPageSize = 0f;
-		private bool manualMovementEnabled = true;
-		private bool allowTouchInput;
+		private bool manualMovementEnabled = false;
 		private float pagePaddingLeft;
 		private float pagePaddingRight;
 		private float pagePaddingTop;
@@ -74,41 +74,38 @@ namespace UnityUIToolkit.Extensions
 		{
 			AddToClassList(RootClass);
 
-			scrollView = new ScrollView(ScrollViewMode.Horizontal);
-			scrollView.AddToClassList(ScrollViewClass);
-			scrollView.verticalScrollerVisibility = ScrollerVisibility.Hidden;
-			scrollView.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+			// Custom viewport (replaces ScrollView) - clips overflow
+			viewport = new VisualElement();
+			viewport.AddToClassList(ScrollViewClass);
+			viewport.style.flexGrow = 1;
+			viewport.style.flexShrink = 1;
+			viewport.style.minWidth = 0;
+			viewport.style.minHeight = 0;
+			viewport.style.overflow = Overflow.Hidden;
 
-			scrollView.style.flexGrow = 1;
-			scrollView.style.flexShrink = 1;
-			scrollView.style.minWidth = 0;
-			scrollView.style.minHeight = 0;
+			// Content container inside viewport
+			content = new VisualElement();
+			content.AddToClassList(ContentClass);
+			content.RegisterCallback<GeometryChangedEvent>(_ => RefreshPageSizing());
 
-			hierarchy.Add(scrollView);
-
-			pages = scrollView.contentContainer;
-			pages.AddToClassList(ContentClass);
-			pages.RegisterCallback<GeometryChangedEvent>(_ => RefreshPageSizing());
+			viewport.Add(content);
+			hierarchy.Add(viewport);
 
 			UpdateOrientation(orientation);
 
 			RegisterCallback<CustomStyleResolvedEvent>(OnCustomStyleResolved);
 			RegisterCallback<GeometryChangedEvent>(_ => RefreshPageSizing());
 
-			RegisterCallback<PointerDownEvent>(OnPointerDown);
-			RegisterCallback<PointerMoveEvent>(OnPointerMove);
-			RegisterCallback<PointerUpEvent>(OnPointerUp);
-			RegisterCallback<PointerCancelEvent>(OnPointerCancel);
-
-			// ScrollView can consume drag/wheel events. Hook into its events so we can snap
-			// after the user scrolls it via trackpad/wheel/touch.
-			scrollView.RegisterCallback<WheelEvent>(OnScrollWheel, TrickleDown.TrickleDown);
-			scrollView.RegisterCallback<PointerUpEvent>(OnScrollViewPointerUp, TrickleDown.TrickleDown);
-			scrollView.RegisterCallback<PointerCancelEvent>(OnScrollViewPointerCancel, TrickleDown.TrickleDown);
+			// Register pointer events directly on viewport for full control
+			viewport.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
+			viewport.RegisterCallback<PointerMoveEvent>(OnPointerMove, TrickleDown.TrickleDown);
+			viewport.RegisterCallback<PointerUpEvent>(OnPointerUp, TrickleDown.TrickleDown);
+			viewport.RegisterCallback<PointerCancelEvent>(OnPointerCancel, TrickleDown.TrickleDown);
+			viewport.RegisterCallback<WheelEvent>(OnScrollWheel, TrickleDown.TrickleDown);
 
 		}
 
-		public override VisualElement contentContainer => pages;
+		public override VisualElement contentContainer => content;
 
 		[UxmlAttribute("orientation")]
 		public ScrollSnapOrientation Orientation
@@ -155,12 +152,6 @@ namespace UnityUIToolkit.Extensions
 		/// Enables or disables touch-driven page navigation. When false, pages only change via the
 		/// MoveNext/MovePrevious/GoToPage API and all touch gestures are ignored.
 		/// </summary>
-		[UxmlAttribute("allow-touch-input")]
-		public bool AllowTouchInput
-		{
-			get => allowTouchInput;
-			set => allowTouchInput = value;
-		}
 
 		/// <summary>
 		/// Padding/gap around each page (in pixels). This is applied as margins on the page,
@@ -216,7 +207,7 @@ namespace UnityUIToolkit.Extensions
 			}
 		}
 
-		public int PageCount => pages?.childCount ?? 0;
+		public int PageCount => content?.childCount ?? 0;
 
 		public int CurrentPageIndex { get; private set; }
 
@@ -331,16 +322,14 @@ namespace UnityUIToolkit.Extensions
 		{
 			if (newOrientation == ScrollSnapOrientation.Horizontal)
 			{
-				scrollView.mode = ScrollViewMode.Horizontal;
-				pages.style.flexDirection = FlexDirection.Row;
+				content.style.flexDirection = FlexDirection.Row;
 			}
 			else
 			{
-				scrollView.mode = ScrollViewMode.Vertical;
-				pages.style.flexDirection = FlexDirection.Column;
+				content.style.flexDirection = FlexDirection.Column;
 			}
 
-			pages.style.flexWrap = Wrap.NoWrap;
+			content.style.flexWrap = Wrap.NoWrap;
 		}
 
 		private float GetResolvedPageSize()
@@ -350,7 +339,7 @@ namespace UnityUIToolkit.Extensions
 				return explicitPageSize;
 			}
 
-			var size = orientation == ScrollSnapOrientation.Horizontal ? resolvedStyle.width : resolvedStyle.height;
+			var size = orientation == ScrollSnapOrientation.Horizontal ? viewport.resolvedStyle.width : viewport.resolvedStyle.height;
 			if (float.IsNaN(size) || size <= 0f)
 			{
 				return 0f;
@@ -361,22 +350,34 @@ namespace UnityUIToolkit.Extensions
 
 		private float GetScrollOffset()
 		{
-			var v = scrollView.scrollOffset;
-			return orientation == ScrollSnapOrientation.Horizontal ? v.x : v.y;
+			return orientation == ScrollSnapOrientation.Horizontal ? scrollOffset.x : scrollOffset.y;
 		}
 
 		private void SetScrollOffset(float primary)
 		{
 			primary = Mathf.Max(0f, primary);
 
-			var current = scrollView.scrollOffset;
 			if (orientation == ScrollSnapOrientation.Horizontal)
 			{
-				scrollView.scrollOffset = new Vector2(primary, current.y);
+				scrollOffset.x = primary;
 			}
 			else
 			{
-				scrollView.scrollOffset = new Vector2(current.x, primary);
+				scrollOffset.y = primary;
+			}
+
+			ApplyScrollOffset();
+		}
+
+		private void ApplyScrollOffset()
+		{
+			if (orientation == ScrollSnapOrientation.Horizontal)
+			{
+				content.style.translate = new Translate(-scrollOffset.x, 0, 0);
+			}
+			else
+			{
+				content.style.translate = new Translate(0, -scrollOffset.y, 0);
 			}
 		}
 
@@ -393,7 +394,7 @@ namespace UnityUIToolkit.Extensions
 
 		private void RefreshPageSizing()
 		{
-			if (pages == null)
+			if (content == null)
 			{
 				return;
 			}
@@ -413,12 +414,12 @@ namespace UnityUIToolkit.Extensions
 			var innerPrimary = hasPageSize
 				? Mathf.Max(0f, pageSize - (orientation == ScrollSnapOrientation.Horizontal ? padX : padY))
 				: 0f;
-			var viewportCross = orientation == ScrollSnapOrientation.Horizontal ? resolvedStyle.height : resolvedStyle.width;
+			var viewportCross = orientation == ScrollSnapOrientation.Horizontal ? viewport.resolvedStyle.height : viewport.resolvedStyle.width;
 			var innerCross = viewportCross > 0f && !float.IsNaN(viewportCross)
 				? Mathf.Max(0f, viewportCross - (orientation == ScrollSnapOrientation.Horizontal ? padY : padX))
 				: 0f;
 
-			foreach (var child in pages.Children())
+			foreach (var child in content.Children())
 			{
 				child.AddToClassList(PageClass);
 				// Pages are page-sized; prevent primary-axis flex growth from overriding width/height.
@@ -662,8 +663,9 @@ namespace UnityUIToolkit.Extensions
 
 		private void OnPointerDown(PointerDownEvent evt)
 		{
-			if (!allowTouchInput || !manualMovementEnabled)
+			if (!manualMovementEnabled)
 			{
+				// Allow events to propagate to children when disabled
 				return;
 			}
 
@@ -681,11 +683,19 @@ namespace UnityUIToolkit.Extensions
 			pointerStart = evt.position;
 			scrollOffsetStart = GetScrollOffset();
 			startPageIndex = CurrentPageIndex;
+
+			viewport.CapturePointer(evt.pointerId);
 		}
 
 		private void OnPointerMove(PointerMoveEvent evt)
 		{
-			if (!allowTouchInput || !manualMovementEnabled || !isPointerDown || evt.pointerId != activePointerId)
+			if (!manualMovementEnabled)
+			{
+				// Allow events to propagate to children when disabled
+				return;
+			}
+
+			if (!isPointerDown || evt.pointerId != activePointerId)
 			{
 				return;
 			}
@@ -728,6 +738,7 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
+			viewport.ReleasePointer(evt.pointerId);
 			FinishPointerGesture(evt.position);
 		}
 
@@ -738,11 +749,20 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
+			viewport.ReleasePointer(evt.pointerId);
 			FinishPointerGesture(evt.position);
 		}
 
 		private void OnScrollWheel(WheelEvent evt)
 		{
+			if (!manualMovementEnabled)
+			{
+				// Block wheel scrolling when disabled
+				evt.StopImmediatePropagation();
+				evt.StopPropagation();
+				return;
+			}
+
 			// Only react to wheel/trackpad gestures that are primarily along our snap axis.
 			var absPrimary = Mathf.Abs(orientation == ScrollSnapOrientation.Horizontal ? evt.delta.x : evt.delta.y);
 			var absSecondary = Mathf.Abs(orientation == ScrollSnapOrientation.Horizontal ? evt.delta.y : evt.delta.x);
@@ -753,35 +773,7 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			if (!allowTouchInput || !manualMovementEnabled)
-			{
-				// Disable ScrollSnap's own movement without affecting child perpendicular scrolling.
-				evt.StopImmediatePropagation();
-				return;
-			}
-
-			// Let ScrollView process the wheel, then snap after the scroll settles.
-			ScheduleSnapToNearestPage(animate: true);
-		}
-
-		private void OnScrollViewPointerUp(PointerUpEvent _)
-		{
-			if (!allowTouchInput || !manualMovementEnabled)
-			{
-				return;
-			}
-
-			// If the ScrollView handled the drag, we still want to settle onto a page.
-			ScheduleSnapToNearestPage(animate: true);
-		}
-
-		private void OnScrollViewPointerCancel(PointerCancelEvent _)
-		{
-			if (!allowTouchInput || !manualMovementEnabled)
-			{
-				return;
-			}
-
+			// Snap after wheel scroll settles
 			ScheduleSnapToNearestPage(animate: true);
 		}
 
