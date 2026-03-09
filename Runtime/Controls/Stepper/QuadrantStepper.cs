@@ -102,9 +102,14 @@ namespace UnityUIToolkit.Extensions
 
         public void SetOptions(IReadOnlyList<string> options)
         {
+            var previousSelectedIndex = selectedIndex;
+
             segmentsRoot.Clear();
             segments.Clear();
             labels.Clear();
+
+            // Force selection re-application against rebuilt segment elements.
+            selectedIndex = -1;
 
             if (options == null || options.Count == 0)
             {
@@ -135,7 +140,7 @@ namespace UnityUIToolkit.Extensions
             }
 
             // Keep selection if possible, otherwise select first segment.
-            var nextIndex = selectedIndex;
+            var nextIndex = previousSelectedIndex;
             if (nextIndex < 0 || nextIndex >= options.Count)
             {
                 nextIndex = 0;

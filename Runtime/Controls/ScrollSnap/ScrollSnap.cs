@@ -684,7 +684,8 @@ namespace UnityUIToolkit.Extensions
 			scrollOffsetStart = GetScrollOffset();
 			startPageIndex = CurrentPageIndex;
 
-			viewport.CapturePointer(evt.pointerId);
+			// Don't capture pointer yet - let children receive click events
+			// Pointer will be captured in OnPointerMove if drag is detected
 		}
 
 		private void OnPointerMove(PointerMoveEvent evt)
@@ -715,6 +716,8 @@ namespace UnityUIToolkit.Extensions
 				if (absPrimary >= intentThresholdPx && absPrimary >= absSecondary)
 				{
 					isDragging = true;
+					// Now capture the pointer since we've confirmed it's a drag gesture
+					viewport.CapturePointer(evt.pointerId);
 				}
 				else
 				{
@@ -738,7 +741,11 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			viewport.ReleasePointer(evt.pointerId);
+			// Only release if we captured it (during drag)
+			if (isDragging)
+			{
+				viewport.ReleasePointer(evt.pointerId);
+			}
 			FinishPointerGesture(evt.position);
 		}
 
@@ -749,7 +756,11 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			viewport.ReleasePointer(evt.pointerId);
+			// Only release if we captured it (during drag)
+			if (isDragging)
+			{
+				viewport.ReleasePointer(evt.pointerId);
+			}
 			FinishPointerGesture(evt.position);
 		}
 
