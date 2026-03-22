@@ -1,6 +1,7 @@
 /// Credit SimonDarksideJ  
 
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.UIElements.Experimental;
@@ -43,6 +44,7 @@ namespace UnityUIToolkit.Extensions
 		private static readonly CustomStyleProperty<string> PagePaddingRightStyleProperty = new("--scrollsnap-page-padding-right");
 		private static readonly CustomStyleProperty<string> PagePaddingTopStyleProperty = new("--scrollsnap-page-padding-top");
 		private static readonly CustomStyleProperty<string> PagePaddingBottomStyleProperty = new("--scrollsnap-page-padding-bottom");
+		private static readonly CustomStyleProperty<string> ValidationDragLimitStyleProperty = new("--scrollsnap-validation-drag-limit");
 
 		private readonly VisualElement viewport;
 		private readonly VisualElement content;
@@ -55,6 +57,15 @@ namespace UnityUIToolkit.Extensions
 		private float pagePaddingRight;
 		private float pagePaddingTop;
 		private float pagePaddingBottom;
+
+		// Validation state fields
+		private bool validatePageChange = false;
+		private bool onlySinglePageSwipeAllowed = true;
+		private bool canMoveNextPage = true;
+		private bool canMoveBackPage = true;
+		private bool allowMoveBack = true;
+		private float validationDragLimit = 0.2f;
+		private bool isValidatingPageChange = false;
 
 		private bool isPointerDown;
 		private bool isDragging;
@@ -69,6 +80,20 @@ namespace UnityUIToolkit.Extensions
 		private const long ScrollEndSnapDelayMs = 100;
 
 		public event Action<int> PageChanged;
+
+		/// <summary>Fired immediately when a swipe gesture is detected, before validation runs.
+		/// targetPage is the page the user is attempting to reach; moveAllowed indicates whether
+		/// the current validation state permits movement in that direction.</summary>
+		public event Action<int, bool> OnPageStartChange;
+
+		/// <summary>Fired when a swipe gesture is blocked and the control snaps back to the
+		/// current page. Use this to show on-screen feedback explaining the restriction.</summary>
+		public event Action<int> OnPageChangeRestricted;
+
+		/// <summary>Optional async validation callback. Return true to allow the page transition,
+		/// false to block it. While the callback is pending, further swipe gestures are ignored.
+		/// Only invoked when ValidatePageChange is true and the CanMove flags permit movement.</summary>
+		public Func<int, Task<bool>> OnValidatePageTransition;
 
 		public ScrollSnap()
 		{
@@ -149,9 +174,84 @@ namespace UnityUIToolkit.Extensions
 		}
 
 		/// <summary>
-		/// Enables or disables touch-driven page navigation. When false, pages only change via the
-		/// MoveNext/MovePrevious/GoToPage API and all touch gestures are ignored.
+		/// When true, a swipe can move at most one page regardless of swipe distance or speed.
+		/// The page will resist movement beyond the adjacent page boundary (with a small tolerance)
+		/// and snap back if the user exceeds it. Default: true.
 		/// </summary>
+		[UxmlAttribute("only-single-page-swipe-allowed")]
+		public bool OnlySinglePageSwipeAllowed
+		{
+			get => onlySinglePageSwipeAllowed;
+			set => onlySinglePageSwipeAllowed = value;
+		}
+
+		/// <summary>
+		/// When true, page transitions are subject to validation via <see cref="CanMoveNextPage"/>,
+		/// <see cref="AllowMoveBack"/> and the <see cref="OnValidatePageTransition"/> callback.
+		/// Validation only applies to swipe gestures (and programmatic calls without force: true).
+		/// Default: false.
+		/// </summary>
+		[UxmlAttribute("validate-page-change")]
+		public bool ValidatePageChange
+		{
+			get => validatePageChange;
+			set => validatePageChange = value;
+		}
+
+		/// <summary>
+		/// Controls whether the user may swipe forward to the next page when
+		/// <see cref="ValidatePageChange"/> is true. Automatically reset to false when the
+		/// current page index changes. Set to true externally to permit the next forward swipe.
+		/// Default: true (permits movement until validation resets it).
+		/// </summary>
+		public bool CanMoveNextPage
+		{
+			get => canMoveNextPage;
+			set => canMoveNextPage = value;
+		}
+
+		/// <summary>
+		/// Controls whether the user may swipe backward to the previous page when
+		/// <see cref="ValidatePageChange"/> is true. Mirrors <see cref="CanMoveNextPage"/> for
+		/// backward gestures. Default: true.
+		/// </summary>
+		public bool CanMoveBackPage
+		{
+			get => canMoveBackPage;
+			set => canMoveBackPage = value;
+		}
+
+		/// <summary>
+		/// When false and <see cref="ValidatePageChange"/> is true, backward swipes are treated
+		/// the same as a blocked forward swipe: the user sees a preview drag up to
+		/// <see cref="ValidationDragLimit"/> and the control snaps back on release.
+		/// Default: true.
+		/// </summary>
+		[UxmlAttribute("allow-move-back")]
+		public bool AllowMoveBack
+		{
+			get => allowMoveBack;
+			set => allowMoveBack = value;
+		}
+
+		/// <summary>
+		/// The maximum fraction of the page size (0–1) that a blocked drag can travel before
+		/// the offset is clamped. Provides tactile preview feedback. Default: 0.2 (20%).
+		/// Can be overridden per-element via USS: <c>--scrollsnap-validation-drag-limit: 30px;</c>
+		/// (interpreted as a fraction of page size when value &lt;= 1, or as raw pixels when &gt; 1).
+		/// </summary>
+		[UxmlAttribute("validation-drag-limit")]
+		public float ValidationDragLimit
+		{
+			get => validationDragLimit;
+			set => validationDragLimit = Mathf.Clamp01(value);
+		}
+
+		/// <summary>
+		/// True while an async <see cref="OnValidatePageTransition"/> callback is in progress.
+		/// Swipe gestures are ignored during this period.
+		/// </summary>
+		public bool IsValidatingPageChange => isValidatingPageChange;
 
 		/// <summary>
 		/// Padding/gap around each page (in pixels). This is applied as margins on the page,
@@ -211,24 +311,53 @@ namespace UnityUIToolkit.Extensions
 
 		public int CurrentPageIndex { get; private set; }
 
-		public void MoveNext(bool animate = true) => GoToPage(CurrentPageIndex + 1, animate);
+		/// <summary>Moves to the next page. If <see cref="ValidatePageChange"/> is active,
+		/// <see cref="CanMoveNextPage"/> must be true unless <paramref name="force"/> is true.</summary>
+		public void MoveNext(bool animate = true, bool force = false) => GoToPage(CurrentPageIndex + 1, animate, force);
 
-		public void MovePrevious(bool animate = true) => GoToPage(CurrentPageIndex - 1, animate);
+		/// <summary>Moves to the previous page. If <see cref="ValidatePageChange"/> is active,
+		/// <see cref="AllowMoveBack"/> and <see cref="CanMoveBackPage"/> must be true unless <paramref name="force"/> is true.</summary>
+		public void MovePrevious(bool animate = true, bool force = false) => GoToPage(CurrentPageIndex - 1, animate, force);
 
-		public void GoToPage(int index, bool animate = true)
+		/// <summary>Navigates to the specified page.
+		/// <paramref name="force"/> bypasses all validation checks and moves immediately.</summary>
+		public void GoToPage(int index, bool animate = true, bool force = false)
+		{
+			GoToPageInternal(index, animate, force, onCompleted: null);
+		}
+
+		private void GoToPageInternal(int index, bool animate, bool force, Action onCompleted)
 		{
 			if (PageCount <= 0)
 			{
 				CurrentPageIndex = 0;
 				SetScrollOffset(0f);
+				onCompleted?.Invoke();
 				return;
 			}
 
 			var clamped = Mathf.Clamp(index, 0, PageCount - 1);
+
+			// Validation gate for non-forced programmatic calls.
+			if (!force && validatePageChange && clamped != CurrentPageIndex)
+			{
+				var isForward = clamped > CurrentPageIndex;
+				if (isForward && !canMoveNextPage)
+				{
+					return;
+				}
+
+				if (!isForward && (!allowMoveBack || !canMoveBackPage))
+				{
+					return;
+				}
+			}
+
 			var pageSize = GetResolvedPageSize();
 			if (pageSize <= 0f)
 			{
 				CurrentPageIndex = clamped;
+				onCompleted?.Invoke();
 				return;
 			}
 
@@ -240,6 +369,7 @@ namespace UnityUIToolkit.Extensions
 			{
 				SetScrollOffset(targetOffset);
 				SetCurrentPage(clamped);
+				onCompleted?.Invoke();
 				return;
 			}
 
@@ -255,6 +385,7 @@ namespace UnityUIToolkit.Extensions
 				StopSnapAnimation();
 				SetScrollOffset(targetOffset);
 				SetCurrentPage(clamped);
+				onCompleted?.Invoke();
 			};
 		}
 
@@ -302,6 +433,14 @@ namespace UnityUIToolkit.Extensions
 			}
 
 			CurrentPageIndex = index;
+
+			// Reset validation flags so the host must re-enable movement for the next transition.
+			if (validatePageChange)
+			{
+				canMoveNextPage = false;
+				canMoveBackPage = false;
+			}
+
 			PageChanged?.Invoke(CurrentPageIndex);
 		}
 
@@ -473,6 +612,19 @@ namespace UnityUIToolkit.Extensions
 			if (evt.customStyle.TryGetValue(PagePaddingBottomStyleProperty, out var bottom))
 			{
 				pagePaddingBottom = Mathf.Max(0f, ParsePixels(bottom));
+			}
+
+			// Validation drag limit via USS custom property.
+			// Value is treated as a fraction (0-1) of page size when <= 1, or as raw pixels
+			// that are converted to a fraction at drag time.
+			if (evt.customStyle.TryGetValue(ValidationDragLimitStyleProperty, out var dragLimitStr))
+			{
+				var parsed = ParsePixels(dragLimitStr);
+				if (parsed > 0f)
+				{
+					// Store as fraction when <= 1, otherwise store raw px to be resolved at drag time.
+					validationDragLimit = parsed <= 1f ? parsed : parsed;
+				}
 			}
 
 			RefreshPageSizing();
@@ -701,6 +853,13 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
+			// Block gestures while async validation is running.
+			if (isValidatingPageChange)
+			{
+				evt.StopPropagation();
+				return;
+			}
+
 			var delta = evt.position - pointerStart;
 			var primary = orientation == ScrollSnapOrientation.Horizontal ? delta.x : delta.y;
 			var secondary = orientation == ScrollSnapOrientation.Horizontal ? delta.y : delta.x;
@@ -726,8 +885,47 @@ namespace UnityUIToolkit.Extensions
 				}
 			}
 
-			// Dragging: update scroll offset directly.
+			// Dragging: compute unclamped offset then apply validation clamping.
 			var next = scrollOffsetStart - primary;
+
+			if (validatePageChange)
+			{
+				var pageSize = GetResolvedPageSize();
+				var movingForward = next > scrollOffsetStart;
+				var movingBack = next < scrollOffsetStart;
+
+				// Compute the maximum allowed offset delta when validation blocks movement.
+				var dragLimitOffset = pageSize > 0f ? pageSize * validationDragLimit : 0f;
+
+				if (movingForward && !canMoveNextPage)
+				{
+					// Clamp forward drag to the validation preview limit.
+					next = Mathf.Min(next, scrollOffsetStart + dragLimitOffset);
+				}
+				else if (movingBack && (!allowMoveBack || !canMoveBackPage))
+				{
+					// Clamp backward drag to the validation preview limit.
+					next = Mathf.Max(next, scrollOffsetStart - dragLimitOffset);
+				}
+				else if (onlySinglePageSwipeAllowed && pageSize > 0f)
+				{
+					// Permitted direction – still clamp to max one page stride.
+					var minAllowed = startPageIndex * pageSize;
+					var maxAllowed = (startPageIndex + 1) * pageSize;
+					next = Mathf.Clamp(next, minAllowed, maxAllowed);
+				}
+			}
+			else if (onlySinglePageSwipeAllowed)
+			{
+				var pageSize = GetResolvedPageSize();
+				if (pageSize > 0f)
+				{
+					var minAllowed = startPageIndex * pageSize;
+					var maxAllowed = (startPageIndex + 1) * pageSize;
+					next = Mathf.Clamp(next, minAllowed, maxAllowed);
+				}
+			}
+
 			next = Mathf.Clamp(next, 0f, GetMaxScrollOffset());
 			SetScrollOffset(next);
 
@@ -808,17 +1006,21 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			// Only move one page per swipe.
+			// Only move one page per swipe (when enabled).
 			var threshold = pageSize * 0.15f;
 			var target = startPageIndex;
 
 			if (primary <= -threshold)
 			{
-				target = startPageIndex + 1;
+				target = onlySinglePageSwipeAllowed
+					? startPageIndex + 1
+					: Mathf.Clamp(startPageIndex + Mathf.Max(1, Mathf.FloorToInt(Mathf.Abs(primary) / pageSize)), 0, PageCount - 1);
 			}
 			else if (primary >= threshold)
 			{
-				target = startPageIndex - 1;
+				target = onlySinglePageSwipeAllowed
+					? startPageIndex - 1
+					: Mathf.Clamp(startPageIndex - Mathf.Max(1, Mathf.FloorToInt(primary / pageSize)), 0, PageCount - 1);
 			}
 			else
 			{
@@ -827,7 +1029,86 @@ namespace UnityUIToolkit.Extensions
 				target = Mathf.RoundToInt(raw);
 			}
 
-			GoToPage(target, animate: true);
+			target = Mathf.Clamp(target, 0, PageCount - 1);
+
+			if (!validatePageChange || target == CurrentPageIndex)
+			{
+				// No validation required – navigate directly.
+				GoToPage(target, animate: true, force: true);
+				return;
+			}
+
+			// Determine if the intended direction is permitted by the current validation state.
+			var movingForward = target > CurrentPageIndex;
+			var moveAllowed = movingForward ? canMoveNextPage : (allowMoveBack && canMoveBackPage);
+
+			// Notify host of the attempted transition so it can prepare the target page.
+			OnPageStartChange?.Invoke(target, moveAllowed);
+
+			if (!moveAllowed)
+			{
+				// Direction is blocked by flags alone – snap back and notify once snap-back completes.
+				GoToPageInternal(CurrentPageIndex, animate: true, force: true, () => OnPageChangeRestricted?.Invoke(target));
+				return;
+			}
+
+			// Flags permit movement – run async validation if a callback is registered.
+			if (OnValidatePageTransition != null)
+			{
+				ExecutePageTransitionWithValidation(target).Forget();
+			}
+			else
+			{
+				GoToPage(target, animate: true, force: true);
+			}
+		}
+
+		/// <summary>
+		/// Awaits the <see cref="OnValidatePageTransition"/> callback and either navigates to
+		/// <paramref name="target"/> or snaps back to the current page. Runs as a fire-and-forget
+		/// async operation so the UI thread is never blocked.
+		/// </summary>
+		private async Task ExecutePageTransitionWithValidation(int target)
+		{
+			isValidatingPageChange = true;
+
+			bool allowed;
+			try
+			{
+				allowed = await OnValidatePageTransition.Invoke(target);
+			}
+			catch
+			{
+				// Treat any exception from the validator as a denial to avoid soft-locks.
+				allowed = false;
+			}
+			finally
+			{
+				isValidatingPageChange = false;
+			}
+
+			if (allowed)
+			{
+				GoToPage(target, animate: true, force: true);
+			}
+			else
+			{
+				GoToPageInternal(CurrentPageIndex, animate: true, force: true, () => OnPageChangeRestricted?.Invoke(target));
+			}
+		}
+	}
+
+	/// <summary>
+	/// Minimal fire-and-forget extension to suppress CS4014 warnings on unawaited Tasks
+	/// without pulling in UniTask or other async utilities.
+	/// </summary>
+	internal static class TaskExtensions
+	{
+		internal static void Forget(this Task task)
+		{
+			// Intentionally fire-and-forget. Exceptions are swallowed inside
+			// ExecutePageTransitionWithValidation via the try/catch block.
+			_ = task;
 		}
 	}
 }

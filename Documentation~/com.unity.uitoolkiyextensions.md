@@ -27,6 +27,12 @@ Some of the features are also available through the GameObject "Add Component" m
 
 For a full list of the controls and how they are used, please see the [online documentation](https://unity-ui-extensions.github.io/Controls.html) for the project.
 
+## Control References
+
+ScrollSnap is a page-based UI Toolkit navigation control that arranges child elements as discrete pages and snaps cleanly between them using swipe, wheel, or programmatic movement. It is designed for flows such as onboarding, step-by-step forms, and carousel-style interfaces where predictable page boundaries, optional movement validation, restricted swipe feedback, and smooth animated transitions are important.
+
+- [ScrollSnap](ScrollSnap.md) - Page-based snap scroller with manual/sweep modes, validation gating, and restricted-movement events.
+
 ## Technical details
 
 ## Requirements
