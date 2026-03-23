@@ -69,6 +69,8 @@ namespace UnityUIToolkit.Extensions
 
 		private bool isPointerDown;
 		private bool isDragging;
+		private bool pointerStartedOnChild;
+		private bool pointerStartedOnInteractiveChild;
 		private int activePointerId;
 		private Vector3 pointerStart;
 		private float scrollOffsetStart;
@@ -94,6 +96,61 @@ namespace UnityUIToolkit.Extensions
 		/// false to block it. While the callback is pending, further swipe gestures are ignored.
 		/// Only invoked when ValidatePageChange is true and the CanMove flags permit movement.</summary>
 		public Func<int, Task<bool>> OnValidatePageTransition;
+
+		[System.Diagnostics.Conditional("SCROLLSNAP_DEBUG")]
+		private static void DebugLog(string message)
+		{
+			Debug.Log($"[ScrollSnap] {message}");
+		}
+
+		private static string DescribeEventTarget(EventBase evt)
+		{
+			if (evt?.target is not VisualElement element)
+			{
+				return evt?.target?.GetType().Name ?? "null";
+			}
+
+			var elementName = string.IsNullOrEmpty(element.name) ? "<unnamed>" : element.name;
+			return $"{element.GetType().Name}(name={elementName}, classes={string.Join(",", element.GetClasses())})";
+		}
+
+		private static bool IsInteractiveElement(VisualElement element)
+		{
+			for (var current = element; current != null; current = current.parent)
+			{
+				var typeName = current.GetType().Name;
+
+				if (current is TextField || current is Button)
+				{
+					return true;
+				}
+
+				if (typeName.Contains("Button", StringComparison.Ordinal) ||
+					typeName.Contains("Toggle", StringComparison.Ordinal) ||
+					typeName.Contains("InputField", StringComparison.Ordinal) ||
+					typeName.Contains("TextField", StringComparison.Ordinal))
+				{
+					return true;
+				}
+
+				if (current.ClassListContains("pillButton") ||
+					current.ClassListContains("pillButton__background") ||
+					current.ClassListContains("toggleButton") ||
+					current.ClassListContains("unity-base-field") ||
+					current.ClassListContains("unity-text-field") ||
+					current.ClassListContains("unity-text-element--inner-input-field-component"))
+				{
+					return true;
+				}
+
+				if (current == element.panel?.visualTree)
+				{
+					break;
+				}
+			}
+
+			return false;
+		}
 
 		public ScrollSnap()
 		{
@@ -337,18 +394,45 @@ namespace UnityUIToolkit.Extensions
 			}
 
 			var clamped = Mathf.Clamp(index, 0, PageCount - 1);
+			var isStateChange = clamped != CurrentPageIndex;
+			DebugLog($"GoToPageInternal requested={index} clamped={clamped} current={CurrentPageIndex} animate={animate} force={force} stateChange={isStateChange}");
+
+			if (isStateChange)
+			{
+				var moveAllowed = true;
+
+				if (validatePageChange && !force)
+				{
+					var isForward = clamped > CurrentPageIndex;
+					moveAllowed = isForward ? canMoveNextPage : (allowMoveBack && canMoveBackPage);
+				}
+
+				OnPageStartChange?.Invoke(clamped, moveAllowed);
+			}
 
 			// Validation gate for non-forced programmatic calls.
-			if (!force && validatePageChange && clamped != CurrentPageIndex)
+			if (!force && validatePageChange && isStateChange)
 			{
 				var isForward = clamped > CurrentPageIndex;
 				if (isForward && !canMoveNextPage)
 				{
+					DebugLog($"ProgrammaticTransitionRestricted current={CurrentPageIndex} target={clamped} direction=forward");
+					GoToPageInternal(CurrentPageIndex, animate: true, force: true, () =>
+					{
+						OnPageChangeRestricted?.Invoke(clamped);
+						onCompleted?.Invoke();
+					});
 					return;
 				}
 
 				if (!isForward && (!allowMoveBack || !canMoveBackPage))
 				{
+					DebugLog($"ProgrammaticTransitionRestricted current={CurrentPageIndex} target={clamped} direction=backward allowMoveBack={allowMoveBack} canMoveBack={canMoveBackPage}");
+					GoToPageInternal(CurrentPageIndex, animate: true, force: true, () =>
+					{
+						OnPageChangeRestricted?.Invoke(clamped);
+						onCompleted?.Invoke();
+					});
 					return;
 				}
 			}
@@ -356,7 +440,8 @@ namespace UnityUIToolkit.Extensions
 			var pageSize = GetResolvedPageSize();
 			if (pageSize <= 0f)
 			{
-				CurrentPageIndex = clamped;
+				DebugLog($"GoToPageInternal applying without pageSize current={CurrentPageIndex} target={clamped}");
+				SetCurrentPage(clamped);
 				onCompleted?.Invoke();
 				return;
 			}
@@ -367,6 +452,7 @@ namespace UnityUIToolkit.Extensions
 			var targetOffset = clamped * pageSize;
 			if (!animate)
 			{
+				DebugLog($"GoToPageInternal immediate current={CurrentPageIndex} target={clamped} offset={targetOffset:0.##}");
 				SetScrollOffset(targetOffset);
 				SetCurrentPage(clamped);
 				onCompleted?.Invoke();
@@ -385,6 +471,7 @@ namespace UnityUIToolkit.Extensions
 				StopSnapAnimation();
 				SetScrollOffset(targetOffset);
 				SetCurrentPage(clamped);
+				DebugLog($"GoToPageInternal animation completed target={clamped} offset={targetOffset:0.##}");
 				onCompleted?.Invoke();
 			};
 		}
@@ -831,10 +918,13 @@ namespace UnityUIToolkit.Extensions
 
 			isPointerDown = true;
 			isDragging = false;
+			pointerStartedOnChild = evt.target is VisualElement target && target != viewport && target != content;
+			pointerStartedOnInteractiveChild = evt.target is VisualElement interactiveTarget && IsInteractiveElement(interactiveTarget);
 			activePointerId = evt.pointerId;
 			pointerStart = evt.position;
 			scrollOffsetStart = GetScrollOffset();
 			startPageIndex = CurrentPageIndex;
+			DebugLog($"PointerDown pointer={evt.pointerId} pos={evt.position} target={DescribeEventTarget(evt)} childStart={pointerStartedOnChild} interactiveChildStart={pointerStartedOnInteractiveChild} page={CurrentPageIndex} offset={scrollOffsetStart:0.##}");
 
 			// Don't capture pointer yet - let children receive click events
 			// Pointer will be captured in OnPointerMove if drag is detected
@@ -856,6 +946,7 @@ namespace UnityUIToolkit.Extensions
 			// Block gestures while async validation is running.
 			if (isValidatingPageChange)
 			{
+				DebugLog($"PointerMove blocked during validation pointer={evt.pointerId} pos={evt.position}");
 				evt.StopPropagation();
 				return;
 			}
@@ -864,10 +955,19 @@ namespace UnityUIToolkit.Extensions
 			var primary = orientation == ScrollSnapOrientation.Horizontal ? delta.x : delta.y;
 			var secondary = orientation == ScrollSnapOrientation.Horizontal ? delta.y : delta.x;
 
+			if (pointerStartedOnInteractiveChild)
+			{
+				if (Mathf.Abs(primary) > 0f || Mathf.Abs(secondary) > 0f)
+				{
+					DebugLog($"PointerMove ignored interactive child pointer={evt.pointerId} delta={delta} primary={primary:0.##} secondary={secondary:0.##}");
+				}
+				return;
+			}
+
 			var absPrimary = Mathf.Abs(primary);
 			var absSecondary = Mathf.Abs(secondary);
 
-			const float intentThresholdPx = 8f;
+			var intentThresholdPx = pointerStartedOnChild ? 18f : 8f;
 
 			if (!isDragging)
 			{
@@ -875,11 +975,16 @@ namespace UnityUIToolkit.Extensions
 				if (absPrimary >= intentThresholdPx && absPrimary >= absSecondary)
 				{
 					isDragging = true;
+					DebugLog($"DragStarted pointer={evt.pointerId} pos={evt.position} delta={delta} primary={primary:0.##} secondary={secondary:0.##} threshold={intentThresholdPx:0.##} childStart={pointerStartedOnChild}");
 					// Now capture the pointer since we've confirmed it's a drag gesture
 					viewport.CapturePointer(evt.pointerId);
 				}
 				else
 				{
+					if (absPrimary > 0f || absSecondary > 0f)
+					{
+						DebugLog($"PointerMove ignored pointer={evt.pointerId} delta={delta} primary={primary:0.##} secondary={secondary:0.##} threshold={intentThresholdPx:0.##} childStart={pointerStartedOnChild}");
+					}
 					// Likely a perpendicular scroll for child content; let it through.
 					return;
 				}
@@ -928,6 +1033,7 @@ namespace UnityUIToolkit.Extensions
 
 			next = Mathf.Clamp(next, 0f, GetMaxScrollOffset());
 			SetScrollOffset(next);
+			DebugLog($"Dragging pointer={evt.pointerId} nextOffset={next:0.##} startOffset={scrollOffsetStart:0.##}");
 
 			evt.StopPropagation();
 		}
@@ -944,6 +1050,7 @@ namespace UnityUIToolkit.Extensions
 			{
 				viewport.ReleasePointer(evt.pointerId);
 			}
+			DebugLog($"PointerUp pointer={evt.pointerId} pos={evt.position} wasDragging={isDragging}");
 			FinishPointerGesture(evt.position);
 		}
 
@@ -959,6 +1066,7 @@ namespace UnityUIToolkit.Extensions
 			{
 				viewport.ReleasePointer(evt.pointerId);
 			}
+			DebugLog($"PointerCancel pointer={evt.pointerId} pos={evt.position} wasDragging={isDragging}");
 			FinishPointerGesture(evt.position);
 		}
 
@@ -995,6 +1103,7 @@ namespace UnityUIToolkit.Extensions
 
 			if (!isDragging)
 			{
+				DebugLog($"PointerReleasedWithoutDrag pos={endPosition} delta={delta} childStart={pointerStartedOnChild}");
 				return;
 			}
 
@@ -1030,45 +1139,59 @@ namespace UnityUIToolkit.Extensions
 			}
 
 			target = Mathf.Clamp(target, 0, PageCount - 1);
+			DebugLog($"FinishPointerGesture primary={primary:0.##} threshold={threshold:0.##} startPage={startPageIndex} currentPage={CurrentPageIndex} target={target} offset={GetScrollOffset():0.##}");
 
-			if (!validatePageChange || target == CurrentPageIndex)
-			{
-				// No validation required – navigate directly.
-				GoToPage(target, animate: true, force: true);
-				return;
-			}
-
-			// Determine if the intended direction is permitted by the current validation state.
-			var movingForward = target > CurrentPageIndex;
-			var moveAllowed = movingForward ? canMoveNextPage : (allowMoveBack && canMoveBackPage);
-
-			// Notify host of the attempted transition so it can prepare the target page.
-			OnPageStartChange?.Invoke(target, moveAllowed);
-
-			if (!moveAllowed)
-			{
-				// Direction is blocked by flags alone – snap back and notify once snap-back completes.
-				GoToPageInternal(CurrentPageIndex, animate: true, force: true, () => OnPageChangeRestricted?.Invoke(target));
-				return;
-			}
-
-			// Flags permit movement – run async validation if a callback is registered.
-			if (OnValidatePageTransition != null)
-			{
-				ExecutePageTransitionWithValidation(target).Forget();
-			}
-			else
-			{
-				GoToPage(target, animate: true, force: true);
-			}
+		if (target == CurrentPageIndex)
+		{
+			// No page change needed, but snap back to current page position visually
+			DebugLog($"SnapBackToCurrentPage target={target}");
+			GoToPage(target, animate: true, force: true);
+			return;
 		}
 
-		/// <summary>
-		/// Awaits the <see cref="OnValidatePageTransition"/> callback and either navigates to
-		/// <paramref name="target"/> or snaps back to the current page. Runs as a fire-and-forget
-		/// async operation so the UI thread is never blocked.
-		/// </summary>
-		private async Task ExecutePageTransitionWithValidation(int target)
+		if (!validatePageChange)
+		{
+			// Validation disabled – always allow movement and navigate directly.
+			// Fire OnPageStartChange with moveAllowed=true since there are no restrictions.
+			DebugLog($"PageTransitionWithoutValidation current={CurrentPageIndex} target={target}");
+			OnPageStartChange?.Invoke(target, true);
+			GoToPage(target, animate: true, force: true);
+			return;
+		}
+
+		// Validation enabled – determine if movement is permitted by the current validation state.
+		var movingForward = target > CurrentPageIndex;
+		var moveAllowed = movingForward ? canMoveNextPage : (allowMoveBack && canMoveBackPage);
+
+		// Notify host of the attempted transition and whether it's allowed.
+		DebugLog($"PageTransitionAttempt current={CurrentPageIndex} target={target} movingForward={movingForward} moveAllowed={moveAllowed} allowMoveBack={allowMoveBack} canMoveNext={canMoveNextPage} canMoveBack={canMoveBackPage}");
+		OnPageStartChange?.Invoke(target, moveAllowed);
+
+		if (!moveAllowed)
+		{
+			// Direction is blocked by flags alone – snap back and notify once snap-back completes.
+			DebugLog($"PageTransitionRestricted current={CurrentPageIndex} target={target}");
+			GoToPageInternal(CurrentPageIndex, animate: true, force: true, () => OnPageChangeRestricted?.Invoke(target));
+			return;
+		}
+
+		// Flags permit movement – run async validation if a callback is registered.
+		if (OnValidatePageTransition != null)
+		{
+			ExecutePageTransitionWithValidation(target).Forget();
+		}
+		else
+		{
+			GoToPage(target, animate: true, force: true);
+		}
+	}
+
+	/// <summary>
+	/// Awaits the <see cref="OnValidatePageTransition"/> callback and either navigates to
+	/// <paramref name="target"/> or snaps back to the current page. Runs as a fire-and-forget
+	/// async operation so the UI thread is never blocked.
+	/// </summary>
+	private async Task ExecutePageTransitionWithValidation(int target)
 		{
 			isValidatingPageChange = true;
 
