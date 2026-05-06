@@ -670,6 +670,31 @@ namespace UnityUIToolkit.Extensions
 					child.style.width = innerCross > 0f ? innerCross : new Length(100, LengthUnit.Percent);
 				}
 			}
+
+			RealignToCurrentPage(pageSize);
+		}
+
+		private void RealignToCurrentPage(float pageSize)
+		{
+			if (pageSize <= 0f || PageCount <= 0)
+			{
+				return;
+			}
+
+			if (isPointerDown || isDragging || snapAnimation != null)
+			{
+				return;
+			}
+
+			var maxOffset = (PageCount - 1) * pageSize;
+			var targetOffset = Mathf.Clamp(CurrentPageIndex * pageSize, 0f, maxOffset);
+			if (Mathf.Approximately(GetScrollOffset(), targetOffset))
+			{
+				return;
+			}
+
+			DebugLog($"RealignCurrentPage current={CurrentPageIndex} offset={GetScrollOffset():0.##} targetOffset={targetOffset:0.##}");
+			SetScrollOffset(targetOffset);
 		}
 
 		private void OnCustomStyleResolved(CustomStyleResolvedEvent evt)
@@ -967,12 +992,13 @@ namespace UnityUIToolkit.Extensions
 			var absPrimary = Mathf.Abs(primary);
 			var absSecondary = Mathf.Abs(secondary);
 
-			var intentThresholdPx = pointerStartedOnChild ? 18f : 8f;
+			var intentThresholdPx = pointerStartedOnChild ? 24f : 8f;
+			var axisDominancePx = pointerStartedOnChild ? 12f : 0f;
 
 			if (!isDragging)
 			{
 				// Only claim the gesture if it's primarily along our paging axis.
-				if (absPrimary >= intentThresholdPx && absPrimary >= absSecondary)
+				if (absPrimary >= intentThresholdPx && absPrimary >= absSecondary + axisDominancePx)
 				{
 					isDragging = true;
 					DebugLog($"DragStarted pointer={evt.pointerId} pos={evt.position} delta={delta} primary={primary:0.##} secondary={secondary:0.##} threshold={intentThresholdPx:0.##} childStart={pointerStartedOnChild}");
