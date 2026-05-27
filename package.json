@@ -1,0 +1,39 @@
+{
+  "name": "com.unity.uitoolkitextensions",
+  "displayName": "Unity UI Toolkit Extensions",
+  "version": "1.0.0-pre.1",
+  "description": "An extension project for the Unity3D UI Toolkit system, all crafted and contributed by the awesome Unity community",
+  "author": "Simon darkside Jackson <@SimonDarksideJ>",
+  "contributors": [
+    {
+      "name": "SimonDarksideJ",
+      "twitter": "@SimonDarksideJ"
+    }
+  ],
+  "unity": "6000.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/issues"
+  },
+  "keywords": [
+    "Unity3D",
+    "Unity",
+    "UITK",
+    "Unity UI Toolkit",
+    "UI Toolkit Extensions"
+  ],
+  "samples": [
+    {
+      "displayName": "UI Toolkit Extensions Samples",
+      "description": "Examples and demonstrations of the Unity UI Toolkit Extensions controls",
+      "path": "Examples~"
+    }
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "com.unity.ui": "1.0.0"
+  }
+}
