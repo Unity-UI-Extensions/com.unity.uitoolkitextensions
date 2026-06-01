@@ -13,7 +13,7 @@ Typical use cases:
 ## Public API
 
 | Name | Description | Options |
-| --- | --- | --- |
+|---|---|---|
 | Shake(VisualElement target, int wobbleCount = 3, int wobbleDurationMs = 70, float amplitudePixels = 10f, Func<float, float> easingCurve = null, Action onCompleted = null) | Starts a horizontal wobble sequence on the target element. If another shake is already active on the same target, the current animation is stopped and replaced with a new one from the base position. | target required, wobbleCount >= 1, wobbleDurationMs >= 1, amplitudePixels >= 0 |
 | StopShake(VisualElement target, bool resetToBasePosition = true) | Stops the active shake on the target element. Optionally restores the original translate position captured when the shake started. | target required, resetToBasePosition true/false |
 

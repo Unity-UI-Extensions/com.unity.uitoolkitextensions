@@ -20,7 +20,7 @@ Typical use cases:
 ## Properties
 
 | Name | Description | Options |
-| --- | --- | --- |
+|---|---|---|
 | `Orientation` | Paging axis for layout and swipe direction. | `Horizontal` (default), `Vertical` |
 | `PageSize` | Explicit page size in pixels. If `<= 0`, uses viewport resolved size (`width` for horizontal, `height` for vertical). | `float` (`<= 0` means auto) |
 | `ManualMovementEnabled` | Enables pointer/touch and wheel gesture handling by the control. If disabled, input gestures are ignored and only programmatic navigation changes pages. | `true` / `false` (default `false`) |
@@ -41,7 +41,7 @@ Typical use cases:
 ### USS Custom Properties
 
 | Name | Description | Default |
-| --- | --- | --- |
+|---|---|---|
 | `--scrollsnap-easing` | Snap animation easing function name. | `Linear` |
 | `--scrollsnap-page-padding-left` | Left page margin/padding from USS. | `0px` |
 | `--scrollsnap-page-padding-right` | Right page margin/padding from USS. | `0px` |
@@ -52,7 +52,7 @@ Typical use cases:
 ## Events
 
 | Name | Description | Arguments |
-| --- | --- | --- |
+|---|---|---|
 | `PageChanged` | Fired when `CurrentPageIndex` changes after a completed transition/snap. | `(int currentPageIndex)` |
 | `OnPageStartChange` | Fired when a swipe attempt resolves to a target page and validation logic begins. Host can pre-load target content and inspect whether movement is currently allowed by flags. | `(int targetPage, bool moveAllowed)` |
 | `OnPageChangeRestricted` | Fired when a swipe attempt is denied and the control has completed returning/snapping back to the active page. Useful for user feedback animations/toasts. The argument is the attempted destination page index. | `(int attemptedTargetPage)` |
@@ -212,7 +212,7 @@ snap.MoveNext(animate: true, force: true);
 ### Programmatic API Summary
 
 | Method | Purpose |
-| --- | --- |
+|---|---|
 | `GoToPage(int index, bool animate = true, bool force = false)` | Navigate to a specific page |
 | `MoveNext(bool animate = true, bool force = false)` | Navigate to next page |
 | `MovePrevious(bool animate = true, bool force = false)` | Navigate to previous page |
