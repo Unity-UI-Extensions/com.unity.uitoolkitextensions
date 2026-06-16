@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Three bullet rows -->
+  <circle cx="4" cy="7"  r="1.5" fill="white"/>
+  <path d="M8 7 H20"  fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="4" cy="12" r="1.5" fill="white"/>
+  <path d="M8 12 H20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="4" cy="17" r="1.5" fill="white"/>
+  <path d="M8 17 H20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+</svg>

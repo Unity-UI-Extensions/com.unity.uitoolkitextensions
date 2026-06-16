@@ -6,7 +6,7 @@ The Unity UI Toolkit Extensions project is a collection of extension scripts/eff
 
 You can follow the UI Toolkit Extensions team for updates and news on:
 
-### [Twitter - #unityuiextensions](https://twitter.com/search?q=%23unityuiextensions) / [Facebook](https://www.facebook.com/UnityUIExtensions/) / [YouTube](https://www.youtube.com/@UnityUIExtensions)
+## [Twitter - #unityuiextensions](https://twitter.com/search?q=%23unityuiextensions) / [Facebook](https://www.facebook.com/UnityUIExtensions/) / [YouTube](https://www.youtube.com/@UnityUIExtensions)
 
 > Ways to get in touch:
 >
@@ -29,10 +29,54 @@ For a full list of the controls and how they are used, please see the [online do
 
 ## Control References
 
-ScrollSnap is a page-based UI Toolkit navigation control that arranges child elements as discrete pages and snaps cleanly between them using swipe, wheel, or programmatic movement. It is designed for flows such as onboarding, step-by-step forms, and carousel-style interfaces where predictable page boundaries, optional movement validation, restricted swipe feedback, and smooth animated transitions are important.
+### Navigation & Layout
 
-- [ScrollSnap](ScrollSnap.md) - Page-based snap scroller with manual/sweep modes, validation gating, and restricted-movement events.
-- [VisualElementShakeUtility](VisualElementShakeUtility.md) - Generic UI Toolkit utility to shake a target VisualElement with configurable wobble count and wobble speed.
+- [ScrollSnap](ScrollSnap.md) — Page-based snap scroller with manual/swipe modes, validation gating, and restricted-movement events.
+- [QuadrantStepper](Controls/QuadrantStepper.md) — Segmented sliding-overlay step selector. Ideal for tab bars, mode switchers, and category filters.
+- [CollapsibleSection](Controls/CollapsibleSection.md) — Accordion panel with animated max-height expand/collapse. Ideal for FAQs and settings groups.
+- [PageDotIndicator](Controls/PageDotIndicator.md) — Row of pagination dots; all dots up to and including the current page are highlighted.
+- [StepProgressBar](Controls/StepProgressBar.md) — Horizontal gradient fill bar driven by step counts.
+
+### Inputs & Forms
+
+- [PillInputField](Controls/PillInputField.md) — Mobile-aware labeled text input with password mode, multiline support, and validation events.
+- [RoundedInputField](Controls/RoundedInputField.md) — Rounded input field with custom placeholder rendering.
+- [PillSelector](Controls/PillSelector.md) — Read-only tap-to-open selector row with chevron icon.
+- [PillButton](Controls/PillButton.md) — Pill-shaped gradient CTA button with flash feedback animation.
+- [IconLabelButton](Controls/IconLabelButton.md) — Row button with a 24 × 24 icon and label. Ideal for menu items and list actions.
+
+### Media & Images
+
+- [CircularImageButton](Controls/CircularImageButton.md) — Circular tappable image with no-image overlay. Ideal for avatars and profile photos.
+- [GrayscaleImage](Controls/GrayscaleImage.md) — Immediate-mode image renderer with a toggleable greyscale shader effect.
+- [LoadingIcon](Controls/LoadingIcon.md) — Rotating spinner with configurable speed and optional interaction blocking.
+
+### Toggles & Selection
+
+- [ToggleButton](Controls/ToggleButton.md) — Binary image toggle that fires an event on every press.
+- [ColorToggleButton](Controls/ColorToggleButton.md) — Tint-colored toggle with ripple animation and selected overlay. Extends `ToggleButton`.
+- [ColorToggleGroup](Controls/ColorToggleGroup.md) — Single-selection group of `ColorToggleButton` items with tap and drag-to-select support.
+
+### Feedback & Utility
+
+- [ToastSwipeDismissManipulator](Controls/ToastSwipeDismissManipulator.md) — Pointer manipulator that adds swipe-to-dismiss gesture handling to any element.
+- [ComingSoonMessage](Controls/ComingSoonMessage.md) — Centered placeholder panel for in-progress features.
+
+### Utilities
+
+- [VisualElementShakeUtility](VisualElementShakeUtility.md) — Horizontal shake animation for validation and attention feedback.
+- [UIToolkitExtensions](Utilities/UIToolkitExtensions.md) — Static helper for creating, parenting, and wiring VisualElements from code.
+
+## Examples
+
+Ready-to-run sample scenes demonstrating controls in realistic combinations:
+
+- [ScrollSnap + PageDotIndicator](Examples/ScrollSnapAndDots.md) — Horizontal paging with dot indicator and ComingSoonMessage page.
+- [Registration Form](Examples/RegistrationForm.md) — Full form with PillInputField, RoundedInputField, PillButton, PillSelector, and shake validation.
+- [Step Wizard](Examples/StepWizard.md) — Multi-step flow using QuadrantStepper and StepProgressBar.
+- [Content Explorer](Examples/ContentExplorer.md) — LoadingIcon reveal with CollapsibleSection and IconLabelButton items.
+- [Profile Editor](Examples/ProfileEditor.md) — CircularImageButton, GrayscaleImage, ToggleButton, and ColorToggleGroup.
+- [Toast Notifications](Examples/ToastNotifications.md) — Swipe-to-dismiss toast stack using ToastSwipeDismissManipulator.
 
 ## Technical details
 
