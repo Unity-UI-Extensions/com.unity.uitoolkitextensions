@@ -532,7 +532,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            if (evt.pointerType == PointerType.mouse && (evt.pressedButtons & 1) == 0)
+            if (evt.pointerType == UnityEngine.UIElements.PointerType.mouse && (evt.pressedButtons & 1) == 0)
             {
                 return;
             }
@@ -666,7 +666,7 @@ namespace UnityUIToolkit.Extensions
                 return false;
             }
 
-            if (evt.pointerType == PointerType.mouse && evt.button != 0)
+            if (evt.pointerType == UnityEngine.UIElements.PointerType.mouse && evt.button != 0)
             {
                 return false;
             }

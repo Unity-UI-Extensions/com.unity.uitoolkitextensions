@@ -61,7 +61,6 @@
 	display: flex;
 	flex-direction: row;
 	align-items: stretch;
-	/*justify-content: stretch;*/
 	flex-wrap: nowrap;
 }
 
@@ -880,7 +879,8 @@
 	min-height: 0;
 }
 
-/* Hide the scrollbars — the list is still scrollable via touch/drag/wheel. */
+/* Hide the scrollbars — the list is still scrollable via touch/drag/wheel.
+*Note, this is the dumbest thing ever, but Unity's UI Toolkit does not provide a way to hide the scrollbars via USS. But you can in C#*/
 .elasticListView__scrollContainer .unity-scroll-view__vertical-scroller,
 .elasticListView__scrollContainer .unity-scroll-view__horizontal-scroller {
 	display: none;
