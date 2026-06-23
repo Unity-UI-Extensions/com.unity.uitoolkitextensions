@@ -163,7 +163,7 @@ namespace UnityUIToolkit.Extensions
             evt.StopPropagation();
         }
 
-        private void Open()
+        public void Open()
         {
             if (isOpen || items.Length == 0)
             {
@@ -197,7 +197,7 @@ namespace UnityUIToolkit.Extensions
             OpenStateChanged?.Invoke(true);
         }
 
-        private void Close()
+        public void Close()
         {
             if (!isOpen)
             {
