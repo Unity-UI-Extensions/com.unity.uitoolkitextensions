@@ -415,7 +415,6 @@
 	border-radius: 18px;
 	border-color: rgba(255, 255, 255, 0.2);
 	background-color: rgba(17, 23, 34, 0.8);
-	backdrop-filter: blur(8px);
 }
 
 .dropDownControl__triggerLabel {
@@ -665,12 +664,12 @@
 .notificationBadge {
 	min-width: 18px;
 	height: 18px;
-	border-radius: 9px;
+	border-radius: 50%;
 	background-color: rgb(229, 72, 77);
 	align-items: center;
 	justify-content: center;
-	padding-left: 5px;
-	padding-right: 5px;
+	padding-left: 3px;
+	padding-right: 3px;
 }
 
 .notificationBadge__count {
