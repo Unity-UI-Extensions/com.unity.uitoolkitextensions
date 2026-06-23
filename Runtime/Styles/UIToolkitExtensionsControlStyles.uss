@@ -708,7 +708,7 @@
 	left: 16px;
 }
 
-.screenHeader__audioButton.toggleButton {
+.screenHeader__action4Toggle.toggleButton {
 	position: absolute;
 	width: 64px;
 	height: 64px;
@@ -865,4 +865,47 @@
 	color: rgba(255, 255, 255, 1);
 	font-size: 26px;
 	-unity-text-align: middle-left;
+}
+
+/* ElasticListView */
+.elasticListView {
+	flex-grow: 1;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.elasticListView__scrollContainer {
+	flex-grow: 1;
+	flex-shrink: 1;
+	min-height: 0;
+}
+
+/* Hide the scrollbars — the list is still scrollable via touch/drag/wheel. */
+.elasticListView__scrollContainer .unity-scroll-view__vertical-scroller,
+.elasticListView__scrollContainer .unity-scroll-view__horizontal-scroller {
+	display: none;
+}
+
+.elasticListView__content {
+	flex-direction: column;
+}
+
+.elasticListView__emptyLabel {
+	flex-grow: 1;
+	padding-top: 100px;
+	-unity-text-align: middle-center;
+	white-space: normal;
+}
+
+.elasticListView__loadMoreFooter {
+	flex-shrink: 0;
+	height: 64px;
+	margin-bottom: 16px;
+	align-items: center;
+	justify-content: center;
+}
+
+.elasticListView__loadMoreSpinner {
+	width: 40px;
+	height: 40px;
 }

@@ -8,12 +8,12 @@ namespace UnityUIToolkit.Extensions
 {
     /// <summary>
     /// A configurable screen header bar: an optional notch spacer, a centered title, and up to four
-    /// edge buttons (action 1, audio-mute toggle, action 2, action 3).
+    /// edge buttons (action 1, action 2, action 3, and action 4 — a stateful on/off toggle).
     ///
     /// The control owns no application state. Button icons are supplied by the host via the icon
     /// properties (or USS), and interactions are surfaced as events: <see cref="Action1Clicked"/>,
-    /// <see cref="Action2Clicked"/>, <see cref="Action3Clicked"/>, and <see cref="AudioToggled"/>.
-    /// The host is responsible for any muting/persistence logic behind the audio toggle.
+    /// <see cref="Action2Clicked"/>, <see cref="Action3Clicked"/>, and <see cref="Action4Toggled"/>.
+    /// The host is responsible for any persistence logic behind the action-4 toggle.
     /// </summary>
     /// <remarks>
     /// The buttons provided are just examples for common interactions.
@@ -28,23 +28,21 @@ namespace UnityUIToolkit.Extensions
         public const string TitleClass = "screenHeader__title";
         public const string Action2ButtonClass = "screenHeader__action2Button";
         public const string Action3ButtonClass = "screenHeader__action3Button";
-        public const string AudioButtonClass = "screenHeader__audioButton";
+        public const string Action4ToggleClass = "screenHeader__action4Toggle";
 
         public event Action Action1Clicked;
         public event Action Action2Clicked;
         public event Action Action3Clicked;
-
-        /// <summary>Raised when the audio toggle is pressed, carrying the new muted state.</summary>
-        public event Action<bool> AudioToggled;
+        public event Action<bool> Action4Toggled;
 
         private readonly Label titleLabel;
-        private readonly ToggleButton action1Button;
-        private readonly ToggleButton audioButton;
+        private readonly ToggleButton action1Button; // AKA Back button (left edge)
         private readonly ToggleButton action2Button;
         private readonly ToggleButton action3Button;
+        private readonly ToggleButton action4Toggle;
 
-        private Texture2D audioOnIcon;
-        private Texture2D audioOffIcon;
+        private Texture2D action4ToggleOnIcon;
+        private Texture2D action4ToggleOffIcon;
 
         public ScreenHeader()
         {
@@ -58,16 +56,16 @@ namespace UnityUIToolkit.Extensions
             action1Button = UIToolkitExtensions.CreateVisualElement<ToggleButton>(bar, Action1ButtonClass);
             action1Button.OnClicked += () => Action1Clicked?.Invoke();
 
-            audioButton = UIToolkitExtensions.CreateVisualElement<ToggleButton>(bar, AudioButtonClass);
-            audioButton.OnClicked += OnAudioToggled;
-
             action2Button = UIToolkitExtensions.CreateVisualElement<ToggleButton>(bar, Action2ButtonClass);
             action2Button.OnClicked += () => Action2Clicked?.Invoke();
 
             action3Button = UIToolkitExtensions.CreateVisualElement<ToggleButton>(bar, Action3ButtonClass);
             action3Button.OnClicked += () => Action3Clicked?.Invoke();
 
-            Configure(showAction1: true, showTitle: true, showAction2: false, showAction3: true, showAudio: true);
+            action4Toggle = UIToolkitExtensions.CreateVisualElement<ToggleButton>(bar, Action4ToggleClass);
+            action4Toggle.OnClicked += OnAction4Toggled;
+
+            Configure(showAction1: true, showTitle: true, showAction2: false, showAction3: true, showAction4Toggle: true);
         }
 
         [UxmlAttribute("title")]
@@ -102,67 +100,67 @@ namespace UnityUIToolkit.Extensions
             set => action3Button.SetImage(value);
         }
 
-        [UxmlAttribute("audio-on-icon")]
-        public Texture2D AudioOnIcon
+        [UxmlAttribute("action4-toggle-on-icon")]
+        public Texture2D Action4ToggleOnIcon
         {
-            get => audioOnIcon;
+            get => action4ToggleOnIcon;
             set
             {
-                audioOnIcon = value;
-                RefreshAudioIcon();
+                action4ToggleOnIcon = value;
+                RefreshAction4ToggleIcon();
             }
         }
 
-        [UxmlAttribute("audio-off-icon")]
-        public Texture2D AudioOffIcon
+        [UxmlAttribute("action4-toggle-off-icon")]
+        public Texture2D Action4ToggleOffIcon
         {
-            get => audioOffIcon;
+            get => action4ToggleOffIcon;
             set
             {
-                audioOffIcon = value;
-                RefreshAudioIcon();
+                action4ToggleOffIcon = value;
+                RefreshAction4ToggleIcon();
             }
         }
 
-        public bool IsAudioMuted => audioButton.IsSelected;
+        public bool IsAction4ToggleSelected => action4Toggle.IsSelected;
 
-        public void SetAudioMuted(bool muted)
+        public void SetAction4ToggleSelected(bool selected)
         {
-            if (muted)
+            if (selected)
             {
-                audioButton.ForceSelect();
+                action4Toggle.ForceSelect();
             }
             else
             {
-                audioButton.ForceDeselect();
+                action4Toggle.ForceDeselect();
             }
 
-            RefreshAudioIcon();
+            RefreshAction4ToggleIcon();
         }
 
-        private void OnAudioToggled()
+        private void OnAction4Toggled()
         {
-            RefreshAudioIcon();
-            AudioToggled?.Invoke(audioButton.IsSelected);
+            RefreshAction4ToggleIcon();
+            Action4Toggled?.Invoke(action4Toggle.IsSelected);
         }
 
-        private void RefreshAudioIcon()
+        private void RefreshAction4ToggleIcon()
         {
-            var icon = audioButton.IsSelected ? audioOffIcon : audioOnIcon;
+            var icon = action4Toggle.IsSelected ? action4ToggleOffIcon : action4ToggleOnIcon;
             if (icon != null)
             {
-                audioButton.SetImage(icon);
+                action4Toggle.SetImage(icon);
             }
         }
 
         public void Configure(bool showAction1 = true, bool showTitle = true, bool showAction2 = false,
-            bool showAction3 = false, bool showAudio = true)
+            bool showAction3 = false, bool showAction4Toggle = true)
         {
             ShowAction1 = showAction1;
             titleLabel.style.display = showTitle ? DisplayStyle.Flex : DisplayStyle.None;
             ShowAction2 = showAction2;
             ShowAction3 = showAction3;
-            ShowAudio = showAudio;
+            ShowAction4Toggle = showAction4Toggle;
         }
 
         [UxmlAttribute("show-action1")]
@@ -186,11 +184,11 @@ namespace UnityUIToolkit.Extensions
             set => action3Button.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        [UxmlAttribute("show-audio")]
-        public bool ShowAudio
+        [UxmlAttribute("show-action4-toggle")]
+        public bool ShowAction4Toggle
         {
-            get => audioButton.style.display.value == DisplayStyle.Flex;
-            set => audioButton.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            get => action4Toggle.style.display.value == DisplayStyle.Flex;
+            set => action4Toggle.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         public void SetAction1ButtonVisible(bool isVisible) => ShowAction1 = isVisible;
@@ -199,6 +197,6 @@ namespace UnityUIToolkit.Extensions
 
         public void SetAction3ButtonVisible(bool isVisible) => ShowAction3 = isVisible;
 
-        public void SetAudioButtonVisible(bool isVisible) => ShowAudio = isVisible;
+        public void SetAction4ToggleVisible(bool isVisible) => ShowAction4Toggle = isVisible;
     }
 }
