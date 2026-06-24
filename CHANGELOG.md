@@ -13,13 +13,13 @@ The first release of **Unity UI Toolkit Extensions** — a brand-new companion t
 ### Highlights
 
 - **Built for Unity 6 + UI Toolkit** — a native UITK control library targeting Unity `6000.0` and above, distributed via the Unity Package Manager / OpenUPM.
-- **20 controls out of the box** — covering navigation, forms, media, toggles, and feedback, all using the `Unity.UI.Extensions` namespace.
+- **25 controls out of the box** — covering navigation, layout, forms, media, toggles, and feedback, all using the `Unity.UI.Extensions` namespace.
 - **Reusable utilities** — helpers for code-first VisualElement construction, attention animations, and procedural textures.
-- **6 ready-to-run sample scenes** — included as a UPM sample, demonstrating the controls in realistic combinations.
+- **12 ready-to-run sample scenes** — included as a UPM sample, demonstrating the controls in realistic combinations.
 
 ### Added
 
-The initial release contains 20 controls and a handful of extensions plus utilities to help making UI Toolkit UX far easier.
+The initial release contains 25 controls and a handful of extensions plus utilities to help making UI Toolkit UX far easier.
 
 #### Controls
 
@@ -30,6 +30,9 @@ The initial release contains 20 controls and a handful of extensions plus utilit
 - **CollapsibleSection** — Accordion panel with animated max-height expand/collapse, ideal for FAQs and settings groups.
 - **PageDotIndicator** — Row of pagination dots; all dots up to and including the current page are highlighted.
 - **StepProgressBar** — Horizontal gradient fill bar driven by step counts.
+- **ScreenHeader** — Configurable top app-bar with title, notch spacer, and up to four edge action buttons (events only, no app state).
+- **ElasticListView** — Vertical list with iOS-style elastic overscroll and an optional swipe-up "load more" trigger.
+- **DropDownMenuControl** — Anchored overlay action menu with large tappable rows and backdrop-tap dismiss (distinct from the value-picker `DropDownControl`).
 
 ##### Inputs & Forms
 
@@ -39,6 +42,7 @@ The initial release contains 20 controls and a handful of extensions plus utilit
 - **PillButton** — Pill-shaped gradient CTA button with flash feedback animation.
 - **IconLabelButton** — Row button with a 24 × 24 icon and label, ideal for menu items and list actions.
 - **DropDownControl** — Custom dropdown selector with a scrollable list of selectable entries.
+- **SocialLinkContainer** — Editable list of platform-labelled social-link fields with add/remove and a platform picker.
 
 ##### Media & Images
 
@@ -57,6 +61,7 @@ The initial release contains 20 controls and a handful of extensions plus utilit
 
 - **ToastSwipeDismissManipulator** — Pointer manipulator that adds swipe-to-dismiss gesture handling to any element.
 - **ComingSoonMessage** — Centered placeholder panel for in-progress features.
+- **NotificationBadge** — Small rounded unread-count badge that auto-hides at zero and clamps to "99+".
 
 #### Utilities
 
@@ -74,6 +79,12 @@ Included as the **UI Toolkit Extensions Samples** package sample:
 - **Content Explorer** — LoadingIcon reveal with CollapsibleSection and IconLabelButton items.
 - **Profile Editor** — CircularImageButton, GrayscaleImage, ToggleButton, and ColorToggleGroup.
 - **Toast Notifications** — Swipe-to-dismiss toast stack using ToastSwipeDismissManipulator.
+- **Dropdown Phone Entry** — Phone-number entry pairing a country-code DropDownControl with PillInputFields.
+- **Image Crop Overlay** — Pan / pinch-zoom crop flow using ImageCropOverlayControl and CircularImageButton.
+- **Notification List** — Elastic notification feed using ElasticListView, NotificationBadge, and PillButton.
+- **Screen Header** — Top app-bar demo wiring ScreenHeader's title and action events.
+- **Scroll Snap (Split Views)** — The same ScrollSnap built three ways — C#, UXML, and a split layout.
+- **Social Links** — Editable social-links section using SocialLinkContainer and PillButton.
 
 ### Contributors
 

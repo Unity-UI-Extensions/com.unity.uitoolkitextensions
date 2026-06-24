@@ -46,9 +46,16 @@ Coming Soon.
 
 -----
 
-## [Controls and extensions listed in this project](#controls-and-extensions-listed-in-this-project)
+## [Controls and extensions listed in this project](https://unity-ui-extensions.github.io/uitoolkit/#controls)
 
-Check back often as we begin adding controls for launch.
+The package ships **25 controls** across navigation, layout, forms, media, toggles and feedback, plus reusable utilities, and **12 ready-to-run sample scenes** — all using the `Unity.UI.Extensions` namespace.
+
+Browse the full, searchable list with API references and code examples:
+
+- **[Controls →](https://unity-ui-extensions.github.io/uitoolkit/#controls)**
+- **[Example scenes →](https://unity-ui-extensions.github.io/uitoolkit/examples/)**
+
+See the [CHANGELOG](./CHANGELOG.md) for the complete control and example breakdown.
 
 -----
 
