@@ -46,9 +46,16 @@ Coming Soon.
 
 -----
 
-## [Controls and extensions listed in this project](#controls-and-extensions-listed-in-this-project)
+## [Controls and extensions listed in this project](https://unity-ui-extensions.github.io/uitoolkit/#controls)
 
-Check back often as we begin adding controls for launch.
+The package ships **25 controls** across navigation, layout, forms, media, toggles and feedback, plus reusable utilities, and **12 ready-to-run sample scenes** — all using the `Unity.UI.Extensions` namespace.
+
+Browse the full, searchable list with API references and code examples:
+
+- **[Controls →](https://unity-ui-extensions.github.io/uitoolkit/#controls)**
+- **[Example scenes →](https://unity-ui-extensions.github.io/uitoolkit/examples/)**
+
+See the [CHANGELOG](./CHANGELOG.md) for the complete control and example breakdown.
 
 -----
 
@@ -66,9 +73,14 @@ The primary method for install is to use OpenUPM to add the package, it can be i
 
 > For more details on using [OpenUPM CLI, check the docs here](https://github.com/openupm/openupm-cli#installation).
 
-- Unity Package Manager - manual
-
 Alternatively, you can also add the package manually through the Unity package manager using the scope ```com.unity.uitoolkitextensions```, see the [Unity Package Manager docs](https://learn.unity.com/tutorial/the-package-manager) for more information.
+
+> [!NOTE]
+> The package comes with some default `svg` assets for use in the controls and demonstration scenes which requires the `com.unity.vectorgraphics` installed to make use of them
+>
+> Package Manager -> Install Package By Name -> `com.unity.vectorgraphics`
+>
+> However, this is completely optional, but highly recommended when working with images with the UI Toolkit.
 
 ## [Contribution guidelines](https://unity-ui-extensions.github.io/ContributionGuidelines)
 
@@ -82,7 +94,7 @@ Just ensure:
 
 ## [License](https://raw.githubusercontent.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/release/LICENSE.md)
 
-All scripts conform to the BSD3 license and are free to use / distribute.  See the [LICENSE](https://raw.githubusercontent.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/release/LICENSE.md) file for more information =
+All scripts conform to the MIT license and are free to use / distribute.  See the [LICENSE](https://raw.githubusercontent.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/release/LICENSE.md) file for more information =
 
 ## [Like what you see?](https://unity-ui-extensions.github.io/FurtherInfo)
 
