@@ -20,6 +20,7 @@ namespace UnityUIToolkit.Extensions
 
         public ComingSoonMessage()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             var background = UIToolkitExtensions.CreateVisualElement(this, BackgroundClass);

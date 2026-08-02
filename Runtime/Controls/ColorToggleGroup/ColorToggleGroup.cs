@@ -75,6 +75,7 @@ namespace UnityUIToolkit.Extensions
 
         public ColorToggleGroup()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             container = UIToolkitExtensions.CreateVisualElement(this, ContainerClass);

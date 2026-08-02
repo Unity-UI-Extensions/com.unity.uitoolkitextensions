@@ -77,6 +77,7 @@ namespace UnityUIToolkit.Extensions
 
         public ElasticListView()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             scrollView = new ScrollView(ScrollViewMode.Vertical)

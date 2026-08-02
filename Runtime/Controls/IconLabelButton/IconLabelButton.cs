@@ -28,6 +28,7 @@ namespace UnityUIToolkit.Extensions
 
         public IconLabelButton()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             button = UIToolkitExtensions.CreateVisualElement(this, ButtonClass);

@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <ui:VisualElement name="container" style="flex-grow: 1; align-items: center; justify-content: center;">
+        <!-- Items are supplied from code via AddItem()/SetItems(); the empty-state label shows until then. -->
+        <ext:ElasticListView empty-text="No items yet - add some from code." style="width: 320px; height: 240px;" />
+    </ui:VisualElement>
+</ui:UXML>

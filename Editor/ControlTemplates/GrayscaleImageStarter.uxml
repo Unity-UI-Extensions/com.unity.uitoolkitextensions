@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <ui:VisualElement name="container" style="flex-grow: 1; align-items: center; justify-content: center;">
+        <!-- Assign a sprite and a greyscale material in the Inspector or from code; renders blank until then. -->
+        <ext:GrayscaleImage scale-mode="ScaleToFit" greyscale-enabled="true" style="width: 200px; height: 200px;" />
+    </ui:VisualElement>
+</ui:UXML>

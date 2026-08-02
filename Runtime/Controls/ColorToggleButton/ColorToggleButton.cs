@@ -47,6 +47,7 @@ namespace UnityUIToolkit.Extensions
 
         public ColorToggleButton(Color tintColor, Color selectedTintColor)
         {
+            this.ApplyControlStyles();
             image.AddToClassList(IconClass);
 
             rippleOverlay = UIToolkitExtensions.CreateVisualElement(this, RippleOverlayClass);

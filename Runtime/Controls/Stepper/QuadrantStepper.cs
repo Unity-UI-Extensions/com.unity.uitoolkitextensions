@@ -79,6 +79,7 @@ namespace UnityUIToolkit.Extensions
 
         public QuadrantStepper(IReadOnlyList<string> options)
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             overlay = new VisualElement { pickingMode = PickingMode.Ignore };

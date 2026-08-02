@@ -1,0 +1,14 @@
+/* Starter-template icon overrides.
+   The starter scenes render on Unity's light default runtime theme, where the controls'
+   light icon tints (designed for the dark example cards) are invisible. These selectors
+   use two classes so they take precedence over the single-class rules in the shared
+   control stylesheet. Remove this reference from your copy if you restyle on a dark UI. */
+
+.iconLabelButton .iconLabelButton__icon,
+.collapsibleSection .collapsibleSection__chevron,
+.loadingIcon .loadingIcon__image,
+.pillSelector .pillSelector__icon,
+.circularImageButton .circularImageButton__icon,
+.dropDownControl .dropDownControl__triggerIcon {
+	-unity-background-image-tint-color: rgba(0, 0, 0, 1);
+}

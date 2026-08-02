@@ -27,6 +27,7 @@ namespace UnityUIToolkit.Extensions
 
         public StepProgressBar()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             backgroundBar = new VisualElement();

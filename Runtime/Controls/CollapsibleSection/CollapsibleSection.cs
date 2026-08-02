@@ -54,6 +54,7 @@ namespace UnityUIToolkit.Extensions
 
         public CollapsibleSection()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             var header = UIToolkitExtensions.CreateVisualElement(HeaderClass);
