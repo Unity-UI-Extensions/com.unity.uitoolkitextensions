@@ -1,7 +1,20 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
     <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Editor/ControlTemplates/StarterTemplateStyles.uss" />
     <ui:VisualElement name="container" style="flex-grow: 1; align-items: center; justify-content: center;">
-        <!-- Items are supplied from code via AddItem()/SetItems(); the empty-state label shows until then. -->
-        <ext:ElasticListView empty-text="No items yet - add some from code." style="width: 320px; height: 240px;" />
+        <ext:ElasticListView class="elasticListViewStarter" empty-text="No items yet - add some from UXML or code." style="width: 320px; height: 240px;">
+            <ui:Label text="List Item 1" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 2" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 3" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 4" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 5" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 6" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 7" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 8" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 9" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 10" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 11" class="elasticListViewStarter__item" />
+            <ui:Label text="List Item 12" class="elasticListViewStarter__item" />
+        </ext:ElasticListView>
     </ui:VisualElement>
 </ui:UXML>

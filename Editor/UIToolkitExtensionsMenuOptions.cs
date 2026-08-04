@@ -206,7 +206,23 @@ namespace UnityUIToolkit.Extensions.Editor
             var existing = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(destinationPath);
             if (existing != null)
             {
-                return existing;
+                if (System.IO.File.ReadAllText(sourcePath) == System.IO.File.ReadAllText(destinationPath))
+                {
+                    return existing;
+                }
+
+                if (!EditorUtility.DisplayDialog(
+                        "Starter template has changed",
+                        $"{controlName}Starter.uxml already exists in {destinationFolder} but differs from the packaged template (it may contain your edits, or come from an older package version).\n\nReplace it with the latest packaged template?",
+                        "Replace",
+                        "Keep existing"))
+                {
+                    return existing;
+                }
+
+                System.IO.File.Copy(sourcePath, destinationPath, true);
+                AssetDatabase.ImportAsset(destinationPath);
+                return AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(destinationPath);
             }
 
             EnsureGeneratedAssetFolder();

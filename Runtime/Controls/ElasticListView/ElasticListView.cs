@@ -75,6 +75,13 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public event Action LoadMoreRequested;
 
+        /// <summary>
+        /// Routes UXML children (and plain <see cref="VisualElement.Add"/> calls) into the item
+        /// content, so items can be authored directly in UXML / UI Builder as well as via
+        /// <see cref="AddItem"/>/<see cref="SetItems(System.Collections.Generic.IEnumerable{UnityEngine.UIElements.VisualElement})"/>.
+        /// </summary>
+        public override VisualElement contentContainer => content ?? this;
+
         public ElasticListView()
         {
             this.ApplyControlStyles();
@@ -86,20 +93,22 @@ namespace UnityUIToolkit.Extensions
                 horizontalScrollerVisibility = ScrollerVisibility.Hidden
             };
             scrollView.AddToClassList(ScrollContainerClass);
-            Add(scrollView);
+            hierarchy.Add(scrollView);
             scrollViewport = scrollView.Q<VisualElement>(className: ScrollView.viewportUssClassName);
 
             manualViewport = UIToolkitExtensions.CreateVisualElement(ScrollContainerClass);
             manualViewport.style.overflow = Overflow.Hidden;
             manualViewport.style.display = DisplayStyle.None;
-            Add(manualViewport);
+            hierarchy.Add(manualViewport);
 
             content = UIToolkitExtensions.CreateVisualElement(scrollView, ContentClass);
             content.style.flexGrow = 0f;
             content.style.flexShrink = 0f;
 
-            emptyLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, EmptyLabelClass);
+            // hierarchy.Add: once `content` exists, this.Add() would route into it via contentContainer.
+            emptyLabel = UIToolkitExtensions.CreateVisualElement<Label>(EmptyLabelClass);
             emptyLabel.style.display = DisplayStyle.None;
+            hierarchy.Add(emptyLabel);
 
             RegisterCallback<GeometryChangedEvent>(OnListGeometryChanged);
             content.RegisterCallback<GeometryChangedEvent>(OnContentGeometryChanged);

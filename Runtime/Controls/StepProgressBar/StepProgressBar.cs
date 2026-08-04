@@ -125,7 +125,7 @@ namespace UnityUIToolkit.Extensions
         {
             if (fillTexture != null)
             {
-                UnityEngine.Object.Destroy(fillTexture);
+                UnityEngine.Object.DestroyImmediate(fillTexture);
                 fillTexture = null;
             }
         }

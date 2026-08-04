@@ -39,6 +39,8 @@
 	flex-direction: row;
 	align-items: stretch;
 	flex-wrap: nowrap;
+	min-width: 240px;
+	min-height: 42px;
 
 	background-color: var(--quadrantStepper-background-color);
 	border-radius: var(--quadrantStepper-border-radius-medium);
@@ -77,7 +79,7 @@
 
 .quadrantStepper > .quadrantStepper__segments > .quadrantStepper__segment > .quadrantStepper__label {
 	-unity-text-align: middle-center;
-	font-size: var(--normal-font-size);
+	font-size: var(--normal-font-size, 14px);
 	-unity-font-style: bold;
 	color: var(--quadrantStepper-label-color);
 }
@@ -94,10 +96,28 @@
 /* RoundedInputField */
 .roundedInputField {
 	flex-grow: 1;
+	background-color: rgba(255, 255, 255, 0.04);
+	border-width: 1px;
+	border-color: rgba(255, 255, 255, 0.14);
+	border-radius: 14px;
+	overflow: hidden;
 }
 
 .roundedInputField__textField {
 	flex-grow: 1;
+	margin: 0;
+	background-color: rgba(0, 0, 0, 0);
+	border-width: 0;
+}
+
+.roundedInputField__input {
+	background-color: rgba(0, 0, 0, 0);
+	border-width: 0;
+	padding-left: 16px;
+	padding-right: 16px;
+	padding-top: 12px;
+	padding-bottom: 12px;
+	-unity-text-align: middle-left;
 }
 
 .roundedInputField__placeholder {
@@ -106,6 +126,8 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
+	padding-left: 16px;
+	color: rgba(190, 200, 225, 0.9);
 	-unity-text-align: middle-left;
 }
 
@@ -205,10 +227,40 @@
 
 .pillInputField__label {
 	display: none;
+	font-size: 12px;
+	color: rgba(173, 183, 210, 0.85);
+	margin-left: 4px;
+	margin-bottom: 6px;
+	-unity-text-align: upper-left;
 }
 
 .pillInputField__input {
 	flex-grow: 1;
+	margin: 0;
+	min-height: 44px;
+	justify-content: center;
+	background-color: rgba(255, 255, 255, 0.04);
+	border-width: 1px;
+	border-color: rgba(255, 255, 255, 0.14);
+	border-radius: 22px;
+}
+
+.pillInputField__input .unity-text-field__input,
+.pillInputField__input .unity-base-text-field__input {
+	flex-grow: 1;
+	background-color: rgba(0, 0, 0, 0);
+	background-image: none;
+	border-width: 0;
+	margin: 0;
+	padding-left: 16px;
+	padding-right: 16px;
+	-unity-text-align: middle-left;
+}
+
+.pillInputField__input .unity-text-field__placeholder,
+.pillInputField__input .unity-base-text-field__placeholder {
+	color: rgba(190, 200, 225, 0.9);
+	-unity-text-align: middle-left;
 }
 
 /* PillSelector */
@@ -218,15 +270,28 @@
 
 .pillSelector__label {
 	display: none;
+	font-size: 12px;
+	color: rgba(173, 183, 210, 0.85);
+	margin-left: 4px;
+	margin-bottom: 6px;
+	-unity-text-align: upper-left;
 }
 
 .pillSelector__container {
 	flex-direction: row;
 	align-items: center;
+	min-height: 44px;
+	background-color: rgba(255, 255, 255, 0.04);
+	border-width: 1px;
+	border-color: rgba(255, 255, 255, 0.14);
+	border-radius: 22px;
+	padding-left: 16px;
+	padding-right: 14px;
 }
 
 .pillSelector__clickableLabel {
 	flex-grow: 1;
+	-unity-text-align: middle-left;
 }
 
 .pillSelector__icon {
@@ -536,6 +601,12 @@
 }
 
 /* ColorToggleButton */
+.colorToggleButton {
+	width: 44px;
+	height: 44px;
+	margin: 4px;
+}
+
 .toggleButton__icon {
 	position: absolute;
 	top: 0;
@@ -615,7 +686,7 @@
 
 /* StepProgressBar */
 .stepProgressBar {
-	flex-grow: 1;
+	min-height: 6px;
 }
 
 .stepProgressBar__background {
@@ -629,6 +700,10 @@
 }
 
 /* PillButton */
+.pillButton {
+	min-height: 40px;
+}
+
 .pillButton__background {
 	border-radius: 50px;
 	overflow: hidden;
@@ -658,6 +733,9 @@
 .pillButton__label {
 	-unity-text-align: middle-center;
 	flex-grow: 1;
+	color: rgb(255, 255, 255);
+	padding-left: 12px;
+	padding-right: 12px;
 }
 
 /* NotificationBadge */

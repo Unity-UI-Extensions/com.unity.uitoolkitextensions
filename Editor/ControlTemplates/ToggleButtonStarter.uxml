@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
     <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Editor/ControlTemplates/StarterTemplateStyles.uss" />
     <ui:VisualElement name="container" style="flex-grow: 1; align-items: center; justify-content: center;">
-        <!-- The image attribute is a Texture2D asset reference; assign it in the Inspector, from code, or style via USS. -->
-        <ext:ToggleButton style="width: 64px; height: 64px;" />
+        <ext:ToggleButton class="toggleButtonStarter" style="width: 64px; height: 64px;" />
     </ui:VisualElement>
 </ui:UXML>

@@ -12,3 +12,97 @@
 .dropDownControl .dropDownControl__triggerIcon {
 	-unity-background-image-tint-color: rgba(0, 0, 0, 1);
 }
+
+/* ToggleButton starter: the base control renders nothing until an image is assigned,
+   so the starter carries a demo look — a circular button with a volume icon and a
+   green selected state. Replace with your own image/styling in real use. */
+.toggleButtonStarter.toggleButton {
+	border-radius: 32px;
+	background-color: rgba(0, 0, 0, 0.08);
+	border-width: 2px;
+	border-color: rgba(0, 0, 0, 0.25);
+}
+
+.toggleButtonStarter .toggleButton__image {
+	width: 60%;
+	height: 60%;
+	background-image: url("../../Runtime/Assets/Icons/Volume-on.svg");
+	-unity-background-image-tint-color: rgba(0, 0, 0, 0.55);
+}
+
+.toggleButtonStarter.toggleButton--selected {
+	background-color: rgba(46, 204, 113, 1);
+	border-color: rgba(39, 174, 96, 1);
+}
+
+.toggleButtonStarter.toggleButton--selected .toggleButton__image {
+	background-image: url("../../Runtime/Assets/Icons/Volume-off.svg");
+	-unity-background-image-tint-color: rgba(255, 255, 255, 1);
+}
+
+/* ScreenHeader starter: dark header surface with icons assigned to the enabled actions
+   (back chevron, info button, volume on/off toggle), mirroring the ScreenHeader sample.
+   Also repositions the sound toggle to the right edge — the control's default placement
+   (left: 32px) overlaps the back button. */
+.screenHeaderStarter.screenHeader {
+	background-color: rgba(20, 28, 44, 0.94);
+	border-bottom-width: 1px;
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.screenHeaderStarter .screenHeader__title {
+	color: rgba(255, 255, 255, 1);
+}
+
+.screenHeaderStarter .screenHeader__action1Button .toggleButton__image {
+	background-image: url("../../Runtime/Assets/Icons/ChevronLeft.svg");
+	-unity-background-image-tint-color: rgba(236, 240, 252, 1);
+}
+
+.screenHeaderStarter .screenHeader__action3Button.toggleButton {
+	right: 92px;
+}
+
+.screenHeaderStarter .screenHeader__action3Button .toggleButton__image {
+	background-image: url("../../Runtime/Assets/Icons/Information-icon.svg");
+	-unity-background-image-tint-color: rgba(236, 240, 252, 1);
+}
+
+.screenHeaderStarter .screenHeader__action4Toggle.toggleButton {
+	left: auto;
+	right: 16px;
+}
+
+/* Unselected = sound on */
+.screenHeaderStarter .screenHeader__action4Toggle .toggleButton__image {
+	background-image: url("../../Runtime/Assets/Icons/Volume-on.svg");
+	-unity-background-image-tint-color: rgba(124, 230, 200, 1);
+}
+
+/* Selected = muted */
+.screenHeaderStarter .screenHeader__action4Toggle.toggleButton--selected .toggleButton__image {
+	background-image: url("../../Runtime/Assets/Icons/Volume-off.svg");
+	-unity-background-image-tint-color: rgba(255, 138, 138, 1);
+}
+
+/* ElasticListView starter: simple demo rows so the list has content to scroll. */
+.elasticListViewStarter.elasticListView {
+	background-color: rgba(0, 0, 0, 0.05);
+	border-radius: 12px;
+	border-width: 1px;
+	border-color: rgba(0, 0, 0, 0.15);
+	padding: 6px;
+}
+
+.elasticListViewStarter .elasticListViewStarter__item {
+	height: 34px;
+	flex-shrink: 0;
+	margin: 3px 4px;
+	padding-left: 12px;
+	border-radius: 8px;
+	background-color: rgba(255, 255, 255, 0.85);
+	border-width: 1px;
+	border-color: rgba(0, 0, 0, 0.12);
+	color: rgba(20, 24, 32, 1);
+	-unity-text-align: middle-left;
+}

@@ -618,7 +618,7 @@ namespace UnityUIToolkit.Extensions
             {
                 if (destroySamplingTexture)
                 {
-                    UnityEngine.Object.Destroy(samplingTexture);
+                    UnityEngine.Object.DestroyImmediate(samplingTexture);
                 }
             }
 
