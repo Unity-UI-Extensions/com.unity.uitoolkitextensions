@@ -47,6 +47,18 @@ namespace UnityUIToolkit.Extensions.Editor
         [MenuItem("GameObject/UI Toolkit/Extensions/Drop Down Control", false, 10)]
         public static void AddDropDownControl(MenuCommand menuCommand) => AddControl("DropDownControl", menuCommand);
 
+        [MenuItem("GameObject/UI Toolkit/Extensions/Drop Down Menu", false, 10)]
+        public static void AddDropDownMenu(MenuCommand menuCommand)
+        {
+            // DropDownMenuControl is code-only (no UXML element), so this starter pairs its
+            // UXML layout with a demo driver component that opens the menu from the "···" trigger.
+            var go = AddControl("DropDownMenu", menuCommand);
+            if (go != null)
+            {
+                go.AddComponent<DropDownMenuStarterController>();
+            }
+        }
+
         [MenuItem("GameObject/UI Toolkit/Extensions/Elastic List View", false, 10)]
         public static void AddElasticListView(MenuCommand menuCommand) => AddControl("ElasticListView", menuCommand);
 
@@ -115,6 +127,9 @@ namespace UnityUIToolkit.Extensions.Editor
         [MenuItem("Assets/Create/UI Toolkit/Extensions/Drop Down Control Starter", false, 601)]
         public static void CreateDropDownControlStarter() => CreateStarterAsset("DropDownControl");
 
+        [MenuItem("Assets/Create/UI Toolkit/Extensions/Drop Down Menu Starter", false, 601)]
+        public static void CreateDropDownMenuStarter() => CreateStarterAsset("DropDownMenu");
+
         [MenuItem("Assets/Create/UI Toolkit/Extensions/Elastic List View Starter", false, 601)]
         public static void CreateElasticListViewStarter() => CreateStarterAsset("ElasticListView");
 
@@ -166,14 +181,15 @@ namespace UnityUIToolkit.Extensions.Editor
 
         /// <summary>
         /// Ensures the scene can display UI Toolkit content and adds a UIDocument showing
-        /// the starter template for the requested control.
+        /// the starter template for the requested control. Returns the created GameObject
+        /// (or null if the template could not be loaded) so callers can attach extras.
         /// </summary>
-        private static void AddControl(string controlName, MenuCommand menuCommand)
+        private static GameObject AddControl(string controlName, MenuCommand menuCommand)
         {
             var template = InstantiateTemplate(controlName, GeneratedAssetFolder);
             if (template == null)
             {
-                return;
+                return null;
             }
 
             var panelSettings = GetOrCreatePanelSettings();
@@ -187,6 +203,7 @@ namespace UnityUIToolkit.Extensions.Editor
             document.visualTreeAsset = template;
 
             Selection.activeGameObject = go;
+            return go;
         }
 
         /// <summary>

@@ -2,6 +2,9 @@
     <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
     <Style src="project://database/Packages/com.unity.uitoolkitextensions/Editor/ControlTemplates/StarterTemplateStyles.uss" />
     <ui:VisualElement name="container" style="flex-grow: 1; align-items: center; justify-content: center;">
-        <ext:ComingSoonMessage class="comingSoonMessageStarter" title="Coming Soon" message="This feature is on its way. Stay tuned!" />
+        <ui:VisualElement name="menu-item-row" class="dropDownMenuStarter__row">
+            <ui:Label name="menu-status" text="Menu starter item" class="dropDownMenuStarter__label" />
+            <ui:Label name="menu-trigger" text="···" class="dropDownMenuStarter__trigger" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

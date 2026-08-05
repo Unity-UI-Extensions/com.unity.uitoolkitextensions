@@ -85,6 +85,57 @@
 	-unity-background-image-tint-color: rgba(255, 138, 138, 1);
 }
 
+/* DropDownMenu starter: DropDownMenuControl is code-only, so the starter ships a single
+   bordered item row (white card look for the light default runtime theme) whose "···"
+   trigger is wired by DropDownMenuStarterController, added by the GameObject menu entry. */
+.dropDownMenuStarter__row {
+	width: 80%;
+	max-width: 420px;
+	height: 72px;
+	flex-direction: row;
+	align-items: center;
+	padding-left: 20px;
+	padding-right: 12px;
+	background-color: rgba(255, 255, 255, 1);
+	border-width: 1px;
+	border-color: rgba(0, 0, 0, 0.15);
+	border-radius: 22px;
+}
+
+.dropDownMenuStarter__label {
+	flex-grow: 1;
+	font-size: 17px;
+	color: rgba(20, 24, 32, 1);
+	-unity-text-align: middle-left;
+}
+
+.dropDownMenuStarter__trigger {
+	width: 44px;
+	height: 44px;
+	flex-shrink: 0;
+	border-radius: 22px;
+	background-color: rgba(0, 0, 0, 0.06);
+	color: rgba(20, 24, 32, 0.8);
+	font-size: 22px;
+	-unity-font-style: bold;
+	-unity-text-align: middle-center;
+}
+
+.dropDownMenuStarter__trigger:hover {
+	background-color: rgba(0, 0, 0, 0.12);
+}
+
+/* ComingSoonMessage starter: white bordered card around the message panel so it
+   reads as a distinct surface instead of floating text. */
+.comingSoonMessageStarter .comingSoonMessage__background {
+	background-color: rgba(255, 255, 255, 1);
+	border-width: 1px;
+	border-color: rgba(0, 0, 0, 0.15);
+	border-radius: 12px;
+	padding: 28px 40px;
+	color: rgba(20, 24, 32, 1);
+}
+
 /* ElasticListView starter: simple demo rows so the list has content to scroll. */
 .elasticListViewStarter.elasticListView {
 	background-color: rgba(0, 0, 0, 0.05);
