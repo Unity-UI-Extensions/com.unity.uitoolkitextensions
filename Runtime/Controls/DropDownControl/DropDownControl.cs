@@ -94,6 +94,7 @@ namespace UnityUIToolkit.Extensions
 
         public DropDownControl()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             triggerElement = UIToolkitExtensions.CreateVisualElement(this, TriggerClass);
@@ -106,10 +107,14 @@ namespace UnityUIToolkit.Extensions
             triggerElement.RegisterCallback<ClickEvent>(_ => Open());
             triggerElement.RegisterCallback<PointerDownEvent>(OnTriggerPointerDown, TrickleDown.TrickleDown);
 
+            // The backdrop and panel are re-parented to the panel root while open, outside this
+            // control's subtree, so they need the shared stylesheet attached directly.
             backdropElement = UIToolkitExtensions.CreateVisualElement(BackdropClass);
+            backdropElement.ApplyControlStyles();
             backdropElement.RegisterCallback<ClickEvent>(OnBackdropClicked);
 
             panelElement = UIToolkitExtensions.CreateVisualElement(PanelClass);
+            panelElement.ApplyControlStyles();
             panelElement.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
 
             viewportElement = UIToolkitExtensions.CreateVisualElement(panelElement, ViewportClass);

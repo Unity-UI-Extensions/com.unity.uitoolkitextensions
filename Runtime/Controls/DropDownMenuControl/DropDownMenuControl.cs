@@ -76,10 +76,14 @@ namespace UnityUIToolkit.Extensions
 
         public DropDownMenuControl()
         {
+            // The backdrop and panel attach to the panel root while open, outside any styled
+            // subtree, so they need the shared stylesheet attached directly.
             backdropElement = UIToolkitExtensions.CreateVisualElement(BackdropClass);
+            backdropElement.ApplyControlStyles();
             backdropElement.RegisterCallback<ClickEvent>(_ => Close());
 
             panelElement = UIToolkitExtensions.CreateVisualElement(PanelClass);
+            panelElement.ApplyControlStyles();
             panelElement.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
         }
 

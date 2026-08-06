@@ -26,6 +26,7 @@ namespace UnityUIToolkit.Extensions
 
         public GrayscaleImage()
         {
+            this.ApplyControlStyles();
             scaleModeValue = ScaleMode.ScaleToFit;
         }
 

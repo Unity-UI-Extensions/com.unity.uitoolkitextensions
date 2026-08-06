@@ -35,6 +35,7 @@ namespace UnityUIToolkit.Extensions
 
         public PillInputField()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             labelField = UIToolkitExtensions.CreateVisualElement<Label>(this, LabelClass);

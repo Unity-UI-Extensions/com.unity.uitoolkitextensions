@@ -62,6 +62,7 @@ namespace UnityUIToolkit.Extensions
 
         public SocialLinkContainer()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             labelField = UIToolkitExtensions.CreateVisualElement<Label>(this, LabelClass);

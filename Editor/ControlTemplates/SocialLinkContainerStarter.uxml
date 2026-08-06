@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <ui:VisualElement name="container" style="flex-grow: 1; align-items: center; padding-top: 64px;">
+        <ext:SocialLinkContainer label="Your Profiles" edit-mode="true" style="width: 320px;" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -31,6 +31,7 @@ namespace UnityUIToolkit.Extensions
 
         public ToggleButton()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             pickingMode = PickingMode.Position;

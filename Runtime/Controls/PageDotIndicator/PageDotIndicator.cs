@@ -29,6 +29,7 @@ namespace UnityUIToolkit.Extensions
 
         public PageDotIndicator()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
             dotsContainer = UIToolkitExtensions.CreateVisualElement(this, DotsContainerClass);
         }

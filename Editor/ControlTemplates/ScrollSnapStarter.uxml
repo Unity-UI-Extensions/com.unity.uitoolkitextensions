@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <ui:VisualElement name="container" style="flex-grow: 1;">
+        <ext:ScrollSnap manual-movement-enabled="true" style="flex-grow: 1;">
+            <ui:VisualElement style="justify-content: center; align-items: center; background-color: #4A90E2;">
+                <ui:Label text="Page 1" style="font-size: 32px; color: #FFFFFF;" />
+            </ui:VisualElement>
+            <ui:VisualElement style="justify-content: center; align-items: center; background-color: #7B68EE;">
+                <ui:Label text="Page 2" style="font-size: 32px; color: #FFFFFF;" />
+            </ui:VisualElement>
+            <ui:VisualElement style="justify-content: center; align-items: center; background-color: #4DD08C;">
+                <ui:Label text="Page 3" style="font-size: 32px; color: #FFFFFF;" />
+            </ui:VisualElement>
+        </ext:ScrollSnap>
+    </ui:VisualElement>
+</ui:UXML>

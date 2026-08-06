@@ -46,6 +46,7 @@ namespace UnityUIToolkit.Extensions
 
         public ScreenHeader()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             UIToolkitExtensions.CreateVisualElement(this, NotchSpacerClass);

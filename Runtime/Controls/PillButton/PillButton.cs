@@ -40,6 +40,7 @@ namespace UnityUIToolkit.Extensions
 
         public PillButton()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             background = UIToolkitExtensions.CreateVisualElement(this, BackgroundClass);

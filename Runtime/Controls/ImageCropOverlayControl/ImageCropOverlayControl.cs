@@ -147,6 +147,9 @@ namespace UnityUIToolkit.Extensions
             Action<Texture2D> onConfirmed,
             Action onCancelled)
         {
+            // The overlay attaches to the panel root, outside any styled subtree, so it needs
+            // the shared stylesheet attached directly.
+            this.ApplyControlStyles();
             this.sourceTexture = sourceTexture;
             this.configuration = configuration ?? new Configuration();
             this.onConfirmed = onConfirmed;
@@ -615,7 +618,7 @@ namespace UnityUIToolkit.Extensions
             {
                 if (destroySamplingTexture)
                 {
-                    UnityEngine.Object.Destroy(samplingTexture);
+                    UnityEngine.Object.DestroyImmediate(samplingTexture);
                 }
             }
 

@@ -27,6 +27,7 @@ namespace UnityUIToolkit.Extensions
 
         public StepProgressBar()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             backgroundBar = new VisualElement();
@@ -124,7 +125,7 @@ namespace UnityUIToolkit.Extensions
         {
             if (fillTexture != null)
             {
-                UnityEngine.Object.Destroy(fillTexture);
+                UnityEngine.Object.DestroyImmediate(fillTexture);
                 fillTexture = null;
             }
         }

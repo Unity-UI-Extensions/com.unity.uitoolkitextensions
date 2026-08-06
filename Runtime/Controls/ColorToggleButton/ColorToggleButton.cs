@@ -13,6 +13,7 @@ namespace UnityUIToolkit.Extensions
     [UxmlElement]
     public partial class ColorToggleButton : ToggleButton
     {
+        public const string ColorRootClass = "colorToggleButton";
         public const string IconClass = "toggleButton__icon";
         public const string RippleOverlayClass = "toggleButton__ripple";
         public const string RippleOverlayVisibleClass = "toggleButton__ripple--visible";
@@ -47,6 +48,8 @@ namespace UnityUIToolkit.Extensions
 
         public ColorToggleButton(Color tintColor, Color selectedTintColor)
         {
+            this.ApplyControlStyles();
+            AddToClassList(ColorRootClass);
             image.AddToClassList(IconClass);
 
             rippleOverlay = UIToolkitExtensions.CreateVisualElement(this, RippleOverlayClass);
@@ -66,14 +69,19 @@ namespace UnityUIToolkit.Extensions
         {
             tintColor = color;
             image.style.unityBackgroundImageTintColor = color;
+            // background-color fallback so the control renders without a texture assigned
+            image.style.backgroundColor = color;
         }
 
         public void SetSelectedTintColor(Color color)
         {
             selectedTintColor = color;
             selectedOverlay.style.unityBackgroundImageTintColor = color;
+            selectedOverlay.style.backgroundColor = color;
             rippleOverlay.style.unityBackgroundImageTintColor = color;
+            rippleOverlay.style.backgroundColor = color;
             rippleOverlaySecondary.style.unityBackgroundImageTintColor = color;
+            rippleOverlaySecondary.style.backgroundColor = color;
         }
 
         protected override void ApplySelectionState(bool selected)

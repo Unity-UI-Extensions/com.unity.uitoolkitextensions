@@ -24,6 +24,7 @@ namespace UnityUIToolkit.Extensions
 
         public LoadingIcon()
         {
+            this.ApplyControlStyles();
             pickingMode = PickingMode.Ignore;
             AddToClassList(RootClass);
 

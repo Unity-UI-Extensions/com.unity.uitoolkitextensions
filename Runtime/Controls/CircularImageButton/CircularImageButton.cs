@@ -29,6 +29,7 @@ namespace UnityUIToolkit.Extensions
 
         public CircularImageButton()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             focusable = true;

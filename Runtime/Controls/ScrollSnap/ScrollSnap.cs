@@ -162,6 +162,7 @@ namespace UnityUIToolkit.Extensions
 
 		public ScrollSnap()
 		{
+			this.ApplyControlStyles();
 			AddToClassList(RootClass);
 
 			// Custom viewport (replaces ScrollView) - clips overflow

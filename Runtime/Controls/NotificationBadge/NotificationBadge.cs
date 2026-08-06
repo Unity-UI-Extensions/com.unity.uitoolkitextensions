@@ -19,6 +19,7 @@ namespace UnityUIToolkit.Extensions
 
         public NotificationBadge()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             pickingMode = PickingMode.Position;

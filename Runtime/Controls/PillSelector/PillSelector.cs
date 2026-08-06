@@ -25,6 +25,7 @@ namespace UnityUIToolkit.Extensions
 
         public PillSelector()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             labelField = UIToolkitExtensions.CreateVisualElement<Label>(this, LabelClass);

@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <ui:VisualElement name="container" style="flex-grow: 1; align-items: center; justify-content: center;">
+        <ext:ColorToggleGroup alignment="Row" colors="#FF5A5A,#FFB13D,#4DD08C,#4D9FFF,#B36BFF" />
+    </ui:VisualElement>
+</ui:UXML>

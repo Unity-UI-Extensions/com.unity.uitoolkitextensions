@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <ui:VisualElement name="container" style="flex-grow: 1; align-items: center; justify-content: center;">
+        <ext:StepProgressBar current-steps="2" max-steps="4" inner-color="#4A90E2" outer-color="#7B68EE" style="width: 320px; height: 8px;" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -26,6 +26,7 @@ namespace UnityUIToolkit.Extensions
 
         public RoundedInputField()
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             var container = new VisualElement();

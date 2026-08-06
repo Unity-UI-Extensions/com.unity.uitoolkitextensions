@@ -12,6 +12,49 @@ namespace UnityUIToolkit.Extensions
     /// </summary>
     public static class UIToolkitExtensions
     {
+        private const string ControlStylesAssetPath = "Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss";
+
+        private static StyleSheet controlStyles;
+
+        /// <summary>
+        /// The shared stylesheet containing the default styles for all UI Toolkit Extensions controls.
+        /// Resolved via the AssetDatabase, so it is only available in the Editor (including Play Mode).
+        /// </summary>
+        public static StyleSheet ControlStyles
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (controlStyles == null)
+                {
+                    controlStyles = UnityEditor.AssetDatabase.LoadAssetAtPath<StyleSheet>(ControlStylesAssetPath);
+                }
+#endif
+                return controlStyles;
+            }
+        }
+
+        /// <summary>
+        /// Attaches the shared UI Toolkit Extensions stylesheet to an element, so controls render
+        /// correctly while authoring (UI Builder) and in Play Mode without requiring the stylesheet
+        /// to be referenced manually.
+        /// </summary>
+        /// <remarks>
+        /// This is an Editor-side convenience and does nothing in player builds. For builds, the
+        /// stylesheet is referenced explicitly by the starter templates via a UXML Style element,
+        /// and by the theme created by the "GameObject/UI Toolkit/Extensions" menu; code-first UI
+        /// should add the stylesheet to its panel theme or root element.
+        /// </remarks>
+        /// <param name="element">The element to attach the shared stylesheet to</param>
+        public static void ApplyControlStyles(this VisualElement element)
+        {
+            var styles = ControlStyles;
+            if (styles != null && !element.styleSheets.Contains(styles))
+            {
+                element.styleSheets.Add(styles);
+            }
+        }
+
         /// <summary>
         /// Creates a VisualElement with the specified CSS class names.
         /// </summary>
