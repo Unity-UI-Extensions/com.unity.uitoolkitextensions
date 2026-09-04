@@ -11,7 +11,7 @@
 [![Publish main branch and increment version](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/main-publish.yml/badge.svg)](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/main-publish.yml)
 [![Build and test UPM packages for platforms, all branches except main](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/development-buildandtestupmrelease.yml/badge.svg)](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/development-buildandtestupmrelease.yml)
 
-The UI Toolkit library of controls, components and other useful features for extending the UI Toolkit solution for Unity
+The UI Toolkit library of controls, components and other useful features for extending the UI Toolkit solution for Unity.
 
 ## Updates
 
