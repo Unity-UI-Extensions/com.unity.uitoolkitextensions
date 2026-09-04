@@ -1,0 +1,115 @@
+name: Publish main branch and increment version
+
+# Runs when a pull request into main is merged. The PR title selects the release type:
+#   - contains "no-ver"        - tag the version already in package.json, no bump
+#   - contains "major-release" - bump major            (1.x.x  -> 2.0.0)
+#   - contains "minor-release" - bump minor            (1.0.x  -> 1.1.0)
+#   - anything else            - patch release: strip the pre-release suffix (1.0.0-pre.1 -> 1.0.0),
+#                                or bump patch if there is no suffix (1.0.0 -> 1.0.1)
+#
+# After tagging, development is refreshed from main and moved to the next pre-release (1.0.1-pre.1).
+#
+# All commits and tags are pushed by the ui-extensions-bot GitHub App using the org secrets
+# RELEASE_APP_CLIENT_ID and RELEASE_APP_PRIVATE_KEY. No personal access token is involved.
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.pull_request.base.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Read the version to tag when the PR title contains "no-ver" (no version bump)
+  validate-environment:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.title, 'no-ver')
+    name: Get version from UPM package
+    uses: ./.github/workflows/getpackageversionfrompackage.yml
+    with:
+      build-host: ubuntu-latest
+      target-branch: ${{ github.event.pull_request.base.ref }}
+
+  release-package-only:
+    needs: validate-environment
+    name: Release package only, no upversion
+    uses: ./.github/workflows/tagrelease.yml
+    with:
+      build-host: ubuntu-latest
+      target-branch: ${{ github.event.pull_request.base.ref }}
+      version: ${{ needs.validate-environment.outputs.packageversion }}
+    secrets: inherit
+
+  upversion-major-package:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.title, 'no-ver') == false && contains(github.event.pull_request.title, 'major-release')
+    name: Major version package and release
+    uses: ./.github/workflows/upversionandtagrelease.yml
+    with:
+      build-host: ubuntu-latest
+      build-type: major
+      target-branch: ${{ github.event.pull_request.base.ref }}
+    secrets: inherit
+
+  upversion-minor-package:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.title, 'no-ver') == false && contains(github.event.pull_request.title, 'minor-release')
+    name: Minor version package and release
+    uses: ./.github/workflows/upversionandtagrelease.yml
+    with:
+      build-host: ubuntu-latest
+      build-type: minor
+      target-branch: ${{ github.event.pull_request.base.ref }}
+    secrets: inherit
+
+  # Default path when no release keyword is in the PR title
+  upversion-patch-package:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.title, 'no-ver') == false && contains(github.event.pull_request.title, 'minor-release') == false && contains(github.event.pull_request.title, 'major-release') == false
+    name: Patch version package and release
+    uses: ./.github/workflows/upversionandtagrelease.yml
+    with:
+      build-host: ubuntu-latest
+      build-type: patch-release
+      target-branch: ${{ github.event.pull_request.base.ref }}
+    secrets: inherit
+
+  release-complete:
+    # Runs only for a merged PR and only if no release job failed. The release jobs that did not
+    # match the PR title are skipped, which is fine. A real failure skips this job so the
+    # development refresh never runs from a half-finished release.
+    if: ${{ github.event.pull_request.merged == true && !failure() && !cancelled() }}
+    needs: [upversion-major-package, upversion-minor-package, upversion-patch-package, release-package-only]
+    name: Release complete
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release done
+        run: echo "Release done, refreshing development"
+
+  # Merge the released main branch back into development
+  refresh-development:
+    if: ${{ needs.release-complete.result == 'success' }}
+    needs: [release-complete]
+    name: Refresh development branch
+    uses: ./.github/workflows/refreshbranch.yml
+    with:
+      build-host: ubuntu-latest
+      target-branch: development
+      source-branch: ${{ github.event.pull_request.base.ref }}
+    secrets: inherit
+
+  # Move development to the next pre-release version, no tag
+  upversion-development:
+    if: ${{ needs.refresh-development.result == 'success' }}
+    needs: [refresh-development]
+    name: Upversion the development branch for the next release
+    uses: ./.github/workflows/upversionandtagrelease.yml
+    with:
+      build-host: ubuntu-latest
+      build-type: patch-pre
+      target-branch: development
+      createTag: false
+    secrets: inherit

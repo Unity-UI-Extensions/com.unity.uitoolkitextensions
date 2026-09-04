@@ -2,9 +2,8 @@
 
 The UI Toolkit library of controls, components and other useful features for extending the UI Toolkit solution for Unity
 
-<!-- [![openupm](https://img.shields.io/npm/v/com.unity.uitoolkitextensions?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.unity.uitoolkitextensions/)
+<!-- [![openupm](https://img.shields.io/npm/v/com.unity.uitoolkitextensions?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.unity.uitoolkitextensions/) -->
 [![Publish main branch and increment version](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/main-publish.yml/badge.svg)](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/main-publish.yml)
-[![Publish development branch on Merge](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/development-publish.yml/badge.svg)](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/development-publish.yml) -->
 [![Build and test UPM packages for platforms, all branches except main](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/development-buildandtestupmrelease.yml/badge.svg)](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/development-buildandtestupmrelease.yml)
 
 ## Updates

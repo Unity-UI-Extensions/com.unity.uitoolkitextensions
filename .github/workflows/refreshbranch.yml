@@ -1,0 +1,71 @@
+name: Refresh branch
+
+# Merges one branch into another and pushes the result. Used after a release to bring
+# the version bump on main back into development.
+
+on:
+  workflow_call:
+    inputs:
+      build-host:
+        required: true
+        type: string
+      target-branch:
+        description: Branch that receives the merge, for example development
+        required: true
+        type: string
+      source-branch:
+        description: Branch merged into the target, for example main
+        required: true
+        type: string
+    secrets:
+      RELEASE_APP_CLIENT_ID:
+        required: true
+      RELEASE_APP_PRIVATE_KEY:
+        required: true
+
+jobs:
+  refreshBranch:
+    name: Refresh ${{ inputs.target-branch }} from ${{ inputs.source-branch }}
+    runs-on: ${{ inputs.build-host }}
+    steps:
+      - name: Create release App token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Get App bot user id
+        id: bot
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: echo "id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.target-branch }}
+          fetch-depth: 0
+          clean: true
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure git identity
+        shell: bash
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          BOT_ID: ${{ steps.bot.outputs.id }}
+        run: |
+          git config --global user.name "${APP_SLUG}[bot]"
+          git config --global user.email "${BOT_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+      - name: Merge source branch into target branch
+        shell: bash
+        env:
+          TARGET_BRANCH: ${{ inputs.target-branch }}
+          SOURCE_BRANCH: ${{ inputs.source-branch }}
+        run: |
+          git fetch origin "$SOURCE_BRANCH"
+          git merge --no-edit -m "Refresh $TARGET_BRANCH from $SOURCE_BRANCH [skip ci]" FETCH_HEAD
+          git push origin "HEAD:$TARGET_BRANCH"
+          echo "Branch $TARGET_BRANCH updated with changes from $SOURCE_BRANCH"

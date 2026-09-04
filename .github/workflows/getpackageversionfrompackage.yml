@@ -1,0 +1,51 @@
+name: Get the package version from a UPM package.json file
+
+on:
+  workflow_call:
+    inputs:
+      build-host:
+        required: true
+        type: string
+      target-branch:
+        description: Branch to read package.json from. Defaults to the triggering ref.
+        required: false
+        type: string
+        default: ${{ github.ref }}
+      version-file-path:
+        description: Optional path to the package.json to read. Defaults to package.json in the repo root.
+        required: false
+        type: string
+        default: package.json
+    outputs:
+      packageversion:
+        description: The version field of the UPM package
+        value: ${{ jobs.get_package_version.outputs.upmpackageversion }}
+
+jobs:
+  get_package_version:
+    name: Get package version from UPM package
+    runs-on: ${{ inputs.build-host }}
+    outputs:
+      upmpackageversion: ${{ steps.getVersion.outputs.packageversion }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.target-branch }}
+
+      - id: getVersion
+        name: Read package version
+        shell: bash
+        env:
+          VERSION_FILE: ${{ inputs.version-file-path }}
+        run: |
+          if [ ! -f "$VERSION_FILE" ]; then
+            echo "::error::No package.json found at $VERSION_FILE"
+            exit 1
+          fi
+          version=$(jq -r '.version // empty' "$VERSION_FILE")
+          if [ -z "$version" ]; then
+            echo "::error::package.json at $VERSION_FILE has no version"
+            exit 1
+          fi
+          echo "Detected package version $version"
+          echo "packageversion=$version" >> "$GITHUB_OUTPUT"
