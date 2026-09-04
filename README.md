@@ -1,10 +1,17 @@
-# Unity UI Toolkit Extensions README
+<!-- markdownlint-disable MD033 MD041 -->
+<p align="center">
+  <a href="https://unity-ui-extensions.github.io/uitoolkit/" title="Unity UI Toolkit Extensions">
+    <img src="https://raw.githubusercontent.com/Unity-UI-Extensions/Unity-UI-Extensions.GitHub.io/refs/heads/main/assets/img/presskit/unity-store-hero-uitoolkit.svg" alt="Unity UI Toolkit Extensions" width="800">
+  </a>
+</p>
 
-The UI Toolkit library of controls, components and other useful features for extending the UI Toolkit solution for Unity
+# Unity UI Toolkit Extensions
 
-<!-- [![openupm](https://img.shields.io/npm/v/com.unity.uitoolkitextensions?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.unity.uitoolkitextensions/) -->
+[![openupm](https://img.shields.io/npm/v/com.unity.uitoolkitextensions?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.unity.uitoolkitextensions/)
 [![Publish main branch and increment version](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/main-publish.yml/badge.svg)](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/main-publish.yml)
 [![Build and test UPM packages for platforms, all branches except main](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/development-buildandtestupmrelease.yml/badge.svg)](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/actions/workflows/development-buildandtestupmrelease.yml)
+
+The UI Toolkit library of controls, components and other useful features for extending the UI Toolkit solution for Unity
 
 ## Updates
 
@@ -39,20 +46,22 @@ All funds go to support the project, no matter the amount. **Donations in code a
 
 -----
 
-## [Getting Started](#getting-started)
+## [Getting Started](https://unity-ui-extensions.github.io/uitoolkit/)
 
-Coming Soon.
+1. Install the package, see [How do I get set up?](#how-do-i-get-set-up) below.
+2. Open the Package Manager window, select **Unity UI Toolkit Extensions** and import the **UI Toolkit Extensions Samples** from the Samples tab to get the example scenes.
+3. Browse the [UI Toolkit Extensions documentation](https://unity-ui-extensions.github.io/uitoolkit/) for control guides, API references and code examples.
 
 -----
 
 ## [Controls and extensions listed in this project](https://unity-ui-extensions.github.io/uitoolkit/#controls)
 
-The package ships **25 controls** across navigation, layout, forms, media, toggles and feedback, plus reusable utilities, and **12 ready-to-run sample scenes** — all using the `Unity.UI.Extensions` namespace.
+The package ships **25 controls** across navigation, layout, forms, media, toggles and feedback, plus reusable utilities, and **12 ready-to-run sample scenes**. Everything lives in the `Unity.UI.Extensions` namespace.
 
 Browse the full, searchable list with API references and code examples:
 
-- **[Controls →](https://unity-ui-extensions.github.io/uitoolkit/#controls)**
-- **[Example scenes →](https://unity-ui-extensions.github.io/uitoolkit/examples/)**
+- **[Controls](https://unity-ui-extensions.github.io/uitoolkit/#controls)**
+- **[Example scenes](https://unity-ui-extensions.github.io/uitoolkit/examples/)**
 
 See the [CHANGELOG](./CHANGELOG.md) for the complete control and example breakdown.
 
@@ -64,10 +73,8 @@ The recommended way to add the Unity UI Toolkit Extensions project to your solut
 
 The primary method for install is to use OpenUPM to add the package, it can be installed using the following [OpenUPM CLI](https://openupm.com/docs/) command:
 
-> Coming Soon!
-
-```cli
-`openupm add com.unity.uitoolkitextensions`
+```shell
+openupm add com.unity.uitoolkitextensions
 ```
 
 > For more details on using [OpenUPM CLI, check the docs here](https://github.com/openupm/openupm-cli#installation).
@@ -91,9 +98,9 @@ Just ensure:
 - The script uses the **Unity.UI.Extensions** namespace so they do not affect any other developments.
 - (optional) Add Component and Editor options where possible. (editor options are in the Editor\UIToolkitExtensionsMenuOptions.cs file)
 
-## [License](https://raw.githubusercontent.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/release/LICENSE.md)
+## [License](./LICENSE)
 
-All scripts conform to the MIT license and are free to use / distribute.  See the [LICENSE](https://raw.githubusercontent.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/release/LICENSE.md) file for more information =
+All scripts conform to the MIT license and are free to use / distribute.  See the [LICENSE](./LICENSE) file for more information.
 
 ## [Like what you see?](https://unity-ui-extensions.github.io/FurtherInfo)
 
