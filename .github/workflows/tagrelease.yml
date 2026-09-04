@@ -1,0 +1,85 @@
+name: Tag Release
+
+# Tags the head of a branch with v<version> without changing package.json.
+# Called by main-publish for PRs whose title contains "no-ver".
+
+on:
+  workflow_call:
+    inputs:
+      build-host:
+        required: true
+        type: string
+      version:
+        description: Version to tag, without the leading v. Must match package.json.
+        required: true
+        type: string
+      target-branch:
+        description: Branch whose head is tagged. Defaults to the triggering ref.
+        required: false
+        type: string
+        default: ${{ github.ref }}
+    secrets:
+      RELEASE_APP_CLIENT_ID:
+        required: true
+      RELEASE_APP_PRIVATE_KEY:
+        required: true
+
+jobs:
+  packageRelease:
+    name: Tag UPM package release
+    runs-on: ${{ inputs.build-host }}
+    steps:
+      - name: Create release App token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Get App bot user id
+        id: bot
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: echo "id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.target-branch }}
+          fetch-depth: 0
+          clean: true
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure git identity
+        shell: bash
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          BOT_ID: ${{ steps.bot.outputs.id }}
+        run: |
+          git config --global user.name "${APP_SLUG}[bot]"
+          git config --global user.email "${BOT_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+      - name: Check if tag exists
+        shell: pwsh
+        env:
+          TAG_NAME: v${{ inputs.version }}
+        run: |
+          if (git tag --list $env:TAG_NAME) {
+            Write-Error "$env:TAG_NAME tag already exists"
+            exit 1
+          }
+          Write-Host "$env:TAG_NAME is available"
+
+      - name: Create tag and push
+        shell: pwsh
+        env:
+          TAG_NAME: v${{ inputs.version }}
+        run: |
+          git tag -a $env:TAG_NAME -m "$env:TAG_NAME Release [skip ci]"
+          git push origin $env:TAG_NAME
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to push tag $env:TAG_NAME"
+            exit 1
+          }
+          Write-Host "Tagged $(git rev-parse --short HEAD) as $env:TAG_NAME"

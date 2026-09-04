@@ -1,0 +1,173 @@
+name: UpVersion UPM package and create release tag
+
+# Bumps the version in package.json on a branch, commits and pushes the bump, and optionally tags it.
+# Called by main-publish for the release itself (on main) and for the follow-up bump on development.
+
+on:
+  workflow_call:
+    inputs:
+      build-host:
+        required: true
+        type: string
+      build-type:
+        description: |
+          How to change the version in package.json. One of:
+            build         - 1.0.0-pre.1+1  increment build metadata
+            pre-release   - 1.0.0-pre.2    increment the pre-release number
+            patch-release - 1.0.0          strip the pre-release suffix, or bump patch if there is none
+            patch         - 1.0.1          bump patch
+            patch-pre     - 1.0.1-pre.1    bump patch and start a new pre-release
+            minor         - 1.1.0          bump minor
+            major         - 2.0.0          bump major
+        required: false
+        default: pre-release
+        type: string
+      target-branch:
+        description: Branch name to bump and push. Must be a branch name such as main or development.
+        required: false
+        type: string
+        default: ${{ github.ref }}
+      createTag:
+        description: Tag the bump commit as v<version> and push the tag.
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      packageversion:
+        description: The new version written to package.json
+        value: ${{ jobs.packageRelease.outputs.packageversion }}
+    secrets:
+      RELEASE_APP_CLIENT_ID:
+        required: true
+      RELEASE_APP_PRIVATE_KEY:
+        required: true
+
+jobs:
+  packageRelease:
+    name: Bump UPM package version and tag
+    runs-on: ${{ inputs.build-host }}
+    outputs:
+      packageversion: ${{ steps.getpackageversion.outputs.packageversion }}
+    steps:
+      - name: Create release App token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Get App bot user id
+        id: bot
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: echo "id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.target-branch }}
+          fetch-depth: 0
+          clean: true
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure git identity
+        shell: bash
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          BOT_ID: ${{ steps.bot.outputs.id }}
+        run: |
+          git config --global user.name "${APP_SLUG}[bot]"
+          git config --global user.email "${BOT_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+      - id: getpackageversion
+        name: Bump UPM package version
+        shell: pwsh
+        env:
+          BUILD_TYPE: ${{ inputs.build-type }}
+          TARGET_BRANCH: ${{ inputs.target-branch }}
+        run: |
+          $packageFile = 'package.json'
+          if (-not (Test-Path $packageFile)) {
+            Write-Error "No package.json found at $packageFile"
+            exit 1
+          }
+
+          $content = Get-Content $packageFile -Raw
+          $packageInfo = $content | ConvertFrom-Json
+          $current = [System.Management.Automation.SemanticVersion]$packageInfo.version
+          Write-Host "Current package version: $current"
+
+          $major = $current.Major
+          $minor = $current.Minor
+          $patch = $current.Patch
+          $preLabel = $current.PreReleaseLabel
+          $preNumber = if ($preLabel) { [int]($preLabel -replace '^pre\.', '') } else { 0 }
+          $build = if ($current.BuildLabel) { [int]$current.BuildLabel } else { 0 }
+
+          $semver = [System.Management.Automation.SemanticVersion]
+          switch ($env:BUILD_TYPE) {
+            'build'         { $new = $semver::new($major, $minor, $patch, $preLabel, "$($build + 1)") }
+            'pre-release'   { $new = $semver::new($major, $minor, $patch, "pre.$($preNumber + 1)") }
+            'patch-release' {
+              if ($preLabel) { $new = $semver::new($major, $minor, $patch) }
+              else           { $new = $semver::new($major, $minor, $patch + 1) }
+            }
+            'patch'         { $new = $semver::new($major, $minor, $patch + 1) }
+            'patch-pre'     { $new = $semver::new($major, $minor, $patch + 1, 'pre.1') }
+            'minor'         { $new = $semver::new($major, $minor + 1, 0) }
+            'major'         { $new = $semver::new($major + 1, 0, 0) }
+            default {
+              Write-Error "Unknown build-type '$env:BUILD_TYPE'"
+              exit 1
+            }
+          }
+
+          $newVersion = $new.ToString()
+          Write-Host "Upgrading package version [$current] to [$newVersion]"
+
+          # Replace only the top-level version field so the rest of package.json keeps its formatting
+          $pattern = [regex]'"version"\s*:\s*"[^"]*"'
+          $updated = $pattern.Replace($content, ('"version": "' + $newVersion + '"'), 1)
+          [System.IO.File]::WriteAllText((Resolve-Path $packageFile).Path, $updated)
+
+          if (git status --porcelain -- $packageFile) {
+            git add $packageFile
+            git commit -m "Auto increment package version to $newVersion [skip ci]"
+            git push origin "HEAD:$env:TARGET_BRANCH"
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Failed to push version bump to $env:TARGET_BRANCH"
+              exit 1
+            }
+          }
+          else {
+            Write-Host "package.json already at $newVersion, nothing to commit"
+          }
+
+          "packageversion=$newVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        if: ${{ inputs.createTag == true }}
+        shell: pwsh
+        env:
+          TAG_NAME: v${{ steps.getpackageversion.outputs.packageversion }}
+        run: |
+          if (git tag --list $env:TAG_NAME) {
+            Write-Error "$env:TAG_NAME tag already exists"
+            exit 1
+          }
+          Write-Host "$env:TAG_NAME is available"
+
+      - name: Publish package tag
+        if: ${{ inputs.createTag == true }}
+        shell: pwsh
+        env:
+          TAG_NAME: v${{ steps.getpackageversion.outputs.packageversion }}
+        run: |
+          git tag -a $env:TAG_NAME -m "$env:TAG_NAME Release"
+          git push origin $env:TAG_NAME
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to push tag $env:TAG_NAME"
+            exit 1
+          }
+          Write-Host "Tagged $(git rev-parse --short HEAD) as $env:TAG_NAME"
