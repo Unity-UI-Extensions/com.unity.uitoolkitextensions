@@ -1,7 +1,7 @@
 {
   "name": "com.unity.uitoolkitextensions",
   "displayName": "Unity UI Toolkit Extensions",
-  "version": "1.0.0-pre.1",
+  "version": "1.0.0",
   "description": "An extension project for the Unity3D UI Toolkit system, all crafted and contributed by the awesome Unity community",
   "author": "Simon darkside Jackson <@SimonDarksideJ>",
   "contributors": [
