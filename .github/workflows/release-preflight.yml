@@ -42,14 +42,22 @@ jobs:
           echo "Repository permissions block as seen by the token (all false for an installation token, not meaningful): $(gh api "repos/$GITHUB_REPOSITORY" --jq '.permissions // "absent"')"
 
           # The repository object's permissions block describes a user, so it cannot test an App token.
-          # A dry-run push exercises write access on the server without writing anything. The empty
-          # extraheader first clears any Authorization header left in the repo config, so only the App
-          # token is sent. Two Authorization headers make GitHub answer 400 before checking permissions.
+          # A dry-run push exercises write access on the server without writing anything. It targets a
+          # branch name that does not exist, because the runner has a shallow checkout and a push to an
+          # existing branch fails the client-side fast-forward check before proving anything. The empty
+          # extraheader clears any Authorization header left in the repo config so only the App token is sent.
           auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)
-          if git -c "http.https://github.com/.extraheader=" -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push --dry-run "https://github.com/$GITHUB_REPOSITORY.git" "HEAD:refs/heads/$TARGET_BRANCH"; then
-            echo "App $APP_SLUG can push to $GITHUB_REPOSITORY ($TARGET_BRANCH)"
+          probe_ref="refs/heads/preflight-probe-$GITHUB_RUN_ID"
+          if output=$(git -c "http.https://github.com/.extraheader=" -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push --dry-run "https://github.com/$GITHUB_REPOSITORY.git" "HEAD:$probe_ref" 2>&1); then
+            echo "$output"
+            echo "App $APP_SLUG can push to $GITHUB_REPOSITORY. Releases will be pushed to $TARGET_BRANCH."
           else
-            echo "::error::App $APP_SLUG cannot push to $GITHUB_REPOSITORY. Check the App installation covers this repository and has Contents read and write."
+            echo "$output"
+            if echo "$output" | grep -qE "403|not granted|Permission"; then
+              echo "::error::GitHub refused write access for App $APP_SLUG on $GITHUB_REPOSITORY. Check the App installation covers this repository and has Contents read and write."
+            else
+              echo "::error::The push probe failed for a reason other than permissions. See the git output above."
+            fi
             exit 1
           fi
 
