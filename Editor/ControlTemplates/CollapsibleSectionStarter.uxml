@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Editor/ControlTemplates/StarterTemplateStyles.uss" />
+    <ui:VisualElement name="container" style="flex-grow: 1; align-items: center; padding-top: 64px;">
+        <ext:CollapsibleSection title-text="Section Title" body-text="Collapsible body content goes here." style="width: 320px;" />
+    </ui:VisualElement>
+</ui:UXML>

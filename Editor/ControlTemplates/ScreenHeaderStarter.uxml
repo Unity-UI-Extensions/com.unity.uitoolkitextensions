@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions" editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss" />
+    <Style src="project://database/Packages/com.unity.uitoolkitextensions/Editor/ControlTemplates/StarterTemplateStyles.uss" />
+    <ui:VisualElement name="container" style="flex-grow: 1;">
+        <ext:ScreenHeader class="screenHeaderStarter" title="My Screen" show-action1="true" show-action2="false" show-action3="true" show-action4-toggle="true" />
+    </ui:VisualElement>
+</ui:UXML>

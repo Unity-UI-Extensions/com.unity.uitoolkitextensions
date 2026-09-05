@@ -1,4 +1,4 @@
-/// Credit SimonDarksideJ  
+/// Credit SimonDarksideJ
 
 using System;
 using System.Threading.Tasks;
@@ -83,21 +83,29 @@ namespace UnityUIToolkit.Extensions
 
 		public event Action<int> PageChanged;
 
-		/// <summary>Fired immediately when a swipe gesture is detected, before validation runs.
-		/// targetPage is the page the user is attempting to reach; moveAllowed indicates whether
-		/// the current validation state permits movement in that direction.</summary>
+		/// <summary>
+		/// Fired immediately when a swipe gesture is detected, before validation runs.
+		/// The target is the page the user is attempting to reach; moveAllowed indicates whether the current validation state permits movement in that direction.
+		/// </summary>
 		public event Action<int, bool> OnPageStartChange;
 
-		/// <summary>Fired when a swipe gesture is blocked and the control snaps back to the
-		/// current page. Use this to show on-screen feedback explaining the restriction.</summary>
+		/// <summary>
+		/// Fired when a swipe gesture is blocked and the control snaps back to the current page. Use this to show on-screen feedback explaining the restriction.
+		/// </summary>
 		public event Action<int> OnPageChangeRestricted;
 
-		/// <summary>Optional async validation callback. Return true to allow the page transition,
+		/// <summary>
+		/// Optional async validation callback. Return true to allow the page transition,
 		/// false to block it. While the callback is pending, further swipe gestures are ignored.
-		/// Only invoked when ValidatePageChange is true and the CanMove flags permit movement.</summary>
+		/// Only invoked when ValidatePageChange is true and the CanMove flags permit movement.
+		/// </summary>
 		public Func<int, Task<bool>> OnValidatePageTransition;
 
-		[System.Diagnostics.Conditional("SCROLLSNAP_DEBUG")]
+		/// <summary>
+		/// Basic debugging functionality, locked behind the `DEBUG` conditional so that it is not included in production builds.  Tagged so it is easily identifiable in logs.
+		/// </summary>
+		/// <param name="message"></param>
+		[System.Diagnostics.Conditional("DEBUG")]
 		private static void DebugLog(string message)
 		{
 			Debug.Log($"[ScrollSnap] {message}");
@@ -154,6 +162,7 @@ namespace UnityUIToolkit.Extensions
 
 		public ScrollSnap()
 		{
+			this.ApplyControlStyles();
 			AddToClassList(RootClass);
 
 			// Custom viewport (replaces ScrollView) - clips overflow
@@ -209,7 +218,7 @@ namespace UnityUIToolkit.Extensions
 
 		/// <summary>
 		/// Explicit page size in pixels (width for Horizontal, height for Vertical).
-		/// Set to &lt;= 0 to use the control's resolved width/height.
+		/// Set to less than 0 to use the control's resolved width/height.
 		/// </summary>
 		[UxmlAttribute("page-size")]
 		public float PageSize
@@ -232,8 +241,7 @@ namespace UnityUIToolkit.Extensions
 
 		/// <summary>
 		/// When true, a swipe can move at most one page regardless of swipe distance or speed.
-		/// The page will resist movement beyond the adjacent page boundary (with a small tolerance)
-		/// and snap back if the user exceeds it. Default: true.
+		/// The page will resist movement beyond the adjacent page boundary (with a small tolerance) and snap back if the user exceeds it. Default: true.
 		/// </summary>
 		[UxmlAttribute("only-single-page-swipe-allowed")]
 		public bool OnlySinglePageSwipeAllowed
@@ -257,8 +265,7 @@ namespace UnityUIToolkit.Extensions
 
 		/// <summary>
 		/// Controls whether the user may swipe forward to the next page when
-		/// <see cref="ValidatePageChange"/> is true. Automatically reset to false when the
-		/// current page index changes. Set to true externally to permit the next forward swipe.
+		/// <see cref="ValidatePageChange"/> is true. Automatically reset to false when the current page index changes. Set to true externally to permit the next forward swipe.
 		/// Default: true (permits movement until validation resets it).
 		/// </summary>
 		public bool CanMoveNextPage
@@ -268,9 +275,8 @@ namespace UnityUIToolkit.Extensions
 		}
 
 		/// <summary>
-		/// Controls whether the user may swipe backward to the previous page when
-		/// <see cref="ValidatePageChange"/> is true. Mirrors <see cref="CanMoveNextPage"/> for
-		/// backward gestures. Default: true.
+		/// Controls whether the user may swipe backward to the previous page when <see cref="ValidatePageChange"/> is true.
+		/// Mirrors <see cref="CanMoveNextPage"/> for backward gestures. Default: true.
 		/// </summary>
 		public bool CanMoveBackPage
 		{
@@ -279,9 +285,8 @@ namespace UnityUIToolkit.Extensions
 		}
 
 		/// <summary>
-		/// When false and <see cref="ValidatePageChange"/> is true, backward swipes are treated
-		/// the same as a blocked forward swipe: the user sees a preview drag up to
-		/// <see cref="ValidationDragLimit"/> and the control snaps back on release.
+		/// When false and <see cref="ValidatePageChange"/> is true, backward swipes are treated the same as a blocked forward swipe:
+		/// the user sees a preview drag up to <see cref="ValidationDragLimit"/> and the control snaps back on release.
 		/// Default: true.
 		/// </summary>
 		[UxmlAttribute("allow-move-back")]
@@ -292,10 +297,8 @@ namespace UnityUIToolkit.Extensions
 		}
 
 		/// <summary>
-		/// The maximum fraction of the page size (0–1) that a blocked drag can travel before
-		/// the offset is clamped. Provides tactile preview feedback. Default: 0.2 (20%).
-		/// Can be overridden per-element via USS: <c>--scrollsnap-validation-drag-limit: 30px;</c>
-		/// (interpreted as a fraction of page size when value &lt;= 1, or as raw pixels when &gt; 1).
+		/// The maximum fraction of the page size (0–1) that a blocked drag can travel before the offset is clamped. Provides tactile preview feedback. Default: 0.2 (20%).
+		/// Can be overridden per-element via USS: <c>--scrollsnap-validation-drag-limit: 30px;</c> (interpreted as a fraction of page size when value &lt;= 1, or as raw pixels when &gt; 1).
 		/// </summary>
 		[UxmlAttribute("validation-drag-limit")]
 		public float ValidationDragLimit
@@ -310,16 +313,17 @@ namespace UnityUIToolkit.Extensions
 		/// </summary>
 		public bool IsValidatingPageChange => isValidatingPageChange;
 
-		/// <summary>
-		/// Padding/gap around each page (in pixels). This is applied as margins on the page,
-		/// while the page's size is reduced so the overall snap stride stays equal to PageSize.
-		///
-		/// USS custom properties (numbers, pixels):
-		/// - --scrollsnap-page-padding-left
-		/// - --scrollsnap-page-padding-right
-		/// - --scrollsnap-page-padding-top
-		/// - --scrollsnap-page-padding-bottom
-		/// </summary>
+		/*
+		 Padding/gap around each page (in pixels). This is applied as margins on the page,
+		 while the page's size is reduced so the overall snap stride stays equal to PageSize.
+		
+		 USS custom properties (numbers, pixels):
+		 - --scrollsnap-page-padding-left
+		 - --scrollsnap-page-padding-right
+		 - --scrollsnap-page-padding-top
+		 - --scrollsnap-page-padding-bottom
+		*/
+
 		[UxmlAttribute("page-padding-left")]
 		public float PagePaddingLeft
 		{
@@ -368,16 +372,22 @@ namespace UnityUIToolkit.Extensions
 
 		public int CurrentPageIndex { get; private set; }
 
-		/// <summary>Moves to the next page. If <see cref="ValidatePageChange"/> is active,
-		/// <see cref="CanMoveNextPage"/> must be true unless <paramref name="force"/> is true.</summary>
+		/// <summary>
+		/// Moves to the next page. If <see cref="ValidatePageChange"/> is active,
+		/// <see cref="CanMoveNextPage"/> must be true unless <paramref name="force"/> is true.
+		/// </summary>
 		public void MoveNext(bool animate = true, bool force = false) => GoToPage(CurrentPageIndex + 1, animate, force);
 
-		/// <summary>Moves to the previous page. If <see cref="ValidatePageChange"/> is active,
-		/// <see cref="AllowMoveBack"/> and <see cref="CanMoveBackPage"/> must be true unless <paramref name="force"/> is true.</summary>
+		/// <summary>
+		/// Moves to the previous page. If <see cref="ValidatePageChange"/> is active,
+		/// <see cref="AllowMoveBack"/> and <see cref="CanMoveBackPage"/> must be true unless <paramref name="force"/> is true.
+		/// </summary>
 		public void MovePrevious(bool animate = true, bool force = false) => GoToPage(CurrentPageIndex - 1, animate, force);
 
-		/// <summary>Navigates to the specified page.
-		/// <paramref name="force"/> bypasses all validation checks and moves immediately.</summary>
+		/// <summary>
+		/// Navigates to the specified page.
+		/// <paramref name="force"/> bypasses all validation checks and moves immediately.
+		/// </summary>
 		public void GoToPage(int index, bool animate = true, bool force = false)
 		{
 			GoToPageInternal(index, animate, force, onCompleted: null);
@@ -410,7 +420,6 @@ namespace UnityUIToolkit.Extensions
 				OnPageStartChange?.Invoke(clamped, moveAllowed);
 			}
 
-			// Validation gate for non-forced programmatic calls.
 			if (!force && validatePageChange && isStateChange)
 			{
 				var isForward = clamped > CurrentPageIndex;
@@ -521,7 +530,6 @@ namespace UnityUIToolkit.Extensions
 
 			CurrentPageIndex = index;
 
-			// Reset validation flags so the host must re-enable movement for the next transition.
 			if (validatePageChange)
 			{
 				canMoveNextPage = false;
@@ -635,8 +643,6 @@ namespace UnityUIToolkit.Extensions
 			var padX = padLeft + padRight;
 			var padY = padTop + padBottom;
 
-			// When we apply margins to create gaps, we reduce the page size so that
-			// (width/height + margins) still equals the snap stride (pageSize).
 			var innerPrimary = hasPageSize
 				? Mathf.Max(0f, pageSize - (orientation == ScrollSnapOrientation.Horizontal ? padX : padY))
 				: 0f;
@@ -648,7 +654,6 @@ namespace UnityUIToolkit.Extensions
 			foreach (var child in content.Children())
 			{
 				child.AddToClassList(PageClass);
-				// Pages are page-sized; prevent primary-axis flex growth from overriding width/height.
 				child.style.flexGrow = 0;
 				child.style.flexShrink = 0;
 
@@ -659,9 +664,7 @@ namespace UnityUIToolkit.Extensions
 
 				if (orientation == ScrollSnapOrientation.Horizontal)
 				{
-					// If layout hasn't resolved yet, use percentage sizing so each page still occupies the viewport.
 					child.style.width = hasPageSize ? innerPrimary : new Length(100, LengthUnit.Percent);
-					// Use resolved height when available so margins don't cause overflow.
 					child.style.height = innerCross > 0f ? innerCross : new Length(100, LengthUnit.Percent);
 				}
 				else
@@ -701,14 +704,13 @@ namespace UnityUIToolkit.Extensions
 		{
 			if (evt.customStyle.TryGetValue(EasingStyleProperty, out var easingName))
 			{
-				easingCurve = ResolveEasing(easingName);
+				easingCurve = Ease.ResolveEasing(easingName);
 			}
 			else
 			{
 				easingCurve = Ease.Linear;
 			}
 
-			// Page padding (gap) via USS custom properties.
 			if (evt.customStyle.TryGetValue(PagePaddingLeftStyleProperty, out var left))
 			{
 				pagePaddingLeft = Mathf.Max(0f, ParsePixels(left));
@@ -727,14 +729,12 @@ namespace UnityUIToolkit.Extensions
 			}
 
 			// Validation drag limit via USS custom property.
-			// Value is treated as a fraction (0-1) of page size when <= 1, or as raw pixels
-			// that are converted to a fraction at drag time.
+			// Value is treated as a fraction (0-1) of page size when <= 1, or as raw pixels that are converted to a fraction at drag time.
 			if (evt.customStyle.TryGetValue(ValidationDragLimitStyleProperty, out var dragLimitStr))
 			{
 				var parsed = ParsePixels(dragLimitStr);
 				if (parsed > 0f)
 				{
-					// Store as fraction when <= 1, otherwise store raw px to be resolved at drag time.
 					validationDragLimit = parsed <= 1f ? parsed : parsed;
 				}
 			}
@@ -758,171 +758,6 @@ namespace UnityUIToolkit.Extensions
 			return float.TryParse(trimmed, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var px)
 				? px
 				: 0f;
-		}
-
-		private static Func<float, float> ResolveEasing(string name)
-		{
-			if (string.IsNullOrWhiteSpace(name))
-			{
-				return Ease.Linear;
-			}
-
-			switch (name.Trim())
-			{
-				case "Linear": return Ease.Linear;
-				case "InSine": return Ease.InSine;
-				case "OutSine": return Ease.OutSine;
-				case "InOutSine": return Ease.InOutSine;
-				case "InQuad": return Ease.InQuad;
-				case "OutQuad": return Ease.OutQuad;
-				case "InOutQuad": return Ease.InOutQuad;
-				case "InCubic": return Ease.InCubic;
-				case "OutCubic": return Ease.OutCubic;
-				case "InOutCubic": return Ease.InOutCubic;
-				case "InQuart": return Ease.InQuart;
-				case "OutQuart": return Ease.OutQuart;
-				case "InOutQuart": return Ease.InOutQuart;
-				case "InQuint": return Ease.InQuint;
-				case "OutQuint": return Ease.OutQuint;
-				case "InOutQuint": return Ease.InOutQuint;
-				case "InExpo": return Ease.InExpo;
-				case "OutExpo": return Ease.OutExpo;
-				case "InOutExpo": return Ease.InOutExpo;
-				case "InCirc": return Ease.InCirc;
-				case "OutCirc": return Ease.OutCirc;
-				case "InOutCirc": return Ease.InOutCirc;
-				case "InBack": return Ease.InBack;
-				case "OutBack": return Ease.OutBack;
-				case "InOutBack": return Ease.InOutBack;
-				case "InElastic": return Ease.InElastic;
-				case "OutElastic": return Ease.OutElastic;
-				case "InOutElastic": return Ease.InOutElastic;
-				case "InBounce": return Ease.InBounce;
-				case "OutBounce": return Ease.OutBounce;
-				case "InOutBounce": return Ease.InOutBounce;
-				default: return Ease.Linear;
-			}
-		}
-
-		private static class Ease
-		{
-			public static float Linear(float t) => t;
-
-			public static float InSine(float t) => 1f - Mathf.Cos((t * Mathf.PI) / 2f);
-			public static float OutSine(float t) => Mathf.Sin((t * Mathf.PI) / 2f);
-			public static float InOutSine(float t) => -(Mathf.Cos(Mathf.PI * t) - 1f) / 2f;
-
-			public static float InQuad(float t) => t * t;
-			public static float OutQuad(float t) => 1f - (1f - t) * (1f - t);
-			public static float InOutQuad(float t) => t < 0.5f ? 2f * t * t : 1f - Mathf.Pow(-2f * t + 2f, 2f) / 2f;
-
-			public static float InCubic(float t) => t * t * t;
-			public static float OutCubic(float t) => 1f - Mathf.Pow(1f - t, 3f);
-			public static float InOutCubic(float t) => t < 0.5f ? 4f * t * t * t : 1f - Mathf.Pow(-2f * t + 2f, 3f) / 2f;
-
-			public static float InQuart(float t) => t * t * t * t;
-			public static float OutQuart(float t) => 1f - Mathf.Pow(1f - t, 4f);
-			public static float InOutQuart(float t) => t < 0.5f ? 8f * Mathf.Pow(t, 4f) : 1f - Mathf.Pow(-2f * t + 2f, 4f) / 2f;
-
-			public static float InQuint(float t) => t * t * t * t * t;
-			public static float OutQuint(float t) => 1f - Mathf.Pow(1f - t, 5f);
-			public static float InOutQuint(float t) => t < 0.5f ? 16f * Mathf.Pow(t, 5f) : 1f - Mathf.Pow(-2f * t + 2f, 5f) / 2f;
-
-			public static float InExpo(float t) => Mathf.Approximately(t, 0f) ? 0f : Mathf.Pow(2f, 10f * t - 10f);
-			public static float OutExpo(float t) => Mathf.Approximately(t, 1f) ? 1f : 1f - Mathf.Pow(2f, -10f * t);
-			public static float InOutExpo(float t)
-			{
-				if (Mathf.Approximately(t, 0f)) return 0f;
-				if (Mathf.Approximately(t, 1f)) return 1f;
-				return t < 0.5f
-					? Mathf.Pow(2f, 20f * t - 10f) / 2f
-					: (2f - Mathf.Pow(2f, -20f * t + 10f)) / 2f;
-			}
-
-			public static float InCirc(float t) => 1f - Mathf.Sqrt(1f - t * t);
-			public static float OutCirc(float t) => Mathf.Sqrt(1f - Mathf.Pow(t - 1f, 2f));
-			public static float InOutCirc(float t) => t < 0.5f
-				? (1f - Mathf.Sqrt(1f - Mathf.Pow(2f * t, 2f))) / 2f
-				: (Mathf.Sqrt(1f - Mathf.Pow(-2f * t + 2f, 2f)) + 1f) / 2f;
-
-			public static float InBack(float t)
-			{
-				const float c1 = 1.70158f;
-				const float c3 = c1 + 1f;
-				return c3 * t * t * t - c1 * t * t;
-			}
-
-			public static float OutBack(float t)
-			{
-				const float c1 = 1.70158f;
-				const float c3 = c1 + 1f;
-				return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
-			}
-
-			public static float InOutBack(float t)
-			{
-				const float c1 = 1.70158f;
-				const float c2 = c1 * 1.525f;
-				return t < 0.5f
-					? (Mathf.Pow(2f * t, 2f) * ((c2 + 1f) * 2f * t - c2)) / 2f
-					: (Mathf.Pow(2f * t - 2f, 2f) * ((c2 + 1f) * (t * 2f - 2f) + c2) + 2f) / 2f;
-			}
-
-			public static float InElastic(float t)
-			{
-				const float c4 = (2f * Mathf.PI) / 3f;
-				if (Mathf.Approximately(t, 0f)) return 0f;
-				if (Mathf.Approximately(t, 1f)) return 1f;
-				return -Mathf.Pow(2f, 10f * t - 10f) * Mathf.Sin((t * 10f - 10.75f) * c4);
-			}
-
-			public static float OutElastic(float t)
-			{
-				const float c4 = (2f * Mathf.PI) / 3f;
-				if (Mathf.Approximately(t, 0f)) return 0f;
-				if (Mathf.Approximately(t, 1f)) return 1f;
-				return Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * c4) + 1f;
-			}
-
-			public static float InOutElastic(float t)
-			{
-				const float c5 = (2f * Mathf.PI) / 4.5f;
-				if (Mathf.Approximately(t, 0f)) return 0f;
-				if (Mathf.Approximately(t, 1f)) return 1f;
-				return t < 0.5f
-					? -(Mathf.Pow(2f, 20f * t - 10f) * Mathf.Sin((20f * t - 11.125f) * c5)) / 2f
-					: (Mathf.Pow(2f, -20f * t + 10f) * Mathf.Sin((20f * t - 11.125f) * c5)) / 2f + 1f;
-			}
-
-			public static float InBounce(float t) => 1f - OutBounce(1f - t);
-
-			public static float OutBounce(float t)
-			{
-				const float n1 = 7.5625f;
-				const float d1 = 2.75f;
-
-				if (t < 1f / d1)
-				{
-					return n1 * t * t;
-				}
-				if (t < 2f / d1)
-				{
-					t -= 1.5f / d1;
-					return n1 * t * t + 0.75f;
-				}
-				if (t < 2.5f / d1)
-				{
-					t -= 2.25f / d1;
-					return n1 * t * t + 0.9375f;
-				}
-
-				t -= 2.625f / d1;
-				return n1 * t * t + 0.984375f;
-			}
-
-			public static float InOutBounce(float t) => t < 0.5f
-				? (1f - OutBounce(1f - 2f * t)) / 2f
-				: (1f + OutBounce(2f * t - 1f)) / 2f;
 		}
 
 		private void OnPointerDown(PointerDownEvent evt)
@@ -951,8 +786,8 @@ namespace UnityUIToolkit.Extensions
 			startPageIndex = CurrentPageIndex;
 			DebugLog($"PointerDown pointer={evt.pointerId} pos={evt.position} target={DescribeEventTarget(evt)} childStart={pointerStartedOnChild} interactiveChildStart={pointerStartedOnInteractiveChild} page={CurrentPageIndex} offset={scrollOffsetStart:0.##}");
 
-			// Don't capture pointer yet - let children receive click events
-			// Pointer will be captured in OnPointerMove if drag is detected
+			// Do not capture pointer yet - let children receive click events.
+			// Pointer will be captured in OnPointerMove if drag is detected.
 		}
 
 		private void OnPointerMove(PointerMoveEvent evt)
@@ -997,7 +832,7 @@ namespace UnityUIToolkit.Extensions
 
 			if (!isDragging)
 			{
-				// Only claim the gesture if it's primarily along our paging axis.
+				// Only claim the gesture if it is primarily along our paging axis.
 				if (absPrimary >= intentThresholdPx && absPrimary >= absSecondary + axisDominancePx)
 				{
 					isDragging = true;
@@ -1011,12 +846,10 @@ namespace UnityUIToolkit.Extensions
 					{
 						DebugLog($"PointerMove ignored pointer={evt.pointerId} delta={delta} primary={primary:0.##} secondary={secondary:0.##} threshold={intentThresholdPx:0.##} childStart={pointerStartedOnChild}");
 					}
-					// Likely a perpendicular scroll for child content; let it through.
 					return;
 				}
 			}
 
-			// Dragging: compute unclamped offset then apply validation clamping.
 			var next = scrollOffsetStart - primary;
 
 			if (validatePageChange)
@@ -1025,22 +858,18 @@ namespace UnityUIToolkit.Extensions
 				var movingForward = next > scrollOffsetStart;
 				var movingBack = next < scrollOffsetStart;
 
-				// Compute the maximum allowed offset delta when validation blocks movement.
 				var dragLimitOffset = pageSize > 0f ? pageSize * validationDragLimit : 0f;
 
 				if (movingForward && !canMoveNextPage)
 				{
-					// Clamp forward drag to the validation preview limit.
 					next = Mathf.Min(next, scrollOffsetStart + dragLimitOffset);
 				}
 				else if (movingBack && (!allowMoveBack || !canMoveBackPage))
 				{
-					// Clamp backward drag to the validation preview limit.
 					next = Mathf.Max(next, scrollOffsetStart - dragLimitOffset);
 				}
 				else if (onlySinglePageSwipeAllowed && pageSize > 0f)
 				{
-					// Permitted direction – still clamp to max one page stride.
 					var minAllowed = startPageIndex * pageSize;
 					var maxAllowed = (startPageIndex + 1) * pageSize;
 					next = Mathf.Clamp(next, minAllowed, maxAllowed);
@@ -1071,9 +900,9 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			// Only release if we captured it (during drag)
 			if (isDragging)
 			{
+				// Only release if we captured it (during drag)
 				viewport.ReleasePointer(evt.pointerId);
 			}
 			DebugLog($"PointerUp pointer={evt.pointerId} pos={evt.position} wasDragging={isDragging}");
@@ -1087,9 +916,9 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			// Only release if we captured it (during drag)
 			if (isDragging)
 			{
+				// Only release if we captured it (during drag)
 				viewport.ReleasePointer(evt.pointerId);
 			}
 			DebugLog($"PointerCancel pointer={evt.pointerId} pos={evt.position} wasDragging={isDragging}");
@@ -1106,7 +935,6 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			// Only react to wheel/trackpad gestures that are primarily along our snap axis.
 			var absPrimary = Mathf.Abs(orientation == ScrollSnapOrientation.Horizontal ? evt.delta.x : evt.delta.y);
 			var absSecondary = Mathf.Abs(orientation == ScrollSnapOrientation.Horizontal ? evt.delta.y : evt.delta.x);
 			var isPrimaryGesture = absPrimary > 0f && absPrimary >= absSecondary;
@@ -1116,7 +944,6 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			// Snap after wheel scroll settles
 			ScheduleSnapToNearestPage(animate: true);
 		}
 
@@ -1141,7 +968,6 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			// Only move one page per swipe (when enabled).
 			var threshold = pageSize * 0.15f;
 			var target = startPageIndex;
 
@@ -1159,7 +985,6 @@ namespace UnityUIToolkit.Extensions
 			}
 			else
 			{
-				// Snap to nearest page.
 				var raw = GetScrollOffset() / pageSize;
 				target = Mathf.RoundToInt(raw);
 			}
@@ -1167,57 +992,52 @@ namespace UnityUIToolkit.Extensions
 			target = Mathf.Clamp(target, 0, PageCount - 1);
 			DebugLog($"FinishPointerGesture primary={primary:0.##} threshold={threshold:0.##} startPage={startPageIndex} currentPage={CurrentPageIndex} target={target} offset={GetScrollOffset():0.##}");
 
-		if (target == CurrentPageIndex)
-		{
-			// No page change needed, but snap back to current page position visually
-			DebugLog($"SnapBackToCurrentPage target={target}");
-			GoToPage(target, animate: true, force: true);
-			return;
+			if (target == CurrentPageIndex)
+			{
+				DebugLog($"SnapBackToCurrentPage target={target}");
+				GoToPage(target, animate: true, force: true);
+				return;
+			}
+
+			if (!validatePageChange)
+			{
+				// Validation disabled – always allow movement and navigate directly.
+				// Fire OnPageStartChange with moveAllowed=true since there are no restrictions.
+				DebugLog($"PageTransitionWithoutValidation current={CurrentPageIndex} target={target}");
+				OnPageStartChange?.Invoke(target, true);
+				GoToPage(target, animate: true, force: true);
+				return;
+			}
+
+			var movingForward = target > CurrentPageIndex;
+			var moveAllowed = movingForward ? canMoveNextPage : (allowMoveBack && canMoveBackPage);
+
+			DebugLog($"PageTransitionAttempt current={CurrentPageIndex} target={target} movingForward={movingForward} moveAllowed={moveAllowed} allowMoveBack={allowMoveBack} canMoveNext={canMoveNextPage} canMoveBack={canMoveBackPage}");
+			OnPageStartChange?.Invoke(target, moveAllowed);
+
+			if (!moveAllowed)
+			{
+				DebugLog($"PageTransitionRestricted current={CurrentPageIndex} target={target}");
+				GoToPageInternal(CurrentPageIndex, animate: true, force: true, () => OnPageChangeRestricted?.Invoke(target));
+				return;
+			}
+
+			if (OnValidatePageTransition != null)
+			{
+				ExecutePageTransitionWithValidation(target).Forget();
+			}
+			else
+			{
+				GoToPage(target, animate: true, force: true);
+			}
 		}
 
-		if (!validatePageChange)
-		{
-			// Validation disabled – always allow movement and navigate directly.
-			// Fire OnPageStartChange with moveAllowed=true since there are no restrictions.
-			DebugLog($"PageTransitionWithoutValidation current={CurrentPageIndex} target={target}");
-			OnPageStartChange?.Invoke(target, true);
-			GoToPage(target, animate: true, force: true);
-			return;
-		}
-
-		// Validation enabled – determine if movement is permitted by the current validation state.
-		var movingForward = target > CurrentPageIndex;
-		var moveAllowed = movingForward ? canMoveNextPage : (allowMoveBack && canMoveBackPage);
-
-		// Notify host of the attempted transition and whether it's allowed.
-		DebugLog($"PageTransitionAttempt current={CurrentPageIndex} target={target} movingForward={movingForward} moveAllowed={moveAllowed} allowMoveBack={allowMoveBack} canMoveNext={canMoveNextPage} canMoveBack={canMoveBackPage}");
-		OnPageStartChange?.Invoke(target, moveAllowed);
-
-		if (!moveAllowed)
-		{
-			// Direction is blocked by flags alone – snap back and notify once snap-back completes.
-			DebugLog($"PageTransitionRestricted current={CurrentPageIndex} target={target}");
-			GoToPageInternal(CurrentPageIndex, animate: true, force: true, () => OnPageChangeRestricted?.Invoke(target));
-			return;
-		}
-
-		// Flags permit movement – run async validation if a callback is registered.
-		if (OnValidatePageTransition != null)
-		{
-			ExecutePageTransitionWithValidation(target).Forget();
-		}
-		else
-		{
-			GoToPage(target, animate: true, force: true);
-		}
-	}
-
-	/// <summary>
-	/// Awaits the <see cref="OnValidatePageTransition"/> callback and either navigates to
-	/// <paramref name="target"/> or snaps back to the current page. Runs as a fire-and-forget
-	/// async operation so the UI thread is never blocked.
-	/// </summary>
-	private async Task ExecutePageTransitionWithValidation(int target)
+		/// <summary>
+		/// Awaits the <see cref="OnValidatePageTransition"/> callback and either navigates to
+		/// <paramref name="target"/> or snaps back to the current page. Runs as a fire-and-forget
+		/// async operation so the UI thread is never blocked.
+		/// </summary>
+		private async Task ExecutePageTransitionWithValidation(int target)
 		{
 			isValidatingPageChange = true;
 
@@ -1228,7 +1048,6 @@ namespace UnityUIToolkit.Extensions
 			}
 			catch
 			{
-				// Treat any exception from the validator as a denial to avoid soft-locks.
 				allowed = false;
 			}
 			finally
@@ -1255,8 +1074,7 @@ namespace UnityUIToolkit.Extensions
 	{
 		internal static void Forget(this Task task)
 		{
-			// Intentionally fire-and-forget. Exceptions are swallowed inside
-			// ExecutePageTransitionWithValidation via the try/catch block.
+			// Intentionally fire-and-forget. Exceptions are swallowed inside ExecutePageTransitionWithValidation via the try/catch block.
 			_ = task;
 		}
 	}

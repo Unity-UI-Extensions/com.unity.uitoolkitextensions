@@ -4,23 +4,16 @@ on:
   pull_request:
     branches-ignore:    
       - 'main'
-  # Ignore PRs targeting main
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
-# Ensure default token scopes and inherit org-level secrets via env mapping
 permissions:
   contents: write
   packages: read
-
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GIT_PAT: ${{ secrets.GIT_PAT }}
 
 jobs:
   test-unity-build:
@@ -30,15 +23,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest, macos-latest]
         unity-version:
-          - 6000.0.x
-          - 6000
+          - '6000.0.x'
+          - '6000.1'
+          - '6000.2'
+          - '6000.3'
+          - '6000.5'
+          - '6000.6'
+          - '6000.7'
         include:
-          - os: ubuntu-latest
-            build-targets: StandaloneLinux64, Android
+          # - os: ubuntu-latest
+          #   build-targets: StandaloneLinux64, Android
           - os: windows-latest
-            build-targets: StandaloneWindows64
+            build-targets: StandaloneWindows64, Android
           - os: macos-latest
             build-targets: StandaloneOSX, iOS
     steps:

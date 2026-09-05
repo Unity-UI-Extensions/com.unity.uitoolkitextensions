@@ -1,0 +1,94 @@
+name: Release preflight
+
+# Runs on pull requests into main (the release PRs) and on demand. It publishes nothing.
+# It confirms the ui-extensions-bot GitHub App can mint a token with push access to this repo,
+# and reports the version main-publish will produce when the PR is merged.
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release-app:
+    name: Validate release App and version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Do not store the workflow token in the repo config. The push probe below must send only the App token.
+          persist-credentials: false
+
+      - name: Create release App token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Check the App can push to this repo
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          TARGET_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
+        run: |
+          botid=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
+          echo "App $APP_SLUG resolves to bot user id $botid"
+          echo "Repository permissions block as seen by the token (all false for an installation token, not meaningful): $(gh api "repos/$GITHUB_REPOSITORY" --jq '.permissions // "absent"')"
+
+          # The repository object's permissions block describes a user, so it cannot test an App token.
+          # A dry-run push exercises write access on the server without writing anything. It targets a
+          # branch name that does not exist, because the runner has a shallow checkout and a push to an
+          # existing branch fails the client-side fast-forward check before proving anything. The empty
+          # extraheader clears any Authorization header left in the repo config so only the App token is sent.
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)
+          probe_ref="refs/heads/preflight-probe-$GITHUB_RUN_ID"
+          if output=$(git -c "http.https://github.com/.extraheader=" -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push --dry-run "https://github.com/$GITHUB_REPOSITORY.git" "HEAD:$probe_ref" 2>&1); then
+            echo "$output"
+            echo "App $APP_SLUG can push to $GITHUB_REPOSITORY. Releases will be pushed to $TARGET_BRANCH."
+          else
+            echo "$output"
+            if echo "$output" | grep -qE "403|not granted|Permission"; then
+              echo "::error::GitHub refused write access for App $APP_SLUG on $GITHUB_REPOSITORY. Check the App installation covers this repository and has Contents read and write."
+            else
+              echo "::error::The push probe failed for a reason other than permissions. See the git output above."
+            fi
+            exit 1
+          fi
+
+      - name: Report the version this PR will release
+        shell: bash
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          version=$(jq -r .version package.json)
+          base="${version%%-*}"
+          IFS=. read -r major minor patch <<< "$base"
+          case "$PR_TITLE" in
+            *no-ver*)        kind="no bump";     next="$version" ;;
+            *major-release*) kind="major bump";  next="$((major + 1)).0.0" ;;
+            *minor-release*) kind="minor bump";  next="$major.$((minor + 1)).0" ;;
+            *)
+              kind="patch release"
+              if [ "$base" != "$version" ]; then next="$base"; else next="$major.$minor.$((patch + 1))"; fi
+              ;;
+          esac
+          echo "package.json version: $version"
+          echo "PR title: $PR_TITLE"
+          echo "On merge, main-publish will do a $kind and tag v$next"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$next" > /dev/null 2>&1; then
+            echo "::error::Tag v$next already exists. The release would fail at the tag step."
+            exit 1
+          fi
+          {
+            echo "## Release preflight"
+            echo ""
+            echo "- package.json version: \`$version\`"
+            echo "- release type: $kind"
+            echo "- tag on merge: \`v$next\`"
+          } >> "$GITHUB_STEP_SUMMARY"

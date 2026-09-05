@@ -1,4 +1,4 @@
-/// Credit SimonDarksideJ  
+/// Credit SimonDarksideJ
 
 using System;
 using System.Collections.Generic;
@@ -10,10 +10,9 @@ namespace UnityUIToolkit.Extensions
     /// <summary>
     /// A segmented stepper-like control split into equal "quadrants" (segments).
     /// One segment can be active at a time; a colored overlay slides between segments.
-    ///
-    /// Styling is driven via USS classes (see ApplicationStyles.uss).
     /// </summary>
-    public class QuadrantStepper : VisualElement
+    [UxmlElement]
+    public partial class QuadrantStepper : VisualElement
     {
         public const string RootClass = "quadrantStepper";
         public const string OverlayClass = "quadrantStepper__overlay";
@@ -59,13 +58,28 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
+        [UxmlAttribute("options")]
+        public List<string> Options
+        {
+            get
+            {
+                var result = new List<string>(labels.Count);
+                foreach (var label in labels)
+                {
+                    result.Add(label.text);
+                }
+                return result;
+            }
+            set => SetOptions(value ?? new List<string>());
+        }
+
         public QuadrantStepper()
             : this(new[] { "One", "Two", "Three", "Four" })
-        {
-        }
+        { }
 
         public QuadrantStepper(IReadOnlyList<string> options)
         {
+            this.ApplyControlStyles();
             AddToClassList(RootClass);
 
             overlay = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -108,7 +122,6 @@ namespace UnityUIToolkit.Extensions
             segments.Clear();
             labels.Clear();
 
-            // Force selection re-application against rebuilt segment elements.
             selectedIndex = -1;
 
             if (options == null || options.Count == 0)
@@ -139,7 +152,6 @@ namespace UnityUIToolkit.Extensions
                 labels.Add(label);
             }
 
-            // Keep selection if possible, otherwise select first segment.
             var nextIndex = previousSelectedIndex;
             if (nextIndex < 0 || nextIndex >= options.Count)
             {
@@ -236,8 +248,7 @@ namespace UnityUIToolkit.Extensions
             }
             catch (InvalidOperationException)
             {
-                // UI Toolkit animations are pooled/recycled; Stop() can throw if the object
-                // was already recycled even though we still hold a reference.
+                // UI Toolkit animations are pooled/recycled; Stop() can throw if the object was already recycled even though we still hold a reference.
             }
             finally
             {
@@ -278,7 +289,6 @@ namespace UnityUIToolkit.Extensions
             }
             else
             {
-                // Unselected state: keep overlay at 0 width to visually hide it.
                 StopOverlayAnimationIfAny();
                 overlay.style.width = 0;
                 overlay.style.left = 0;
@@ -360,15 +370,12 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            // Smooth but snappy: ease-out power curve.
             overlayAnimation = overlay.experimental.animation.Start(overlayLeft, toLeft, overlayAnimationDurationMs, (e, value) =>
             {
                 overlayLeft = value;
                 overlay.style.left = value;
             });
 
-            // Keep a strong reference without Unity recycling the animation object
-            // while this element still holds onto it.
             overlayAnimation.KeepAlive();
 
             overlayAnimation.easingCurve = Easing.OutCubic;
