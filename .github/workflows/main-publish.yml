@@ -91,7 +91,9 @@ jobs:
 
   # Merge the released main branch back into development
   refresh-development:
-    if: ${{ needs.release-complete.result == 'success' }}
+    # The !cancelled() matters. Without a status function GitHub adds an implicit success(), which looks at
+    # every upstream job including the skipped release types, and skips this job even though release-complete passed.
+    if: ${{ !cancelled() && needs.release-complete.result == 'success' }}
     needs: [release-complete]
     name: Refresh development branch
     uses: ./.github/workflows/refreshbranch.yml
@@ -103,7 +105,7 @@ jobs:
 
   # Move development to the next pre-release version, no tag
   upversion-development:
-    if: ${{ needs.refresh-development.result == 'success' }}
+    if: ${{ !cancelled() && needs.refresh-development.result == 'success' }}
     needs: [refresh-development]
     name: Upversion the development branch for the next release
     uses: ./.github/workflows/upversionandtagrelease.yml
