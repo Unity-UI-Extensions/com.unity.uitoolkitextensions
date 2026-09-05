@@ -13,6 +13,11 @@
 
 The UI Toolkit library of controls, components and other useful features for extending the UI Toolkit solution for Unity.
 
+> [!NOTE]
+> The `UIToolkitExtensions-1.0.0.unitypackage` in the [published release](https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions/releases#release-v1.0.0) and the Unity Asset Store are marketed different to the OpenUPM release and are incompatible, so use one or the other.  This is due to how Unity handles referencing for UIToolkit related sources.
+> We strongly recommend you use the OpenUPM release so as not to "dirty" your solution.
+> But if you wouldn't mind supporting the project, either through one of the [Donation Options](https://unity-ui-extensions.github.io/donate/) or purchasing the Unity asset, we would be eternally grateful.
+
 ## Updates
 
 You can follow the UI Toolkit Extensions team for updates and news on:
