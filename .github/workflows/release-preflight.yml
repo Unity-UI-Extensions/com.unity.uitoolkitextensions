@@ -32,14 +32,21 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          TARGET_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
         run: |
-          push=$(gh api "repos/$GITHUB_REPOSITORY" --jq '.permissions.push')
-          if [ "$push" != "true" ]; then
-            echo "::error::App $APP_SLUG does not have push access to $GITHUB_REPOSITORY. Check the App installation and its Contents permission."
+          botid=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
+          echo "App $APP_SLUG resolves to bot user id $botid"
+          echo "Repository permissions block as seen by the token: $(gh api "repos/$GITHUB_REPOSITORY" --jq '.permissions // "absent, which is normal for an installation token"')"
+
+          # The repository object only carries a permissions block for user tokens, so it cannot be used
+          # to test an App token. A dry-run push exercises write access on the server without writing anything.
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)
+          if git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push --dry-run "https://github.com/$GITHUB_REPOSITORY.git" "HEAD:refs/heads/$TARGET_BRANCH"; then
+            echo "App $APP_SLUG can push to $GITHUB_REPOSITORY ($TARGET_BRANCH)"
+          else
+            echo "::error::App $APP_SLUG cannot push to $GITHUB_REPOSITORY. Check the App installation covers this repository and has Contents read and write."
             exit 1
           fi
-          botid=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
-          echo "App $APP_SLUG (bot user id $botid) can push to $GITHUB_REPOSITORY"
 
       - name: Report the version this PR will release
         shell: bash
