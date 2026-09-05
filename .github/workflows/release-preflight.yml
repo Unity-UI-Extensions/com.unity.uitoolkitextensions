@@ -19,6 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Do not store the workflow token in the repo config. The push probe below must send only the App token.
+          persist-credentials: false
 
       - name: Create release App token
         uses: actions/create-github-app-token@v3
@@ -36,12 +39,14 @@ jobs:
         run: |
           botid=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
           echo "App $APP_SLUG resolves to bot user id $botid"
-          echo "Repository permissions block as seen by the token: $(gh api "repos/$GITHUB_REPOSITORY" --jq '.permissions // "absent, which is normal for an installation token"')"
+          echo "Repository permissions block as seen by the token (all false for an installation token, not meaningful): $(gh api "repos/$GITHUB_REPOSITORY" --jq '.permissions // "absent"')"
 
-          # The repository object only carries a permissions block for user tokens, so it cannot be used
-          # to test an App token. A dry-run push exercises write access on the server without writing anything.
+          # The repository object's permissions block describes a user, so it cannot test an App token.
+          # A dry-run push exercises write access on the server without writing anything. The empty
+          # extraheader first clears any Authorization header left in the repo config, so only the App
+          # token is sent. Two Authorization headers make GitHub answer 400 before checking permissions.
           auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)
-          if git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push --dry-run "https://github.com/$GITHUB_REPOSITORY.git" "HEAD:refs/heads/$TARGET_BRANCH"; then
+          if git -c "http.https://github.com/.extraheader=" -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push --dry-run "https://github.com/$GITHUB_REPOSITORY.git" "HEAD:refs/heads/$TARGET_BRANCH"; then
             echo "App $APP_SLUG can push to $GITHUB_REPOSITORY ($TARGET_BRANCH)"
           else
             echo "::error::App $APP_SLUG cannot push to $GITHUB_REPOSITORY. Check the App installation covers this repository and has Contents read and write."
