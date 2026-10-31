@@ -1,0 +1,8 @@
+/* ============================================================
+   SafeAreaRoot.uss
+   The root fills its parent; C# sets the padding.
+   ============================================================ */
+
+.safeAreaRoot {
+    flex-grow: 1;
+}

@@ -29,6 +29,25 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
+        /// Creates a 1-pixel-wide vertical gradient texture from <paramref name="topColor"/> to <paramref name="bottomColor"/>.
+        /// </summary>
+        /// <param name="topColor">Top edge color.</param>
+        /// <param name="bottomColor">Bottom edge color.</param>
+        /// <param name="height">Vertical resolution in pixels (default 256).</param>
+        public static Texture2D CreateVerticalGradient(Color topColor, Color bottomColor, int height = 256)
+        {
+            var texture = new Texture2D(1, height, TextureFormat.RGBA32, false);
+            texture.wrapMode = TextureWrapMode.Clamp;
+            var pixels = new Color[height];
+            // Texture rows run bottom to top.
+            for (int y = 0; y < height; y++)
+                pixels[y] = Color.Lerp(bottomColor, topColor, (float)y / (height - 1));
+            texture.SetPixels(pixels);
+            texture.Apply();
+            return texture;
+        }
+
+        /// <summary>
         /// Creates a square texture showing a single-color arc (spinner ring).
         /// </summary>
         /// <param name="size">Width and height in pixels.</param>

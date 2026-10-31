@@ -1,0 +1,112 @@
+/* ============================================================
+   PanZoomMapView.uss
+   Reads ThemeTokens only. The image scales; pins and the route keep their size.
+   ============================================================ */
+
+.panZoomMapView {
+    --map-route: var(--c-primary);
+    --map-you: var(--c-warn);
+    --map-you-ring: var(--c-on-primary);
+    min-height: 200px;
+    overflow: hidden;
+    border-radius: 14px;
+    background-color: var(--surface-tile);
+}
+
+.panZoomMapView:focus {
+    border-width: 2px;
+    border-color: var(--surface-accent);
+}
+
+.panZoomMapView__image {
+    position: absolute;
+    left: 0;
+    top: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.panZoomMapView__overlay,
+.panZoomMapView__pins {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* FS09_1: 26 px numbered discs; visited filled, next ringed, pending muted. */
+.panZoomMapView__pin {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 26px;
+    height: 26px;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-radius: var(--radius-pill);
+    border-color: var(--surface-border-strong);
+    background-color: var(--c-page-card);
+    transition-property: scale;
+    transition-duration: var(--motion-fast);
+}
+
+.panZoomMapView__pinLabel {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--c-page-muted);
+}
+
+.panZoomMapView__pin--next {
+    border-color: var(--c-navy-2);
+}
+
+.panZoomMapView__pin--next > .panZoomMapView__pinLabel {
+    color: var(--c-navy-2);
+}
+
+.panZoomMapView__pin--visited {
+    border-color: var(--c-navy-2);
+    background-color: var(--c-navy-2);
+}
+
+.panZoomMapView__pin--visited > .panZoomMapView__pinLabel {
+    color: var(--c-on-primary);
+}
+
+.panZoomMapView__pin--selected {
+    scale: 1.2 1.2;
+    border-color: var(--c-primary);
+}
+
+.panZoomMapView__controls {
+    position: absolute;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    flex-direction: column;
+}
+
+.panZoomMapView__control.panZoomMapView__control {
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    margin-top: var(--space-2);
+    padding: 0;
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-raised);
+    color: var(--surface-fg);
+    font-size: var(--text-subtitle);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.panZoomMapView__control.panZoomMapView__control:hover,
+.panZoomMapView__control.panZoomMapView__control:active {
+    background-color: var(--surface-pressed);
+}

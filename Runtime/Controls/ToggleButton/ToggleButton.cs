@@ -70,6 +70,17 @@ namespace UnityUIToolkit.Extensions
             image.style.unityBackgroundImageTintColor = Color.white;
         }
 
+        /// <summary>
+        /// Sets the icon from a texture, sprite or vector image and leaves its tint to USS, unlike
+        /// <see cref="SetImage"/>, which tints it white. A default value clears the icon.
+        /// </summary>
+        public void SetIcon(Background icon)
+        {
+            var hasIcon = icon.texture != null || icon.sprite != null || icon.vectorImage != null || icon.renderTexture != null;
+            image.style.backgroundImage = hasIcon ? new StyleBackground(icon) : (StyleBackground)StyleKeyword.Null;
+            image.style.unityBackgroundImageTintColor = StyleKeyword.Null;
+        }
+
         private void OnPointerDownHandler(PointerDownEvent evt)
         {
             evt.StopPropagation();

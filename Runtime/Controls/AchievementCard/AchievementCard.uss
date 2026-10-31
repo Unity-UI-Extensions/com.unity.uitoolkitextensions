@@ -1,0 +1,100 @@
+/* ============================================================
+   AchievementCard.uss
+   Reads ThemeTokens only. FS10_7.
+   ============================================================ */
+
+.achievementCard {
+    align-items: center;
+}
+
+.achievementCard--card {
+    padding-top: 26px;
+    padding-bottom: 22px;
+    padding-left: 22px;
+    padding-right: 22px;
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--space-6);
+    background-color: var(--surface-overlay);
+}
+
+/* The 10 px halo round the 96 px badge disc. */
+.achievementCard__halo {
+    padding: 10px;
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-highlight);
+}
+
+.achievementCard__badge .badgeTile__title,
+.achievementCard__badge .badgeTile__status {
+    display: none;
+}
+
+.achievementCard__eyebrow {
+    margin: 0;
+    margin-top: var(--space-3);
+    padding: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--surface-accent);
+}
+
+.achievementCard__title {
+    margin: 0;
+    margin-top: var(--space-3);
+    padding: 0;
+    font-size: var(--text-title);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    -unity-text-align: upper-center;
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.achievementCard__body {
+    margin: 0;
+    margin-top: var(--space-3);
+    padding: 0;
+    font-size: var(--text-label-sm);
+    -unity-font-definition: var(--font-body);
+    -unity-text-align: upper-center;
+    color: var(--surface-fg-soft);
+    white-space: normal;
+}
+
+.achievementCard__rewards {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: var(--space-3);
+}
+
+.achievementCard__reward {
+    margin: var(--space-1);
+    padding-top: var(--space-1);
+    padding-bottom: var(--space-1);
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-tile);
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+}
+
+.achievementCard__actions {
+    flex-direction: row;
+    align-self: stretch;
+    margin-top: 20px;
+}
+
+.achievementCard__secondary.pillButton,
+.achievementCard__primary.pillButton {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.achievementCard__secondary.pillButton {
+    margin-right: 10px;
+}

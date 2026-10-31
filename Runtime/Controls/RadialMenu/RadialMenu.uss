@@ -1,0 +1,102 @@
+/* ============================================================
+   RadialMenu.uss
+   Reads ThemeTokens only. The layer is hidden until open.
+   ============================================================ */
+
+.radialMenu {
+    --radial-segment: var(--surface-overlay);
+    --radial-highlight: var(--surface-highlight);
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    visibility: hidden;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: var(--motion-fast);
+}
+
+.radialMenu--open {
+    visibility: visible;
+    opacity: 1;
+}
+
+.radialMenu__scrim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--c-scrim);
+}
+
+.radialMenu__wheel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.radialMenu__centre {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 24px;
+    height: 24px;
+    border-width: 2px;
+    border-color: var(--surface-accent);
+    border-radius: var(--radius-pill);
+}
+
+.radialMenu__item {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 56px;
+    align-items: center;
+    overflow: visible;
+}
+
+.radialMenu__disc {
+    width: 56px;
+    height: 56px;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: var(--radius-pill);
+    transition-property: scale;
+    transition-duration: var(--motion-fast);
+}
+
+.radialMenu__icon {
+    width: 24px;
+    height: 24px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.radialMenu__label {
+    position: absolute;
+    top: 60px;
+    left: -32px;
+    right: -32px;
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    -unity-text-align: upper-center;
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.radialMenu__item--highlighted > .radialMenu__disc {
+    scale: 1.15 1.15;
+    border-color: var(--surface-accent);
+}
+
+.radialMenu__item:focus > .radialMenu__disc {
+    border-color: var(--surface-accent);
+}

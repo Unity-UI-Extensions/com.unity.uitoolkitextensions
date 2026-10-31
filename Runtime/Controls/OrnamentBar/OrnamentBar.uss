@@ -1,0 +1,246 @@
+/* ============================================================
+   OrnamentBar.uss
+   Reads ThemeTokens only. The bar sizes to its items; the root is a
+   pass-through layer that centres it on the anchored edge.
+   ============================================================ */
+
+.ornamentBar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.ornamentBar--bottom {
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.ornamentBar--right {
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.ornamentBar__bar {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 1;
+    padding-top: var(--space-1);
+    padding-bottom: var(--space-1);
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
+    background-color: var(--surface-bg);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+}
+
+.ornamentBar--bottom > .ornamentBar__bar {
+    margin-bottom: var(--space-4);
+}
+
+.ornamentBar--right > .ornamentBar__bar {
+    flex-direction: column;
+    margin-right: var(--space-4);
+}
+
+.ornamentBar__item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    min-height: 52px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    border-radius: var(--radius-pill);
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.ornamentBar__item:hover,
+.ornamentBar__item:active {
+    background-color: var(--surface-pressed);
+}
+
+.ornamentBar__item:focus {
+    border-width: 2px;
+    border-color: var(--surface-accent);
+}
+
+.ornamentBar__item--primary {
+    min-width: 64px;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+}
+
+.ornamentBar__item--disabled {
+    opacity: 0.4;
+}
+
+.ornamentBar__icon {
+    width: 22px;
+    height: 22px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--surface-fg);
+}
+
+.ornamentBar__label {
+    display: none;
+    margin-top: 2px;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+}
+
+.ornamentBar--labels .ornamentBar__label {
+    display: flex;
+}
+
+/* The boards draw bar icons at 22 and the icon in a labelled pill at 20, as in a primary button. */
+.ornamentBar__item--primary > .ornamentBar__icon {
+    width: 20px;
+    height: 20px;
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.ornamentBar__item--primary > .ornamentBar__label {
+    color: var(--c-on-primary);
+}
+
+/* The primary item is a pill with its icon and label side by side, labels on or off. */
+.ornamentBar .ornamentBar__item.ornamentBar__item--primary {
+    flex-direction: row;
+    padding-left: var(--space-4);
+    padding-right: var(--space-5);
+}
+
+.ornamentBar .ornamentBar__item--primary > .ornamentBar__label.ornamentBar__label {
+    display: flex;
+    margin-top: 0;
+    margin-left: var(--space-2);
+    max-width: 96px;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body-semibold);
+    white-space: normal;
+}
+
+/* The centre slot holds a custom element, such as the shutter (FS08_1). */
+.ornamentBar__slot {
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    margin-left: var(--space-1);
+    margin-right: var(--space-1);
+}
+
+.ornamentBar__message,
+.ornamentBar__spacer {
+    display: none;
+}
+
+/* Message mode (FS08_4): the line on the left, the slot centred, the items hidden. */
+.ornamentBar--message .ornamentBar__item {
+    display: none;
+}
+
+.ornamentBar--message .ornamentBar__message {
+    display: flex;
+    flex-grow: 1;
+    flex-basis: 0;
+    flex-shrink: 1;
+    padding-left: var(--space-3);
+    margin: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--surface-muted);
+    white-space: normal;
+}
+
+.ornamentBar--message .ornamentBar__spacer {
+    display: flex;
+    flex-grow: 1;
+    flex-basis: 0;
+    flex-shrink: 1;
+    /* Matches the message's padding so the slot stays centred. */
+    padding-left: var(--space-3);
+}
+
+/* Stretch (FS08): the bar fills the edge, 24 px in from each side, items spread evenly. The 24 px gaps are the
+   layer's padding and the bar is 100% of what is left, so max-length caps it and it stays centred on a tablet. */
+.ornamentBar--stretch.ornamentBar--bottom {
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+}
+
+.ornamentBar--stretch.ornamentBar--bottom > .ornamentBar__bar {
+    align-self: center;
+    width: 100%;
+    justify-content: space-between;
+    min-height: 70px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.ornamentBar--stretch.ornamentBar--right {
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-6);
+}
+
+.ornamentBar--stretch.ornamentBar--right > .ornamentBar__bar {
+    align-self: center;
+    height: 100%;
+    justify-content: space-between;
+    min-width: 70px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.ornamentBar--right.ornamentBar--message .ornamentBar__message {
+    display: none;
+}
+
+.ornamentBar--stretch .ornamentBar__item {
+    min-width: 48px;
+    min-height: 48px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.ornamentBar--stretch .ornamentBar__item.ornamentBar__item--primary {
+    min-height: 50px;
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
+}
+
+/* Icon-only primary (FS01_5 review): a round gradient disc with a large icon and no label, in line with the other
+   icons on the bar. Only the primary item; active items keep their labelled pills. */
+.ornamentBar.ornamentBar--primaryIconOnly .ornamentBar__item.ornamentBar__item--primaryAction {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    min-height: 52px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.ornamentBar--stretch.ornamentBar--primaryIconOnly .ornamentBar__item.ornamentBar__item--primaryAction {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+}
+
+.ornamentBar.ornamentBar--primaryIconOnly .ornamentBar__item.ornamentBar__item--primaryAction > .ornamentBar__label.ornamentBar__label {
+    display: none;
+}
+
+.ornamentBar.ornamentBar--primaryIconOnly .ornamentBar__item--primaryAction > .ornamentBar__icon {
+    width: 28px;
+    height: 28px;
+}

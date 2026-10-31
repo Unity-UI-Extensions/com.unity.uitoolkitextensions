@@ -1,0 +1,6 @@
+/* Test-only: a theme rule that gives every base field input a zero flex-basis, as an app theme did. */
+.unity-base-field__input {
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+}

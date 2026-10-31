@@ -1,0 +1,90 @@
+/* ============================================================
+   TrailStrip.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.trailStrip {
+    min-height: 32px;
+    justify-content: center;
+}
+
+.trailStrip__track {
+    flex-direction: row;
+    align-items: center;
+}
+
+.trailStrip__compact {
+    display: none;
+}
+
+.trailStrip--compact > .trailStrip__track {
+    display: none;
+}
+
+.trailStrip--compact > .trailStrip__compact {
+    display: flex;
+}
+
+.trailStrip__stop {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-color: var(--surface-border-strong);
+    border-radius: var(--radius-pill);
+}
+
+.trailStrip__stop:focus {
+    border-color: var(--surface-accent);
+}
+
+.trailStrip__stopLabel {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--surface-muted);
+}
+
+.trailStrip__stop--done {
+    border-color: var(--c-primary);
+    background-color: var(--c-primary);
+}
+
+.trailStrip__stop--done > .trailStrip__stopLabel {
+    color: var(--c-on-primary);
+}
+
+.trailStrip__stop--current {
+    width: 28px;
+    height: 28px;
+    border-color: var(--surface-accent);
+}
+
+.trailStrip__stop--current > .trailStrip__stopLabel {
+    color: var(--surface-fg);
+}
+
+.trailStrip__line {
+    flex-grow: 1;
+    min-width: 12px;
+    height: 2px;
+    background-color: var(--surface-border-strong);
+}
+
+.trailStrip__line--done {
+    background-color: var(--c-primary);
+}
+
+.trailStrip__compactLabel {
+    margin: 0;
+    margin-bottom: var(--space-1);
+    padding: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+}

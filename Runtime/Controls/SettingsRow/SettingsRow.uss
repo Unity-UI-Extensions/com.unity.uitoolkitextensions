@@ -1,0 +1,107 @@
+/* ============================================================
+   SettingsRow.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+/* Margins rather than padding, so the divider is inset to the content as in the design. */
+.settingsRow {
+    flex-direction: row;
+    align-items: center;
+    min-height: 56px;
+    margin-left: var(--space-4);
+    margin-right: var(--space-4);
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+}
+
+.settingsRow--divider {
+    border-bottom-width: 1px;
+    border-bottom-color: var(--surface-border);
+}
+
+.settingsRow:hover,
+.settingsRow:active {
+    background-color: var(--surface-pressed);
+}
+
+.settingsRow:focus {
+    background-color: var(--surface-pressed);
+    border-left-width: 2px;
+    border-left-color: var(--surface-accent);
+}
+
+.settingsRow:disabled {
+    opacity: 0.45;
+}
+
+.settingsRow__iconTile {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    margin-right: var(--space-3);
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-tile);
+}
+
+.settingsRow__icon {
+    width: 20px;
+    height: 20px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--surface-accent);
+}
+
+.settingsRow__texts {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.settingsRow__title {
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.settingsRow__subtitle {
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+    white-space: normal;
+    margin-top: 2px;
+}
+
+.settingsRow__trailing {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: var(--space-3);
+}
+
+.settingsRow__value {
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+    margin-right: var(--space-1);
+}
+
+.settingsRow__chevron {
+    width: 20px;
+    height: 20px;
+    background-image: url("../../Assets/Icons/ChevronRight.svg");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--surface-muted);
+}
+
+.settingsRow .settingsRow__switch {
+    min-height: 0;
+    flex-shrink: 0;
+}
+
+/* Custom mode: the slot lays its children out in a row, such as a switch and a remove button. */
+.settingsRow__custom {
+    flex-direction: row;
+    align-items: center;
+}

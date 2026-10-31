@@ -1,0 +1,100 @@
+/* ============================================================
+   Switch.uss
+   Reads ThemeTokens only. The thumb slides by a transition on
+   translate, so .reduce-motion makes it instant.
+   ============================================================ */
+
+.switch {
+    flex-direction: row;
+    align-items: center;
+    min-height: 44px;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.switch > .unity-base-field__label {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    padding-left: 0;
+    margin-right: var(--space-3);
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+/* FS09_5: a 46 x 28 track with a 22 px thumb inset 3 px. */
+.switch__track {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 46px;
+    height: 28px;
+    padding-left: 3px;
+    padding-right: 3px;
+    justify-content: center;
+    background-color: var(--surface-switch-off);
+    border-width: 0;
+    border-radius: var(--radius-pill);
+    transition-property: background-color, border-color;
+    transition-duration: var(--motion-fast);
+}
+
+/* The track is the base field's input. A theme can give .unity-base-field__input a zero flex-basis, which
+   wins over width and leaves only the padding (6 px), so the size is pinned here with a stronger selector. */
+.switch > .switch__track.unity-base-field__input {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 46px;
+    min-width: 46px;
+    max-width: 46px;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* The primary gradient, faded in when on. */
+.switch__fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: var(--motion-fast);
+}
+
+.switch--on > .switch__track > .switch__fill {
+    opacity: 1;
+}
+
+.switch__thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-pill);
+    background-color: var(--c-on-primary);
+    translate: 0 0;
+    transition-property: translate;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: ease-out-cubic;
+}
+
+.switch--on > .switch__track {
+    background-color: var(--c-primary);
+    border-color: var(--c-primary);
+}
+
+.switch--on > .switch__track > .switch__thumb {
+    translate: 18px 0;
+    background-color: var(--c-on-primary);
+}
+
+.switch:focus > .switch__track {
+    border-width: 2px;
+    border-color: var(--surface-accent);
+}
+
+.switch:disabled {
+    opacity: 0.45;
+}

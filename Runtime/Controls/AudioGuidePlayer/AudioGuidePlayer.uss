@@ -1,0 +1,164 @@
+/* ============================================================
+   AudioGuidePlayer.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.audioGuidePlayer {
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-3);
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    background-color: var(--surface-bg);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-card);
+}
+
+.audioGuidePlayer:focus {
+    border-color: var(--surface-accent);
+}
+
+.audioGuidePlayer__row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.audioGuidePlayer__play {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.audioGuidePlayer__playIcon {
+    width: 22px;
+    height: 22px;
+    background-image: url("../../Assets/Icons/Play.svg");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.audioGuidePlayer__playIcon.audioGuidePlayer__playIcon--pause {
+    background-image: url("../../Assets/Icons/Pause.svg");
+}
+
+.audioGuidePlayer__playIcon.audioGuidePlayer__playIcon--replay {
+    background-image: url("../../Assets/Icons/Replay.svg");
+}
+
+.audioGuidePlayer__skip {
+    min-width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    margin-left: var(--space-1);
+    margin-right: var(--space-1);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-semibold);
+    color: var(--surface-fg);
+    -unity-text-align: middle-center;
+}
+
+.audioGuidePlayer__texts {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin-left: var(--space-3);
+}
+
+.audioGuidePlayer__title {
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.audioGuidePlayer__time {
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+}
+
+.audioGuidePlayer__loop {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    background-image: url("../../Assets/Icons/Loop.svg");
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-position-x: center;
+    background-position-y: center;
+    -unity-background-image-tint-color: var(--surface-muted);
+}
+
+.audioGuidePlayer--looping .audioGuidePlayer__loop {
+    background-color: var(--surface-pressed);
+    -unity-background-image-tint-color: var(--surface-accent);
+}
+
+.audioGuidePlayer__rate {
+    min-width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-semibold);
+    color: var(--surface-fg);
+    -unity-text-align: middle-center;
+}
+
+.audioGuidePlayer__skip:hover,
+.audioGuidePlayer__loop:hover,
+.audioGuidePlayer__rate:hover {
+    background-color: var(--surface-pressed);
+}
+
+.audioGuidePlayer__scrubber {
+    height: 24px;
+    margin-top: var(--space-2);
+    justify-content: center;
+}
+
+.audioGuidePlayer__track {
+    height: 4px;
+    border-radius: 2px;
+    background-color: var(--surface-border);
+    overflow: hidden;
+}
+
+.audioGuidePlayer__fill {
+    height: 100%;
+    background-color: var(--c-accent);
+}
+
+.audioGuidePlayer__thumb {
+    position: absolute;
+    top: 5px;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-fg);
+}
+
+.audioGuidePlayer--scrubbing .audioGuidePlayer__thumb {
+    top: 2px;
+    width: 20px;
+    height: 20px;
+    margin-left: -10px;
+    background-color: var(--c-accent);
+}
+
+.audioGuidePlayer__cue {
+    margin-top: var(--space-1);
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-fg-soft);
+    white-space: normal;
+}

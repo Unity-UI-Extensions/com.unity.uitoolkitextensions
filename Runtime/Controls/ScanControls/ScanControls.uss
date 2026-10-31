@@ -1,0 +1,80 @@
+/* ============================================================
+   ScanControls.uss
+   Reads ThemeTokens only. FS04_2 and FS04_3: a layer with the
+   ring near the top and the actions at the bottom.
+   ============================================================ */
+
+.scanControls {
+    --scan-path: var(--surface-accent);
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+}
+
+.scanControls__ring {
+    margin-top: var(--space-6);
+}
+
+.scanControls__bottom {
+    position: absolute;
+    left: var(--space-6);
+    right: var(--space-6);
+    bottom: 34px;
+}
+
+.scanControls__status {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--space-3);
+}
+
+.scanControls__timer {
+    margin: 0;
+    margin-right: var(--space-2);
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-bg);
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+}
+
+.scanControls__status > .statusChip {
+    align-self: auto;
+    margin-right: var(--space-2);
+}
+
+.scanControls__path {
+    width: 44px;
+    height: 44px;
+    padding: 6px;
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-bg);
+}
+
+.scanControls__actions {
+    flex-direction: row;
+}
+
+.scanControls__secondary.pillButton,
+.scanControls__primary.pillButton {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.scanControls__secondary.pillButton {
+    margin-right: var(--space-3);
+}

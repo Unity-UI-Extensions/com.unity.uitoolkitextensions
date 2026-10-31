@@ -4,6 +4,82 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## Unreleased
+
+A theming contract and a set of app-shell, browsing and AR guidance components, built so any UI Toolkit app can use them.
+
+### Changed
+
+- Renamed `CaptionBar.Clear()` to `ClearCue()`, `SearchField.Clear()` to `ClearQuery()`, and `StatusChipHost.Clear()` to `ClearStatuses()`. Update custom callers to these names; inherited `VisualElement.Clear()` only removes children and does not perform control-specific cleanup.
+- Renamed private backing fields in EntryGate, BottomSheet, SideDrawer and ToastHost to avoid hiding Unity properties. Public properties and UXML attributes are unchanged.
+
+### Added
+
+#### Theming
+
+- **ThemeTokens** - one USS variable contract (`Runtime/Styles/ThemeTokens.uss`) that every new component reads: primary colours, a surface layer that remaps deep and light grounds, type sizes, radii, spacing and motion. An app restyles everything by redefining the variables on `:root` in its own sheet, imported after the token sheet in the panel theme. Root classes switch reduce motion, text scale (1, 1.15, 1.3), high contrast and the surface; `ThemeTokens` has C# helpers for each.
+- **GradientFill** - a manipulator that paints a two-stop gradient background from tokens (primary or deep, horizontal or vertical), since USS has no gradients.
+
+#### Components
+
+- **SegmentedControl** - the extended `QuadrantStepper` under a general name, themed from tokens.
+- **BottomSheet** - peek, half and full detents, drag with velocity, optional scrim, back-button rule, a docked right-hand column for wide layouts, and a footer pinned to the visible bottom edge. The content area ends at the visible edge, so scrolling content reaches its end at every detent.
+- **SideDrawer** - left or right drawer with scrim, edge swipe, drag to close, titled sections and a permanent variant.
+- **ModalDialog** - confirm, destructive and short-form dialogs with a header slot, optional text or choice field, focus trap and back handling; `Show(options)` returns a `Task<DialogResult>`.
+- **ToastHost** - queued toasts with tones, one action (including undo), a detail line, an icon, a progress bar that updates in place, auto-dismiss or stay until dismissed, tap and swipe to dismiss, anchored top or bottom.
+- **StatusChip** and **StatusChipHost** - persistent statuses (info, busy, ok, warn, fail) keyed by id, updated in place and resolved with a final state.
+- **OrnamentBar** - a floating action bar that sizes to its items, bottom centre in portrait and on the right edge in landscape, with one primary item.
+- **ScrollingTabs** - dynamic categories as tabs or chips, with counts, an optional search tab, an animated indicator and edge fades.
+- **ContentGrid** - a virtualised tile grid with a thumbnail aspect, selection modes, a long-press drag-out source, and loading and empty states.
+- **SectionList** - data-bound expandable sections with counts and rows, built on `CollapsibleSection` and `SettingsRow`.
+- **SearchField** - a search box on `RoundedInputField` with a debounced query, submit, clear and a result count.
+- **SettingsRow** - icon, title, subtitle and a trailing chevron, value, switch or custom slot.
+- **Switch** - a labelled on/off `BaseField<bool>`.
+- **EmptyState** - icon, title, body and one action for empty lists.
+- **SkeletonTile** - loading placeholders in tile, row, text and circle shapes that hold still with reduce motion.
+- **ProgressRing** - a determinate ring with a centre value and caption. It turns the success colour at 100% unless `ShowComplete` is off, as for a countdown that starts full.
+- **StatusList** - structured loading steps (pending, active, done, failed) with an overall bar.
+- **CoachingOverlay** - AR tracking cues (look around, find a surface, move slower, too dark) with plain-language text, an optional detail line, icon disc, one or two actions (ghost, then primary) and a progress line, centred or as a card at the top or bottom.
+- **WorldAnchoredLabel** - a pill that follows a point in the world, through a camera or from panel coordinates, with tones, a distance, safe-area clamping and a range fade.
+- **ToolRail** - icon tools in a pill, as an action toolbar or a mode rail with one active tool; disabled and warning tools; horizontal, vertical or chosen from the parent's shape.
+- **GestureHint** - the first-use chip that teaches move, rotate, scale and raise, in touch or mouse wording, dismissed by a tap or the first gesture.
+- **EntryGate** - the full-screen gate before an experience or the camera: a deep gradient backdrop, optional logos, a message or hero layout, the requirements Start unlocks, a content slot, primary and secondary actions, a cancel link and consent links.
+- **AudioGuidePlayer** - controls for a guide or a video: play, pause and replay, a scrubber, 15 second skips, loop, rate and the transcript line. It holds no media; the owner reports the state and answers the requests.
+- **CaptionBar** - captions with a speaker column, clamped to a number of lines that follows the text scale, cross-fading between cues.
+- **PromptChoices** - numbered prompt rows for talking to a character, with used prompts dimmed and number keys.
+- **SpeechInputPanel** and **HoldToTalk** - the listening panel (status, level meter, partial and final transcript, match or no match, actions) and the hold-to-talk row that tells a hold from a tap.
+- **AvatarPortrait** - a round portrait with an initials fallback at 40, 48 and 56 px.
+- **LinearProgress** - a thin bar in the primary-to-accent gradient, or an indeterminate segment that sweeps back and forth.
+- **AchievementRow** - a badge disc, a title and an optional progress bar.
+- **ShutterButton** - the camera shutter: a white ring around a primary-colour disc.
+- **ContextPill** - the pill at the top left of AR screens: a logo, a title and an eyebrow, with a dimmed state for when a dialog is open, and a logo-only state when there is no text.
+- **ScanFrame** - corner brackets for the scanner in neutral, success and warning tones, pulsing while searching, centred or hugging a tracked marker.
+- **QRCodeView** and **QrEncoder** - a QR code for a string with a quiet zone, and a texture copy to share or save. The encoder is self-contained (numeric, alphanumeric and UTF-8 byte modes, versions 1 to 40, all four error correction levels) and was checked against ZXing.Net.
+- **HintImageCard** - a picture of what to face, a line of guidance and an optional proximity strip (FAR, NEAR, FOUND), as a card or embedded in another card.
+- **WayfinderCard** - directions to the next stop: an arrow that turns with the bearing, the distance and a detail line, and a check on arrival.
+- Icons: `Search`, `Close`, `Check`, `Play`, `Pause`, `Replay`, `Loop`, `Mic` and `ArrowUp`.
+
+#### Tests and samples
+
+- A PlayMode test assembly (`UnityUIToolkitExtensions.Tests`) that mounts each component in a `UIDocument`.
+- A sample scene per component, on a shared token-themed sample page.
+
+### Changed
+
+- **QuadrantStepper** - an icon slot, equal or content sizing (the row scrolls when it is wider than the control), disabled segments, keyboard navigation and a settable `SelectedIndex`. The existing API and USS class names are unchanged.
+- **CollapsibleSection** - leading and trailing header slots, a subtitle, `ShowChevron`, `Interactive`, `ToggleOnPointerDown` and a token-styled card variant. The default look and pointer-down toggle are unchanged.
+- **PillButton** - token-styled `Primary`, `Ghost`, `Warn` and `Danger` (filled from the `--grad-danger` pair) variants, a `Compact` height, and `SetIcon` for a leading icon centred with the label; the default keeps the inner and outer colour gradient.
+- **RoundedInputField** - an `Invalid` state with a warning border, and a token-styled `Themed` variant (50 px, 1.5 px border, 12 px radius) for deep and light grounds.
+- **ScreenHeader** - a token-styled `Compact` variant (56 px bar, back chevron, optional eyebrow line above the title), `TopInset`, and `SetActionIcon`, which takes any `Background` and leaves the tint to USS.
+- **ToggleButton** - `SetIcon(Background)`, for sprites and vector images, tinted by USS.
+- The sample theme imports the sample styles with relative paths, so the samples keep their styles at any package version.
+
+### Fixed
+
+- `DropDownControl.meta` and `ImageCropOverlayControl.meta` contained their content twice, which Unity reported on import.
+- The Editor assembly is now Editor-only, so player builds no longer try to compile it.
+- A custom-coloured `PillButton` lost its gradient after being removed from and re-added to a panel.
+
 ## Release 1.0.0 - Launch - 2026/09
 
 The first release of **Unity UI Toolkit Extensions** - a brand-new companion to the long-running uGUI Extensions library, built from the ground up for Unity 6 and the UI Toolkit (UITK) system.

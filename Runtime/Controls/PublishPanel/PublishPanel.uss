@@ -1,0 +1,130 @@
+/* ============================================================
+   PublishPanel.uss
+   Reads ThemeTokens only. FS04_5: content for the host's sheet.
+   ============================================================ */
+
+.publishPanel {
+    flex-grow: 1;
+}
+
+.publishPanel__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-3);
+}
+
+.publishPanel__headings {
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.publishPanel__eyebrow {
+    margin: 0;
+    margin-bottom: 3px;
+    padding: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--surface-muted);
+}
+
+.publishPanel__title {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-title);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.publishPanel__detail {
+    margin: 0;
+    margin-top: var(--space-1);
+    padding: 0;
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+}
+
+.publishPanel__close {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 1.5px;
+    border-color: var(--surface-border-strong);
+    border-radius: var(--radius-pill);
+}
+
+.publishPanel__closeIcon {
+    width: 22px;
+    height: 22px;
+    background-image: url("../../Assets/Icons/Close.svg");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--surface-fg);
+}
+
+.publishPanel__close:hover,
+.publishPanel__close:active {
+    background-color: var(--surface-pressed);
+}
+
+.publishPanel__stages {
+    margin-bottom: var(--space-3);
+}
+
+.publishPanel__stage {
+    margin-bottom: 10px;
+}
+
+.publishPanel__stageLabels {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.publishPanel__stageLabel,
+.publishPanel__stagePercent {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+}
+
+.publishPanel__status {
+    margin: 0;
+    margin-bottom: var(--space-3);
+    padding: 0;
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+    white-space: normal;
+}
+
+.publishPanel--failed .publishPanel__status {
+    color: var(--c-warn);
+}
+
+.publishPanel__visibility {
+    margin-bottom: var(--space-3);
+}
+
+.publishPanel__code {
+    margin-bottom: var(--space-3);
+}
+
+.publishPanel__actions {
+    flex-direction: row;
+    margin-top: auto;
+}
+
+.publishPanel__secondary.pillButton,
+.publishPanel__primary.pillButton {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.publishPanel__secondary.pillButton {
+    margin-right: 10px;
+}

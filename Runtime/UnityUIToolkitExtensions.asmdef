@@ -9,6 +9,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.modules.accessibility",
+            "expression": "1.0.0",
+            "define": "UITK_ACCESSIBILITY"
+        }
+    ],
     "noEngineReferences": false
 }

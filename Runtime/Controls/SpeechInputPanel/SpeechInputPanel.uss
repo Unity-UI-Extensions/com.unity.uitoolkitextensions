@@ -1,0 +1,149 @@
+/* ============================================================
+   SpeechInputPanel.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.speechInputPanel {
+    flex-direction: column;
+}
+
+.speechInputPanel__header {
+    flex-direction: row;
+    align-items: center;
+    height: 24px;
+    margin-bottom: var(--space-3);
+}
+
+.speechInputPanel__dot {
+    width: 10px;
+    height: 10px;
+    margin-right: 10px;
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-accent);
+    opacity: 0.6;
+    transition-property: opacity, scale;
+    transition-duration: var(--motion-slow);
+}
+
+.speechInputPanel--pulse .speechInputPanel__dot {
+    opacity: 1;
+    scale: 1.25 1.25;
+}
+
+.speechInputPanel__status {
+    flex-grow: 1;
+    padding-left: 0;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-accent);
+}
+
+.speechInputPanel__meter {
+    flex-direction: row;
+    align-items: center;
+    height: 24px;
+}
+
+.speechInputPanel__bar {
+    width: 4px;
+    margin-left: 3px;
+    border-radius: 2px;
+    background-color: var(--surface-accent);
+    transition-property: height;
+    transition-duration: var(--motion-fast);
+}
+
+.speechInputPanel--processing .speechInputPanel__bar,
+.speechInputPanel--matched .speechInputPanel__bar,
+.speechInputPanel--noMatch .speechInputPanel__bar {
+    opacity: 0.45;
+}
+
+.speechInputPanel--unavailable .speechInputPanel__dot,
+.speechInputPanel--unavailable .speechInputPanel__bar {
+    background-color: var(--c-warn);
+}
+
+.speechInputPanel--unavailable .speechInputPanel__status,
+.speechInputPanel--noMatch .speechInputPanel__status {
+    color: var(--c-warn);
+}
+
+.speechInputPanel__transcript {
+    margin-bottom: var(--space-3);
+    padding-left: 0;
+    font-size: var(--text-title);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.speechInputPanel--partial .speechInputPanel__transcript {
+    color: var(--surface-muted);
+}
+
+.speechInputPanel__match {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-3);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    background-color: var(--surface-highlight);
+    border-width: 1px;
+    border-color: var(--surface-highlight-border);
+    border-radius: 12px;
+}
+
+.speechInputPanel--noMatch .speechInputPanel__match {
+    background-color: rgba(232, 176, 75, 0.12);
+    border-color: var(--c-warn);
+}
+
+.speechInputPanel__matchEyebrow {
+    flex-shrink: 0;
+    margin-right: 10px;
+    padding-left: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--surface-accent);
+}
+
+.speechInputPanel--noMatch .speechInputPanel__matchEyebrow {
+    color: var(--c-warn);
+}
+
+.speechInputPanel__matchText {
+    flex-shrink: 1;
+    padding-left: 0;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.speechInputPanel__actions {
+    flex-direction: row;
+    margin-bottom: var(--space-3);
+}
+
+.speechInputPanel__actions > .pillButton {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.speechInputPanel__actions > .speechInputPanel__primary {
+    margin-right: 10px;
+}
+
+.speechInputPanel__footnote {
+    padding-left: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+    white-space: normal;
+}

@@ -1,0 +1,70 @@
+/* ============================================================
+   WayfinderChips.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.wayfinderChips {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.wayfinderChips .unity-scroll-view__content-container {
+    flex-direction: row;
+}
+
+.wayfinderChips__chip {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    height: 40px;
+    margin-right: var(--space-2);
+    padding-left: var(--space-1);
+    padding-right: var(--space-3);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-bg);
+}
+
+.wayfinderChips__chip:hover,
+.wayfinderChips__chip:active {
+    background-color: var(--surface-pressed);
+}
+
+.wayfinderChips__chip:focus {
+    border-color: var(--surface-accent);
+}
+
+.wayfinderChips__disc {
+    width: 30px;
+    height: 30px;
+    margin-right: var(--space-2);
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-accent);
+}
+
+.wayfinderChips__arrow {
+    width: 16px;
+    height: 16px;
+    background-image: url("../../Assets/Icons/ArrowUp.svg");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-bg);
+}
+
+.wayfinderChips__name {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-label-sm);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+}
+
+.wayfinderChips__distance {
+    margin: 0;
+    margin-left: var(--space-2);
+    padding: 0;
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+}

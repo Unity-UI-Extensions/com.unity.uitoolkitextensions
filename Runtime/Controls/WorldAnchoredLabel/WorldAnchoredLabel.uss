@@ -1,0 +1,67 @@
+/* ============================================================
+   WorldAnchoredLabel.uss
+   Reads ThemeTokens only. The label sits over the camera, so it uses
+   the deep palette directly rather than the surface layer.
+   ============================================================ */
+
+.worldAnchoredLabel {
+    position: absolute;
+    flex-direction: row;
+    align-items: center;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    padding-left: 9px;
+    padding-right: var(--space-3);
+    background-color: var(--c-panel);
+    border-width: 1px;
+    border-color: var(--c-divider);
+    border-radius: var(--radius-pill);
+    transition-property: opacity;
+    transition-duration: var(--motion-fast);
+}
+
+.worldAnchoredLabel.worldAnchoredLabel--hidden {
+    visibility: hidden;
+}
+
+.worldAnchoredLabel--offscreen {
+    border-color: var(--c-accent);
+}
+
+.worldAnchoredLabel__dot {
+    width: 8px;
+    height: 8px;
+    margin-right: var(--space-2);
+    border-radius: var(--radius-pill);
+    background-color: var(--c-primary);
+}
+
+.worldAnchoredLabel--action > .worldAnchoredLabel__dot {
+    background-color: var(--c-accent);
+}
+
+.worldAnchoredLabel--success > .worldAnchoredLabel__dot {
+    background-color: var(--c-success);
+}
+
+.worldAnchoredLabel--warn > .worldAnchoredLabel__dot {
+    background-color: var(--c-warn);
+}
+
+.worldAnchoredLabel__text,
+.worldAnchoredLabel__separator,
+.worldAnchoredLabel__detail {
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--c-fg);
+    white-space: nowrap;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.worldAnchoredLabel__separator {
+    margin-left: 5px;
+    margin-right: 5px;
+}

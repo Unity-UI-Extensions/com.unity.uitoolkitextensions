@@ -1,0 +1,219 @@
+/* ============================================================
+   HintImageCard.uss
+   Reads ThemeTokens only. The placeholder's gradient stops are
+   redefined on its own rule (muted to primary).
+   ============================================================ */
+
+.hintImageCard {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    padding-left: 16px;
+    padding-right: 16px;
+    background-color: var(--surface-bg);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-card);
+}
+
+.hintImageCard.hintImageCard--embedded {
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+}
+
+.hintImageCard__row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.hintImageCard__image {
+    width: 110px;
+    height: 80px;
+    flex-shrink: 0;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 6px;
+    border-radius: var(--radius-input);
+    overflow: hidden;
+}
+
+.hintImageCard--embedded .hintImageCard__image {
+    width: 84px;
+    height: 62px;
+    border-radius: var(--radius-sm);
+}
+
+.hintImageCard__placeholder.gradientFill {
+    --gradient-start: var(--c-fg-muted);
+    --gradient-end: var(--c-primary);
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.hintImageCard--hasImage .hintImageCard__placeholder {
+    display: none;
+}
+
+.hintImageCard__picture {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+/* On the placeholder the tag is dark text, as drawn; on a photo it sits on a chip so it reads */
+.hintImageCard__tag {
+    margin: 0;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 6px;
+    padding-right: 6px;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-semibold);
+    letter-spacing: 14px;
+    color: var(--c-bg);
+    border-radius: var(--radius-pill);
+}
+
+.hintImageCard--hasImage .hintImageCard__tag {
+    background-color: var(--surface-bg);
+    color: var(--surface-fg);
+}
+
+.hintImageCard__text {
+    flex-shrink: 1;
+    flex-grow: 1;
+    margin: 0;
+    margin-left: var(--space-3);
+    padding: 0;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.hintImageCard--embedded .hintImageCard__text {
+    color: var(--surface-fg-soft);
+}
+
+.hintImageCard__proximity {
+    flex-direction: row;
+    margin-top: 10px;
+    border-width: 1px;
+    border-color: var(--surface-border-strong);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.hintImageCard__segment {
+    flex-grow: 1;
+    flex-basis: 0;
+    align-items: center;
+    justify-content: center;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.hintImageCard__segmentFill {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.hintImageCard__segment--current > .hintImageCard__segmentFill {
+    display: flex;
+}
+
+.hintImageCard__segmentLabel {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 14px;
+    color: var(--surface-muted);
+}
+
+.hintImageCard__segment--current > .hintImageCard__segmentLabel {
+    -unity-font-definition: var(--font-body-semibold);
+    color: var(--c-on-primary);
+}
+
+/* State machine additions: heading, loading bar, tips and actions. */
+.hintImageCard__texts {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.hintImageCard__heading {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-1);
+}
+
+.hintImageCard__location {
+    margin: 0;
+    padding: 0;
+    flex-shrink: 1;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body-semibold);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+}
+
+.hintImageCard__distance {
+    margin: 0;
+    margin-left: var(--space-2);
+    padding: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-accent);
+}
+
+.hintImageCard__loading {
+    margin-top: var(--space-3);
+}
+
+.hintImageCard__tips {
+    margin-top: var(--space-3);
+}
+
+.hintImageCard__tip {
+    margin: 0;
+    margin-bottom: var(--space-1);
+    padding: 0;
+    font-size: var(--text-caption);
+    color: var(--surface-fg-soft);
+    white-space: normal;
+}
+
+.hintImageCard__actions {
+    flex-direction: row;
+    margin-top: var(--space-3);
+}
+
+.hintImageCard__retry.pillButton,
+.hintImageCard__skip.pillButton {
+    flex-grow: 1;
+    flex-basis: 0;
+    height: 44px;
+    min-height: 44px;
+}
+
+.hintImageCard__skip.pillButton {
+    margin-right: 10px;
+}
+
+.hintImageCard--failed .hintImageCard__text {
+    color: var(--c-warn);
+}

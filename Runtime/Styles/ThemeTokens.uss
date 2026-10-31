@@ -1,0 +1,227 @@
+/* ============================================================
+   ThemeTokens.uss
+   The variable contract every UI Toolkit Extensions component reads.
+   Defaults are neutral, reusable values. An application can restyle every
+   component by redefining these variables on :root in its
+   own sheet, imported after this one in the panel theme (.tss).
+
+   Do not attach this sheet to a component: :root matches the element a
+   sheet is attached to, so the defaults would shadow the application's
+   overrides for that component. Import it in the theme, or attach it to
+   the document root with ThemeTokens.ApplyThemeTokens().
+
+   Modifier classes (set on any ancestor, normally the panel root):
+     .surface--deep / .surface--light   remap the --surface-* layer
+     .reduce-motion                     every --motion-* token becomes 0 ms
+     .text-scale--115 / .text-scale--130  scale the --text-* tokens
+     .theme--high-contrast              stronger muted text and dividers
+   ============================================================ */
+
+:root {
+    --theme-tokens: 1;
+
+    /* Colour: deep ground, over the camera */
+    --c-bg: #18181B;
+    --c-bg-2: #202024;
+    --c-navy: #202024;
+    --c-navy-2: #34343A;
+    --c-surface: #27272A;
+    --c-surface-2: #34343A;
+    --c-panel: rgba(24, 24, 27, 0.86);
+    --c-panel-strong: rgba(24, 24, 27, 0.96);
+    --c-divider: rgba(161, 161, 170, 0.3);
+    --c-divider-strong: rgba(161, 161, 170, 0.6);
+    --c-primary: #4F6BED;
+    --c-primary-2: #3956C5;
+    --c-accent: #A5B4FC;
+    --c-fg: #FAFAFA;
+    --c-fg-soft: #E4E4E7;
+    --c-fg-muted: #A1A1AA;
+    --c-warn: #FBBF24;
+    --c-success: #22C55E;
+    --c-danger: #DC2626;
+
+    /* Colour: light ground, white sheets and pages */
+    --c-page: #F4F4F5;
+    --c-page-fg: #27272A;
+    --c-page-muted: #71717A;
+    --c-page-card: #FFFFFF;
+    --c-page-divider: rgba(39, 39, 42, 0.14);
+    --c-page-divider-strong: rgba(39, 39, 42, 0.35);
+
+    /* Colour: shared */
+    --c-on-primary: #FFFFFF;
+    --c-on-danger: #FFFFFF;
+    --c-on-warn: #18181B;
+
+    /* Recording: the REC chip and the recording shutter */
+    --c-record: #DC2626;
+    --c-on-record: #FFFFFF;
+    --c-scrim: rgba(5, 8, 14, 0.55);
+
+    /* Gradient stops for primary actions; USS has no gradients, components build the texture. */
+    --grad-brand-start: #4F6BED;
+    --grad-brand-end: #3956C5;
+
+    /* --grad-danger: the filled destructive action, such as "Stop and save" */
+    --grad-danger-start: var(--c-danger);
+    --grad-danger-end: #5A2222;
+
+    /* Surface layer: what components read. Deep by default.
+       Fills and borders inside panels are opaque: the design's translucent values blended over the panel
+       (#18181B) or, on the light ground, over white. UI Toolkit blends in linear space in a linear colour space
+       project, which makes small alphas far brighter (4% white reads as about 13%), so opaque values are the only
+       way to match the designs in both colour spaces. Glass panels and scrims over the camera stay translucent. */
+    --surface-bg: var(--c-panel);
+    --surface-raised: var(--c-surface);
+    --surface-fg: var(--c-fg);
+    --surface-fg-soft: var(--c-fg-soft);
+    --surface-muted: var(--c-fg-muted);
+    --surface-border: #3F3F46;
+    --surface-border-strong: #52525B;
+    --surface-accent: var(--c-accent);
+    --surface-pressed: #3F3F46;
+    --surface-skeleton: #3F3F46;
+    --surface-overlay: var(--c-panel-strong);
+    --surface-input: #202024;
+    --surface-input-border: #52525B;
+    --surface-tile: #303036;
+    --surface-highlight: #303036;
+    --surface-highlight-border: #52525B;
+    --surface-switch-off: #52525B;
+    --surface-ring: #71717A;
+
+    /* Font weights fall back to --font-body when the application defines only that. */
+    --font-body-medium: var(--font-body);
+    --font-body-semibold: var(--font-body);
+
+    /* Type sizes. --font-display and --font-body are left to the application (FontAsset).
+       letter-spacing in USS is in hundredths of an em, not pixels (UI Toolkit text uses TextCore's character
+       spacing): a design's .22em eyebrow is letter-spacing: 22px, at any font size.
+       Font sizes draw at whole points: a fractional size is drawn at the next whole point up, so a design's half
+       point is written as the whole point below to keep its line breaks. */
+    --text-scale: 1;
+    --text-micro: 10px;
+    --text-caption: 12px;
+    --text-label-sm: 13px;
+    --text-label: 14px;
+    --text-body: 16px;
+    --text-subtitle: 18px;
+    --text-title: 22px;
+    --text-display: 28px;
+
+    /* Radius. A pill radius larger than half the height gives a full pill at any size. */
+    --radius-sm: 8px;
+    --radius-input: 12px;
+    --radius-pill: 50px;
+    --radius-card: 16px;
+    --radius-sheet: 28px;
+    --radius-dialog: 22px;
+
+    /* Spacing scale */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+
+    /* Motion */
+    --motion-fast: 120ms;
+    --motion-base: 240ms;
+    --motion-slow: 400ms;
+}
+
+.surface--deep {
+    --surface-bg: var(--c-panel);
+    --surface-raised: var(--c-surface);
+    --surface-fg: var(--c-fg);
+    --surface-fg-soft: var(--c-fg-soft);
+    --surface-muted: var(--c-fg-muted);
+    --surface-border: #3F3F46;
+    --surface-border-strong: #52525B;
+    --surface-accent: var(--c-accent);
+    --surface-pressed: #3F3F46;
+    --surface-skeleton: #3F3F46;
+    --surface-overlay: var(--c-panel-strong);
+    --surface-input: #202024;
+    --surface-input-border: #52525B;
+    --surface-tile: #303036;
+    --surface-highlight: #303036;
+    --surface-highlight-border: #52525B;
+    --surface-switch-off: #52525B;
+    --surface-ring: #71717A;
+}
+
+.surface--light {
+    --surface-bg: var(--c-page);
+    --surface-raised: var(--c-page-card);
+    --surface-fg: var(--c-page-fg);
+    --surface-fg-soft: var(--c-page-fg);
+    --surface-muted: var(--c-page-muted);
+    --surface-border: #D4D4D8;
+    --surface-border-strong: #A1A1AA;
+    --surface-accent: var(--c-primary);
+    --surface-pressed: #E4E4E7;
+    --surface-skeleton: #E4E4E7;
+    --surface-overlay: var(--c-page-card);
+    --surface-input: var(--c-page-card);
+    --surface-input-border: #A1A1AA;
+    --surface-tile: #E4E4E7;
+    --surface-highlight: #E4E4E7;
+    --surface-highlight-border: #A1A1AA;
+    --surface-switch-off: #A1A1AA;
+    --surface-ring: #D4D4D8;
+}
+
+.reduce-motion {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+}
+
+.text-scale--115 {
+    --text-scale: 1.15;
+    --text-micro: 12px;
+    --text-caption: 14px;
+    --text-label-sm: 15px;
+    --text-label: 16px;
+    --text-body: 18px;
+    --text-subtitle: 21px;
+    --text-title: 25px;
+    --text-display: 32px;
+}
+
+.text-scale--130 {
+    --text-scale: 1.3;
+    --text-micro: 13px;
+    --text-caption: 16px;
+    --text-label-sm: 17px;
+    --text-label: 18px;
+    --text-body: 21px;
+    --text-subtitle: 23px;
+    --text-title: 29px;
+    --text-display: 36px;
+}
+
+.theme--high-contrast {
+    --c-panel: rgba(12, 14, 19, 0.97);
+    --c-fg-muted: #E4E4E7;
+    --c-divider: rgba(165, 180, 252, 0.8);
+    --c-divider-strong: rgba(165, 180, 252, 1);
+    --c-page-muted: #3F3F46;
+    --c-page-divider: rgba(39, 39, 42, 0.5);
+    --surface-border: #A5B4FC;
+    --surface-border-strong: #C7D2FE;
+}
+
+/* The surface classes set their own borders, so high contrast restates them for each ground. */
+.theme--high-contrast .surface--deep {
+    --surface-border: #A5B4FC;
+    --surface-border-strong: #C7D2FE;
+}
+
+.theme--high-contrast .surface--light {
+    --surface-border: #71717A;
+    --surface-border-strong: #52525B;
+}

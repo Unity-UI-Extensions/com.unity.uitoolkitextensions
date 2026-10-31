@@ -1,0 +1,85 @@
+/* ============================================================
+   ScanFrame.uss
+   Reads ThemeTokens only. The pulse scales the frame with
+   --motion-slow; C# stops it with .reduce-motion.
+   ============================================================ */
+
+.scanFrame {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.scanFrame__frame {
+    flex-shrink: 0;
+    transition-property: scale, opacity;
+    transition-duration: var(--motion-slow);
+    transition-timing-function: ease-in-out-sine;
+}
+
+.scanFrame--targeted > .scanFrame__frame {
+    position: absolute;
+    transition-property: opacity;
+}
+
+.scanFrame--searching > .scanFrame__frame {
+    opacity: 0.85;
+}
+
+.scanFrame--searching.scanFrame--pulsed > .scanFrame__frame {
+    scale: 1.04 1.04;
+    opacity: 1;
+}
+
+.scanFrame__corner {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border-color: var(--c-accent);
+    transition-property: border-color;
+    transition-duration: var(--motion-fast);
+}
+
+.scanFrame--success .scanFrame__corner {
+    border-color: var(--c-success);
+}
+
+.scanFrame--warn .scanFrame__corner {
+    border-color: var(--c-warn);
+}
+
+.scanFrame__corner--topLeft {
+    left: 0;
+    top: 0;
+    border-top-width: 3px;
+    border-left-width: 3px;
+    border-top-left-radius: var(--radius-sm);
+}
+
+.scanFrame__corner--topRight {
+    right: 0;
+    top: 0;
+    border-top-width: 3px;
+    border-right-width: 3px;
+    border-top-right-radius: var(--radius-sm);
+}
+
+.scanFrame__corner--bottomLeft {
+    left: 0;
+    bottom: 0;
+    border-bottom-width: 3px;
+    border-left-width: 3px;
+    border-bottom-left-radius: var(--radius-sm);
+}
+
+.scanFrame__corner--bottomRight {
+    right: 0;
+    bottom: 0;
+    border-bottom-width: 3px;
+    border-right-width: 3px;
+    border-bottom-right-radius: var(--radius-sm);
+}

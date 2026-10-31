@@ -1,0 +1,269 @@
+/* ============================================================
+   EntryGate.uss
+   Reads ThemeTokens only. The gate is a launch screen on a gradient
+   backdrop, so it uses the deep palette directly.
+   ============================================================ */
+
+.entryGate {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    flex-direction: column;
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+/* The navy stops come from GradientFill's navy preset; the deep ground redefines them. */
+.entryGate.entryGate--deep.gradientFill {
+    --gradient-start: var(--c-bg);
+    --gradient-end: var(--c-bg-2);
+}
+
+.entryGate__logo {
+    align-self: center;
+    width: 140px;
+    height: 30px;
+    margin-top: 56px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-fg);
+}
+
+/* Hero */
+.entryGate__hero {
+    margin-top: var(--space-3);
+    padding-top: 22px;
+    padding-bottom: var(--space-5);
+    padding-left: 22px;
+    padding-right: 22px;
+    border-radius: var(--radius-sheet);
+    flex-shrink: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.entryGate__heroLogos {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.entryGate__brandTile {
+    height: 44px;
+    padding-left: 14px;
+    padding-right: 14px;
+    justify-content: center;
+    border-radius: 12px;
+    background-color: var(--c-page-card);
+}
+
+.entryGate__brandLogo {
+    width: 90px;
+    height: 22px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.entryGate__orgLogo {
+    width: 96px;
+    height: 44px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.entryGate__eyebrow {
+    margin-bottom: var(--space-1);
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--c-fg-soft);
+}
+
+.entryGate__hero .entryGate__title {
+    font-size: var(--text-display);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--c-fg);
+    white-space: normal;
+}
+
+.entryGate__subtitle {
+    margin-top: 6px;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body);
+    color: var(--c-fg-soft);
+    white-space: normal;
+}
+
+/* Message */
+.entryGate__main {
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.entryGate--hero .entryGate__main {
+    justify-content: flex-start;
+    margin-top: var(--space-5);
+}
+
+.entryGate__panel {
+    flex-direction: column;
+}
+
+.entryGate--card .entryGate__panel {
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-6);
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
+    background-color: var(--c-panel);
+    border-width: 1px;
+    border-color: var(--c-divider);
+    border-radius: var(--radius-sheet);
+}
+
+.entryGate__icon {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 14px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--c-primary);
+}
+
+.entryGate__icon.entryGate__icon--warn {
+    background-color: var(--c-warn);
+}
+
+.entryGate__icon.entryGate__icon--warnOutline {
+    width: 64px;
+    height: 64px;
+    background-color: rgba(232, 176, 75, 0.15);
+    border-width: 2px;
+    border-color: var(--c-warn);
+}
+
+.entryGate__iconImage {
+    width: 26px;
+    height: 26px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-fg);
+}
+
+.entryGate__icon--warn > .entryGate__iconImage {
+    -unity-background-image-tint-color: var(--c-bg);
+}
+
+.entryGate__icon--warnOutline > .entryGate__iconImage {
+    -unity-background-image-tint-color: var(--c-warn);
+}
+
+.entryGate__panel > .entryGate__title {
+    font-size: var(--text-display);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--c-fg);
+    white-space: normal;
+}
+
+.entryGate--card .entryGate__panel > .entryGate__title {
+    font-size: var(--text-title);
+}
+
+.entryGate__body {
+    margin-top: 14px;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+    color: var(--c-fg-soft);
+    white-space: normal;
+}
+
+.entryGate__requirements {
+    margin-top: var(--space-4);
+}
+
+.entryGate__requirement {
+    flex-direction: row;
+    align-items: center;
+    min-height: 36px;
+}
+
+.entryGate__requirementIcon {
+    width: 22px;
+    height: 22px;
+    margin-right: var(--space-3);
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-accent);
+}
+
+.entryGate__requirementLabel {
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--c-fg);
+}
+
+.entryGate__content {
+    flex-direction: column;
+}
+
+/* Actions: in the panel for a message, at the bottom of the screen for the hero */
+.entryGate__actions {
+    margin-top: var(--space-5);
+}
+
+.entryGate--hero > .entryGate__actions {
+    flex-shrink: 0;
+    margin-top: var(--space-4);
+}
+
+.entryGate__actions > .pillButton {
+    margin-bottom: 10px;
+}
+
+.entryGate__link,
+.entryGate__consentLink,
+.entryGate__cancel {
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--c-accent);
+}
+
+.entryGate__link {
+    align-self: center;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+}
+
+.entryGate__consent {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: var(--space-1);
+}
+
+.entryGate__consentLink {
+    margin-left: var(--space-2);
+    margin-right: var(--space-2);
+}
+
+.entryGate__footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: var(--space-3);
+    margin-bottom: 36px;
+}
+
+.entryGate__note,
+.entryGate__footerEnd {
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--c-fg-muted);
+}
+
+.entryGate__footerSpacer {
+    flex-grow: 1;
+}

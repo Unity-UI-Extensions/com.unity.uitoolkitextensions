@@ -1,0 +1,95 @@
+/* ============================================================
+   ToolRail.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.toolRail {
+    align-items: center;
+    justify-content: space-around;
+    background-color: var(--surface-bg);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+}
+
+.toolRail--horizontal {
+    flex-direction: row;
+    min-height: 60px;
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+}
+
+.toolRail--vertical {
+    flex-direction: column;
+    min-width: 60px;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+}
+
+.toolRail__item {
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+}
+
+.toolRail--labels .toolRail__item {
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    padding-top: var(--space-1);
+    padding-bottom: var(--space-1);
+}
+
+.toolRail__item:hover,
+.toolRail__item:active {
+    background-color: var(--surface-pressed);
+}
+
+.toolRail__item:focus {
+    border-width: 2px;
+    border-color: var(--surface-accent);
+}
+
+.toolRail__item.toolRail__item--active {
+    background-color: var(--surface-pressed);
+}
+
+.toolRail__item--disabled {
+    opacity: 0.35;
+}
+
+.toolRail__icon {
+    width: 22px;
+    height: 22px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--surface-fg);
+}
+
+.toolRail__item--active > .toolRail__icon {
+    -unity-background-image-tint-color: var(--surface-accent);
+}
+
+.toolRail__item--warn > .toolRail__icon {
+    -unity-background-image-tint-color: var(--c-warn);
+}
+
+.toolRail__label {
+    display: none;
+    margin-top: 2px;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+}
+
+.toolRail--labels .toolRail__label {
+    display: flex;
+}
+
+.toolRail__item--active > .toolRail__label {
+    color: var(--surface-accent);
+}
+
+.toolRail__item--warn > .toolRail__label {
+    color: var(--c-warn);
+}

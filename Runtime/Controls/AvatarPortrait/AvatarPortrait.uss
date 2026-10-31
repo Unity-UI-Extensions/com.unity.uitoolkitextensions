@@ -1,0 +1,63 @@
+/* ============================================================
+   AvatarPortrait.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.avatarPortrait {
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-tile);
+    overflow: hidden;
+}
+
+.avatarPortrait.avatarPortrait--small {
+    width: 40px;
+    height: 40px;
+}
+
+.avatarPortrait.avatarPortrait--medium {
+    width: 48px;
+    height: 48px;
+}
+
+.avatarPortrait.avatarPortrait--large {
+    width: 56px;
+    height: 56px;
+}
+
+.avatarPortrait.avatarPortrait--ring {
+    border-width: 2px;
+    border-color: var(--c-primary);
+}
+
+.avatarPortrait__image {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.avatarPortrait__initials {
+    padding-left: 0;
+    padding-right: 0;
+    -unity-font-definition: var(--font-body-semibold);
+    -unity-font-style: bold;
+    color: var(--surface-accent);
+    -unity-text-align: middle-center;
+}
+
+.avatarPortrait--small > .avatarPortrait__initials {
+    font-size: var(--text-label);
+}
+
+.avatarPortrait--medium > .avatarPortrait__initials {
+    font-size: var(--text-body);
+}
+
+.avatarPortrait--large > .avatarPortrait__initials {
+    font-size: var(--text-subtitle);
+}

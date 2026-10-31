@@ -1,3 +1,62 @@
+/* Component sheets for the extension controls. Each component owns its USS and reads only
+   ThemeTokens variables (Runtime/Styles/ThemeTokens.uss, imported by the panel theme, never by this sheet). */
+@import url("../Controls/Stepper/SegmentedControl.uss");
+@import url("../Controls/BottomSheet/BottomSheet.uss");
+@import url("../Controls/GradientFill/GradientFill.uss");
+@import url("../Controls/ModalDialog/ModalDialog.uss");
+@import url("../Controls/PillButton/PillButtonVariants.uss");
+@import url("../Controls/ToastHost/ToastHost.uss");
+@import url("../Controls/StatusChip/StatusChip.uss");
+@import url("../Controls/Switch/Switch.uss");
+@import url("../Controls/SettingsRow/SettingsRow.uss");
+@import url("../Controls/OrnamentBar/OrnamentBar.uss");
+@import url("../Controls/ScrollingTabs/ScrollingTabs.uss");
+@import url("../Controls/SearchField/SearchField.uss");
+@import url("../Controls/EmptyState/EmptyState.uss");
+@import url("../Controls/SkeletonTile/SkeletonTile.uss");
+@import url("../Controls/ProgressRing/ProgressRing.uss");
+@import url("../Controls/StatusList/StatusList.uss");
+@import url("../Controls/CollapsibleSection/CollapsibleSectionCard.uss");
+@import url("../Controls/CoachingOverlay/CoachingOverlay.uss");
+@import url("../Controls/ContentGrid/ContentGrid.uss");
+@import url("../Controls/SectionList/SectionList.uss");
+@import url("../Controls/SideDrawer/SideDrawer.uss");
+@import url("../Controls/ScreenHeader/ScreenHeaderCompact.uss");
+@import url("../Controls/RoundedInputField/RoundedInputFieldThemed.uss");
+@import url("../Controls/WorldAnchoredLabel/WorldAnchoredLabel.uss");
+@import url("../Controls/ToolRail/ToolRail.uss");
+@import url("../Controls/GestureHint/GestureHint.uss");
+@import url("../Controls/AudioGuidePlayer/AudioGuidePlayer.uss");
+@import url("../Controls/EntryGate/EntryGate.uss");
+@import url("../Controls/LinearProgress/LinearProgress.uss");
+@import url("../Controls/AvatarPortrait/AvatarPortrait.uss");
+@import url("../Controls/ShutterButton/ShutterButton.uss");
+@import url("../Controls/AchievementRow/AchievementRow.uss");
+@import url("../Controls/CaptionBar/CaptionBar.uss");
+@import url("../Controls/PromptChoices/PromptChoices.uss");
+@import url("../Controls/SpeechInputPanel/HoldToTalk.uss");
+@import url("../Controls/SpeechInputPanel/SpeechInputPanel.uss");
+@import url("../Controls/ContextPill/ContextPill.uss");
+@import url("../Controls/ScanFrame/ScanFrame.uss");
+@import url("../Controls/QRCodeView/QRCodeView.uss");
+@import url("../Controls/HintImageCard/HintImageCard.uss");
+@import url("../Controls/WayfinderCard/WayfinderCard.uss");
+@import url("../Controls/PanZoomMapView/PanZoomMapView.uss");
+@import url("../Controls/MapStopCard/MapStopCard.uss");
+@import url("../Controls/TrailStrip/TrailStrip.uss");
+@import url("../Controls/WayfinderChips/WayfinderChips.uss");
+@import url("../Controls/StorageBar/StorageBar.uss");
+@import url("../Controls/NotificationCentre/NotificationCentre.uss");
+@import url("../Controls/BadgeTile/BadgeTile.uss");
+@import url("../Controls/AchievementCard/AchievementCard.uss");
+@import url("../Controls/ScanControls/ScanControls.uss");
+@import url("../Controls/PublishPanel/PublishPanel.uss");
+@import url("../Controls/FilterChipRow/FilterChipRow.uss");
+@import url("../Controls/RadialMenu/RadialMenu.uss");
+@import url("../Controls/NumericField/NumericField.uss");
+@import url("../Controls/SafeAreaRoot/SafeAreaRoot.uss");
+@import url("../Controls/BreakpointRoot/BreakpointRoot.uss");
+
 :root {
 	--quadrantStepper-background-color: #e6e6e6;
 	--quadrantStepper-label-color: #000000;
@@ -5,6 +64,13 @@
 	--quadrantStepper-overlay-color: #458398;
 	--quadrantStepper-icon-size: 50px;
 	--quadrantStepper-border-radius-medium: 30px;
+	--quadrantStepper-focus-color: #7FC7D9;
+}
+
+/* Components that read ThemeTokens carry this class; the probe lets them warn when the theme lacks the tokens. */
+.uitk-themed {
+	--uitk-themed: 1;
+	--uitk-tokens: var(--theme-tokens);
 }
 
 /* ScrollSnap */
@@ -88,6 +154,41 @@
 	color: var(--quadrantStepper-label-selected-color);
 }
 
+.quadrantStepper .quadrantStepper__icon {
+	width: var(--quadrantStepper-icon-size);
+	height: var(--quadrantStepper-icon-size);
+	flex-shrink: 0;
+	-unity-background-scale-mode: scale-to-fit;
+	-unity-background-image-tint-color: var(--quadrantStepper-label-color);
+}
+
+.quadrantStepper .quadrantStepper__icon.is-selected {
+	-unity-background-image-tint-color: var(--quadrantStepper-label-selected-color);
+}
+
+.quadrantStepper .quadrantStepper__segment--disabled {
+	opacity: 0.4;
+}
+
+.quadrantStepper:focus > .quadrantStepper__overlay {
+	border-width: 2px;
+	border-color: var(--quadrantStepper-focus-color);
+}
+
+/* Content sizing: segments as wide as their content; the row scrolls when wider than the control */
+.quadrantStepper--content > .quadrantStepper__segments {
+	width: auto;
+	flex-shrink: 0;
+}
+
+.quadrantStepper--content > .quadrantStepper__segments > .quadrantStepper__segment {
+	flex-grow: 0;
+	flex-shrink: 0;
+	flex-basis: auto;
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
 /* GrayscaleImage */
 .grayscaleImage {
 	flex-grow: 1;
@@ -101,6 +202,11 @@
 	border-color: rgba(255, 255, 255, 0.14);
 	border-radius: 14px;
 	overflow: hidden;
+}
+
+.roundedInputField.roundedInputField--invalid {
+	border-width: 1.5px;
+	border-color: var(--c-warn, #E8B04B);
 }
 
 .roundedInputField__textField {
@@ -163,6 +269,28 @@
 
 .collapsibleSection__title {
 	flex-grow: 1;
+}
+
+.collapsibleSection__titles {
+	flex-grow: 1;
+	flex-shrink: 1;
+}
+
+.collapsibleSection__subtitle {
+	font-size: 11px;
+	opacity: 0.7;
+}
+
+.collapsibleSection__leading {
+	flex-shrink: 0;
+	margin-right: 12px;
+}
+
+.collapsibleSection__trailing {
+	flex-direction: row;
+	align-items: center;
+	flex-shrink: 0;
+	margin-left: 8px;
 }
 
 .collapsibleSection__chevron {
@@ -738,11 +866,36 @@
 	padding-right: 12px;
 }
 
+/* PillButton leading icon: the icon and label centre together in a row */
+.pillButton__icon {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+	margin-right: 8px;
+	-unity-background-scale-mode: scale-to-fit;
+	-unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+.pillButton.pillButton--hasIcon > .pillButton__background {
+	flex-direction: row;
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
+.pillButton.pillButton--hasIcon .pillButton__label {
+	flex-grow: 0;
+	flex-shrink: 1;
+	margin-left: 0;
+	margin-right: 0;
+	padding-left: 0;
+	padding-right: 0;
+}
+
 /* NotificationBadge */
 .notificationBadge {
 	min-width: 18px;
 	height: 18px;
-	border-radius: 50%;
+	border-radius: 9px; /* half its 18 px height: a pill when it widens for two digits */
 	background-color: rgb(229, 72, 77);
 	align-items: center;
 	justify-content: center;
@@ -800,6 +953,16 @@
 	width: 64px;
 	height: 64px;
 	right: 16px;
+}
+
+.screenHeader__titles {
+	width: 100%;
+	align-items: center;
+}
+
+.screenHeader__eyebrow {
+	font-size: 11px;
+	-unity-text-align: middle-center;
 }
 
 .screenHeader__title {

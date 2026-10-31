@@ -1,0 +1,4 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:ext="UnityUIToolkit.Extensions">
+    <ext:SegmentedControl name="segmented" options="Day,Week,Month" sizing="Content" selected-index="1" />
+    <ext:QuadrantStepper name="quadrant" options="About,Goals,Settings,Done" />
+</ui:UXML>

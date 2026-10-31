@@ -1,0 +1,82 @@
+/* ============================================================
+   SearchField.uss
+   Reads ThemeTokens only; restyles the inner RoundedInputField.
+   ============================================================ */
+
+.searchField {
+    flex-direction: row;
+    align-items: center;
+    min-height: 44px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-1);
+    background-color: var(--surface-raised);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+}
+
+.searchField.searchField--focused {
+    border-color: var(--surface-accent);
+}
+
+.searchField__icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    background-image: url("../../Assets/Icons/Search.svg");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--surface-muted);
+}
+
+.searchField .searchField__input.roundedInputField {
+    flex-grow: 1;
+    flex-shrink: 1;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+}
+
+.searchField .roundedInputField__input.roundedInputField__input {
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    padding-top: 0;
+    padding-bottom: 0;
+    min-height: 40px;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--surface-fg);
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body);
+}
+
+.searchField .roundedInputField__placeholder.roundedInputField__placeholder {
+    padding-left: var(--space-2);
+    color: var(--surface-muted);
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body);
+}
+
+.searchField__count {
+    flex-shrink: 0;
+    margin-left: var(--space-1);
+    margin-right: var(--space-1);
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+}
+
+.searchField__clear {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    background-image: url("../../Assets/Icons/Close.svg");
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position-x: center;
+    background-position-y: center;
+    -unity-background-image-tint-color: var(--surface-muted);
+}
+
+.searchField__clear:hover,
+.searchField__clear:active {
+    background-color: var(--surface-pressed);
+}

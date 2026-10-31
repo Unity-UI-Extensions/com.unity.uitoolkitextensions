@@ -1,0 +1,6 @@
+/* Test-only probes that read ThemeTokens variables. */
+.probe-surface { background-color: var(--surface-bg); color: var(--surface-fg); }
+.probe-text { font-size: var(--text-body); }
+.probe-motion { transition-property: opacity; transition-duration: var(--motion-base); }
+.probe-radius { border-top-left-radius: var(--radius-sheet); }
+.probe-space { padding-left: var(--space-4); }

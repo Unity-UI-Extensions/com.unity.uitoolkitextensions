@@ -1,0 +1,95 @@
+/* ============================================================
+   StorageBar.uss
+   Reads ThemeTokens only. FS10_2.
+   ============================================================ */
+
+.storageBar__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.storageBar__title {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+}
+
+.storageBar__detail {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+}
+
+.storageBar__track {
+    flex-direction: row;
+    height: 10px;
+    margin-top: var(--space-2);
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: var(--surface-skeleton);
+}
+
+.storageBar__segment {
+    height: 100%;
+}
+
+.storageBar__segment--0,
+.storageBar__dot--0 {
+    background-color: var(--c-navy-2);
+}
+
+.storageBar__segment--1,
+.storageBar__dot--1 {
+    background-color: var(--c-primary);
+}
+
+.storageBar__segment--2,
+.storageBar__dot--2 {
+    background-color: var(--c-accent);
+}
+
+.storageBar__segment--3,
+.storageBar__dot--3 {
+    background-color: var(--c-primary-2);
+}
+
+.storageBar__segment--other,
+.storageBar__dot--other {
+    background-color: var(--c-fg-muted);
+}
+
+.storageBar__legend {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: var(--space-2);
+}
+
+.storageBar__legendItem {
+    flex-direction: row;
+    align-items: center;
+    margin-right: 14px;
+    margin-bottom: 2px;
+}
+
+.storageBar__dot {
+    width: 8px;
+    height: 8px;
+    margin-right: var(--space-1);
+    border-radius: 2px;
+}
+
+.storageBar__legendLabel {
+    margin: 0;
+    padding: 0;
+    font-size: 11px;
+    color: var(--surface-muted);
+}
+
+.storageBar__freeUp.pillButton {
+    margin-top: var(--space-4);
+}

@@ -1,0 +1,95 @@
+/* ============================================================
+   CaptionBar.uss
+   Reads ThemeTokens only. The cross-fade is an opacity transition
+   on --motion-fast; .reduce-motion makes it instant.
+   ============================================================ */
+
+.captionBar {
+    flex-direction: row;
+    align-items: flex-start;
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-3);
+    padding-left: 14px;
+    padding-right: 14px;
+    background-color: var(--c-panel);
+    border-width: 1px;
+    border-color: var(--c-divider);
+    border-left-width: 3px;
+    border-left-color: var(--c-primary);
+    border-radius: 14px;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: var(--motion-fast);
+}
+
+.captionBar.captionBar--empty {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.captionBar__speaker {
+    flex-shrink: 0;
+    margin-right: var(--space-3);
+    padding-top: 4px;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--c-accent);
+}
+
+.captionBar__text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    overflow: hidden;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+    color: var(--c-fg);
+    white-space: normal;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: var(--motion-fast);
+}
+
+.captionBar--changing > .captionBar__text {
+    opacity: 0;
+}
+
+/* Sizes: Medium is the default (--text-label). */
+.captionBar--small > .captionBar__text {
+    font-size: var(--text-caption);
+}
+
+.captionBar--large > .captionBar__text {
+    font-size: var(--text-body);
+}
+
+.captionBar--extraLarge > .captionBar__text {
+    font-size: var(--text-subtitle);
+}
+
+/* Backgrounds: Panel is the default. */
+.captionBar.captionBar--solid {
+    background-color: var(--c-panel-strong);
+}
+
+.captionBar.captionBar--plain {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+.captionBar--plain > .captionBar__text,
+.captionBar--plain > .captionBar__speaker {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+/* Floating: the bar places itself in its parent, 16 px in from each side. */
+.captionBar.captionBar--floating {
+    position: absolute;
+    left: var(--space-4);
+    right: var(--space-4);
+}

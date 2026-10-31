@@ -1,0 +1,210 @@
+/* ============================================================
+   CoachingOverlay.uss
+   Reads ThemeTokens only. Fades with --motion-base; the device glyph
+   sways with --motion-slow and holds still with .reduce-motion.
+   ============================================================ */
+
+.coachingOverlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: var(--motion-base);
+}
+
+.coachingOverlay.coachingOverlay--shown {
+    opacity: 1;
+}
+
+.coachingOverlay__cue {
+    align-items: center;
+    max-width: 300px;
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-4);
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
+    background-color: var(--surface-bg);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-card);
+}
+
+.coachingOverlay--warn .coachingOverlay__cue {
+    border-color: var(--c-warn);
+}
+
+.coachingOverlay__device {
+    width: 28px;
+    height: 48px;
+    border-width: 2px;
+    border-color: var(--surface-fg);
+    border-radius: var(--radius-sm);
+    translate: -14px 0;
+    rotate: -8deg;
+    transition-property: translate, rotate;
+    transition-duration: var(--motion-slow);
+    transition-timing-function: ease-in-out-sine;
+}
+
+.coachingOverlay--swayed .coachingOverlay__device {
+    translate: 14px 0;
+    rotate: 8deg;
+}
+
+.coachingOverlay--findSurface .coachingOverlay__device {
+    rotate: 35deg;
+}
+
+.coachingOverlay--findSurface.coachingOverlay--swayed .coachingOverlay__device {
+    rotate: 50deg;
+}
+
+.coachingOverlay__ground {
+    display: none;
+    width: 72px;
+    height: 3px;
+    margin-top: var(--space-2);
+    border-radius: 2px;
+    background-color: var(--surface-accent);
+}
+
+.coachingOverlay--findSurface .coachingOverlay__ground {
+    display: flex;
+}
+
+.coachingOverlay__text {
+    margin-top: var(--space-3);
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.coachingOverlay--warn .coachingOverlay__text {
+    color: var(--c-warn);
+}
+
+.coachingOverlay__header {
+    align-items: center;
+}
+
+.coachingOverlay__visual {
+    align-items: center;
+}
+
+.coachingOverlay__disc {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.coachingOverlay__discIcon {
+    width: 22px;
+    height: 22px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.coachingOverlay__detail {
+    margin-top: var(--space-2);
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-fg-soft);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.coachingOverlay--hasIcon .coachingOverlay__text {
+    margin-top: var(--space-2);
+}
+
+/* Card placements: a full-width card under the top bar (top) or above the bottom actions (bottom) */
+.coachingOverlay.coachingOverlay--card {
+    align-items: stretch;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+}
+
+.coachingOverlay.coachingOverlay--top {
+    justify-content: flex-start;
+}
+
+.coachingOverlay.coachingOverlay--bottom {
+    justify-content: flex-end;
+}
+
+.coachingOverlay--card .coachingOverlay__cue {
+    max-width: 480px;
+    align-self: center;
+    width: 100%;
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+    align-items: stretch;
+}
+
+.coachingOverlay--top .coachingOverlay__cue {
+    margin-top: var(--space-4);
+}
+
+.coachingOverlay--bottom .coachingOverlay__cue {
+    margin-bottom: var(--space-4);
+}
+
+.coachingOverlay--card .coachingOverlay__header {
+    flex-direction: row;
+}
+
+.coachingOverlay--card .coachingOverlay__text.coachingOverlay__text {
+    flex-shrink: 1;
+    margin-top: 0;
+    margin-left: var(--space-3);
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+}
+
+.coachingOverlay--card .coachingOverlay__detail {
+    -unity-text-align: upper-left;
+}
+
+.coachingOverlay__actions {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: var(--space-3);
+}
+
+.coachingOverlay__action.pillButton.pillButton--compact,
+.coachingOverlay__secondaryAction.pillButton.pillButton--compact {
+    height: 40px;
+    min-height: 40px;
+}
+
+/* Two actions share the row equally, ghost on the left */
+.coachingOverlay--twoActions .coachingOverlay__action.pillButton.pillButton--compact,
+.coachingOverlay--twoActions .coachingOverlay__secondaryAction.pillButton.pillButton--compact {
+    flex-grow: 1;
+    flex-basis: 0;
+    height: 44px;
+    min-height: 44px;
+}
+
+.coachingOverlay--twoActions .coachingOverlay__secondaryAction {
+    margin-left: 10px;
+}
+
+.coachingOverlay__progress {
+    margin-top: var(--space-3);
+}

@@ -1,0 +1,130 @@
+/* ============================================================
+   BadgeTile.uss
+   BadgeTile, BadgeGrid and BadgeSummaryCard. Reads ThemeTokens only. FS10_8.
+   ============================================================ */
+
+.badgeTile {
+    align-items: center;
+}
+
+.badgeTile:focus > .badgeTile__disc {
+    border-width: 2px;
+    border-color: var(--surface-accent);
+}
+
+.badgeTile__disc {
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.badgeTile__icon {
+    -unity-background-scale-mode: scale-to-fit;
+    background-image: url("../../Assets/Icons/StarOutline.svg");
+    -unity-background-image-tint-color: var(--surface-muted);
+}
+
+.badgeTile--unlocked .badgeTile__icon {
+    background-image: url("../../Assets/Icons/Star.svg");
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.badgeTile--locked > .badgeTile__disc {
+    background-color: var(--surface-tile);
+}
+
+/* Badge art (FS10_7 review): fills the disc untinted, scaled and cropped, inside a subtle ring. The disc and the
+   icon are both round, so the art is clipped round. A locked badge's art is dimmed rather than tinted. */
+.badgeTile--hasIcon > .badgeTile__disc {
+    border-width: 1.5px;
+    border-color: var(--surface-ring);
+    background-color: var(--surface-tile);
+}
+
+.badgeTile.badgeTile--hasIcon .badgeTile__icon {
+    -unity-background-scale-mode: scale-and-crop;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+.badgeTile--locked.badgeTile--hasIcon .badgeTile__icon {
+    opacity: 0.45;
+}
+
+.badgeTile__title {
+    margin: 0;
+    margin-top: 6px;
+    padding: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-semibold);
+    -unity-font-style: bold;
+    -unity-text-align: upper-center;
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.badgeTile__status {
+    margin: 0;
+    margin-top: 2px;
+    padding: 0;
+    /* The board's 10.5, rounded down: UI Toolkit draws half points at the next whole point. */
+    font-size: 10px;
+    -unity-text-align: upper-center;
+    color: var(--surface-muted);
+}
+
+.badgeGrid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.badgeGrid--card {
+    padding-top: var(--space-4);
+    padding-bottom: 0;
+    padding-left: 14px;
+    padding-right: 14px;
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: 18px;
+    background-color: var(--surface-raised);
+}
+
+.badgeGrid__cell {
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
+    margin-bottom: var(--space-4);
+}
+
+.badgeSummaryCard {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+    padding-left: 18px;
+    padding-right: 18px;
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: 18px;
+    background-color: var(--surface-raised);
+}
+
+.badgeSummaryCard__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.badgeSummaryCard__title {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+}
+
+.badgeSummaryCard__detail {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+}

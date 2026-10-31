@@ -1,0 +1,48 @@
+/* ============================================================
+   RoundedInputFieldThemed.uss
+   The themed variant of RoundedInputField. Reads ThemeTokens only;
+   the selectors are specific enough to beat the default runtime
+   theme's hover and focus states on the inner text input.
+   ============================================================ */
+
+.roundedInputField.roundedInputField--themed {
+    flex-grow: 0;
+    min-height: 50px;
+    background-color: var(--surface-input);
+    border-width: 1.5px;
+    border-color: var(--surface-input-border);
+    border-radius: var(--radius-input);
+}
+
+.roundedInputField--themed .roundedInputField__textField.roundedInputField__textField {
+    min-height: 47px;
+}
+
+.roundedInputField--themed .roundedInputField__input.roundedInputField__input,
+.roundedInputField--themed .roundedInputField__input.roundedInputField__input:hover,
+.roundedInputField--themed .roundedInputField__input.roundedInputField__input:focus {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+    padding-top: 0;
+    padding-bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--surface-fg);
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body);
+}
+
+.roundedInputField--themed .roundedInputField__placeholder.roundedInputField__placeholder {
+    padding-left: var(--space-4);
+    color: var(--surface-muted);
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body);
+}
+
+.roundedInputField.roundedInputField--themed.roundedInputField--focused {
+    border-color: var(--surface-accent);
+}
+
+.roundedInputField.roundedInputField--themed.roundedInputField--invalid {
+    border-color: var(--c-warn);
+}

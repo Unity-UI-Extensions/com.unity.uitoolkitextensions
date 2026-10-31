@@ -1,0 +1,41 @@
+/* ============================================================
+   LinearProgress.uss
+   Reads ThemeTokens only. The fill's gradient stops are redefined on
+   its own rule, so GradientFill paints primary to accent.
+   ============================================================ */
+
+.linearProgress {
+    height: 4px;
+    flex-shrink: 0;
+    border-radius: 2px;
+    background-color: var(--surface-border);
+    overflow: hidden;
+}
+
+.linearProgress__fill.gradientFill {
+    --gradient-start: var(--c-primary);
+    --gradient-end: var(--c-accent);
+    height: 100%;
+    transition-property: width;
+    transition-duration: var(--motion-base);
+}
+
+/* Indeterminate: a segment (width set in C#) that sweeps between the ends */
+.linearProgress--indeterminate > .linearProgress__fill.gradientFill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 2px;
+    transition-property: left;
+    transition-duration: var(--motion-slow);
+    transition-timing-function: ease-in-out-sine;
+}
+
+.linearProgress--indeterminate.linearProgress--swept > .linearProgress__fill.gradientFill {
+    left: 65%;
+}
+
+.reduce-motion .linearProgress--indeterminate > .linearProgress__fill.gradientFill {
+    left: 32.5%;
+}

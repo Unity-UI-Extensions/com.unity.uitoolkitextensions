@@ -1,0 +1,166 @@
+/* ============================================================
+   ModalDialog.uss
+   Reads ThemeTokens only. Opening and closing are transitions on
+   opacity and scale, so .reduce-motion makes them instant.
+   ============================================================ */
+
+.modalDialog {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+}
+
+.modalDialog__scrim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--c-scrim);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: var(--motion-base);
+}
+
+.modalDialog--open > .modalDialog__scrim {
+    opacity: 1;
+}
+
+.modalDialog__card {
+    width: 100%;
+    max-width: 480px;
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-5);
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+    background-color: var(--surface-overlay);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-dialog);
+    opacity: 0;
+    scale: 0.96 0.96;
+    transition-property: opacity, scale;
+    transition-duration: var(--motion-base);
+    transition-timing-function: ease-out-cubic;
+}
+
+.modalDialog--open > .modalDialog__card {
+    opacity: 1;
+    scale: 1 1;
+}
+
+.modalDialog__title {
+    font-size: var(--text-title);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+    white-space: normal;
+    margin-bottom: var(--space-2);
+}
+
+.modalDialog__body {
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-fg-soft);
+    white-space: normal;
+    margin-bottom: var(--space-4);
+}
+
+.modalDialog__input,
+.modalDialog__choices {
+    flex-direction: column;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: var(--space-4);
+}
+
+.modalDialog__input > Label,
+.modalDialog__choices > Label {
+    color: var(--surface-muted);
+    font-size: var(--text-label);
+    margin-bottom: var(--space-1);
+}
+
+.modalDialog__input > .unity-base-text-field__input,
+.modalDialog__choices > .unity-base-popup-field__input {
+    min-height: 44px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    background-color: var(--surface-raised);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-sm);
+    color: var(--surface-fg);
+    font-size: var(--text-body);
+}
+
+.modalDialog__input:focus > .unity-base-text-field__input,
+.modalDialog__choices:focus > .unity-base-popup-field__input {
+    border-color: var(--surface-accent);
+}
+
+.modalDialog__content {
+    flex-direction: column;
+}
+
+.modalDialog__actions {
+    flex-direction: row;
+    margin-top: var(--space-2);
+}
+
+.modalDialog__button.modalDialog__button {
+    flex-grow: 1;
+    flex-basis: 0;
+    height: 48px;
+    margin-left: 0;
+    margin-right: 0;
+    border-width: 0;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+    -unity-font-style: bold;
+}
+
+.modalDialog__button.modalDialog__button--secondary {
+    margin-right: var(--space-2);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    color: var(--surface-fg);
+}
+
+.modalDialog__button.modalDialog__button--secondary:hover,
+.modalDialog__button.modalDialog__button--secondary:active {
+    background-color: var(--surface-pressed);
+}
+
+.modalDialog__button.modalDialog__button--primary,
+.modalDialog__button.modalDialog__button--primary:hover {
+    background-color: var(--c-primary);
+    color: var(--c-on-primary);
+}
+
+.modalDialog__button.modalDialog__button--primary:active {
+    opacity: 0.85;
+}
+
+.modalDialog--destructive .modalDialog__button.modalDialog__button--primary,
+.modalDialog--destructive .modalDialog__button.modalDialog__button--primary:hover {
+    background-color: var(--c-danger);
+}
+
+.modalDialog__button.modalDialog__button:focus {
+    border-width: 2px;
+    border-color: var(--surface-accent);
+}
+
+.modalDialog__header {
+    align-items: flex-start;
+    margin-bottom: var(--space-4);
+}

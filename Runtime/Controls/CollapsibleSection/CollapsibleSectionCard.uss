@@ -1,0 +1,72 @@
+/* ============================================================
+   CollapsibleSectionCard.uss
+   The card variant of CollapsibleSection. Reads ThemeTokens only;
+   the default variant keeps its original look.
+   ============================================================ */
+
+.collapsibleSection.collapsibleSection--card {
+    margin-bottom: var(--space-3);
+    background-color: var(--surface-bg);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+}
+
+.collapsibleSection--card > .collapsibleSection__header {
+    min-height: 44px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+}
+
+.collapsibleSection--card > .collapsibleSection__header:focus {
+    background-color: var(--surface-pressed);
+}
+
+.collapsibleSection--card .collapsibleSection__leading {
+    margin-right: var(--space-3);
+}
+
+.collapsibleSection--card .collapsibleSection__trailing {
+    margin-left: var(--space-2);
+}
+
+.collapsibleSection--card .collapsibleSection__title {
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body-semibold);
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.collapsibleSection--card .collapsibleSection__subtitle {
+    margin-top: 2px;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-muted);
+    opacity: 1;
+}
+
+.collapsibleSection--card .collapsibleSection__chevron {
+    -unity-background-image-tint-color: var(--surface-muted);
+    transition-duration: var(--motion-base);
+}
+
+.collapsibleSection--card > .collapsibleSection__body {
+    transition-duration: var(--motion-base);
+}
+
+.collapsibleSection--card .collapsibleSection__bodyContent {
+    padding-top: 0;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+    padding-bottom: var(--space-4);
+}
+
+.collapsibleSection--card .collapsibleSection__bodyText {
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-fg-soft);
+    white-space: normal;
+}

@@ -6,8 +6,22 @@ using UnityEngine.UIElements;
 
 namespace UnityUIToolkit.Extensions
 {
+    public enum RoundedInputFieldVariant
+    {
+        /// <summary>
+        /// The original look.
+        /// </summary>
+        Default,
+
+        /// <summary>
+        /// Styled from ThemeTokens (<c>roundedInputField--themed</c>): 50 px tall, a 1.5 px <c>--surface-input-border</c>,
+        /// <c>--radius-input</c> corners, <c>--surface-input</c> fill and <c>--surface-fg</c> text, on deep and light grounds.
+        /// </summary>
+        Themed,
+    }
+
     /// <summary>
-    /// Simpler implementation of the PillINputField for a minimalist implementation.
+    /// A text input field with rounded corners and a simpler appearance than <see cref="PillInputField"/>.
     /// </summary>
     [UxmlElement]
     public partial class RoundedInputField : VisualElement
@@ -16,6 +30,9 @@ namespace UnityUIToolkit.Extensions
         public const string TextFieldClass = "roundedInputField__textField";
         public const string InputClass = "roundedInputField__input";
         public const string PlaceholderClass = "roundedInputField__placeholder";
+        public const string InvalidClass = "roundedInputField--invalid";
+        public const string ThemedClass = "roundedInputField--themed";
+        public const string FocusedClass = "roundedInputField--focused";
 
         private readonly TextField textField;
         private string placeholderText = string.Empty;
@@ -52,6 +69,9 @@ namespace UnityUIToolkit.Extensions
             {
                 input.AddToClassList(InputClass);
             }
+
+            textField.RegisterCallback<FocusInEvent>(_ => AddToClassList(FocusedClass));
+            textField.RegisterCallback<FocusOutEvent>(_ => RemoveFromClassList(FocusedClass));
 
             textField.RegisterValueChangedCallback(evt =>
             {
@@ -104,6 +124,31 @@ namespace UnityUIToolkit.Extensions
                 isPassword = value;
                 textField.isPasswordField = value;
             }
+        }
+
+        [UxmlAttribute("variant")]
+        public RoundedInputFieldVariant Variant
+        {
+            get => ClassListContains(ThemedClass) ? RoundedInputFieldVariant.Themed : RoundedInputFieldVariant.Default;
+            set
+            {
+                EnableInClassList(ThemedClass, value == RoundedInputFieldVariant.Themed);
+                if (value == RoundedInputFieldVariant.Themed)
+                {
+                    this.UseThemeTokens();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Marks the field as failing validation (<c>roundedInputField--invalid</c>): a 1.5 px border in
+        /// <c>--c-warn</c>. The error text is the owner's to show.
+        /// </summary>
+        [UxmlAttribute("invalid")]
+        public bool Invalid
+        {
+            get => ClassListContains(InvalidClass);
+            set => EnableInClassList(InvalidClass, value);
         }
 
         [UxmlAttribute("multiline")]

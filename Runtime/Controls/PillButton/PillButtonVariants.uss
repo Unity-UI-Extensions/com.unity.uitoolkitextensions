@@ -1,0 +1,130 @@
+/* ============================================================
+   PillButtonVariants.uss
+   Token-styled PillButton variants. The original PillButton rules
+   live in the shared sheet; these selectors are more specific.
+   ============================================================ */
+
+.pillButton.pillButton--primary,
+.pillButton.pillButton--ghost,
+.pillButton.pillButton--warn,
+.pillButton.pillButton--danger {
+    height: 52px;
+    min-height: 52px;
+}
+
+.pillButton.pillButton--compact {
+    height: 46px;
+    min-height: 46px;
+}
+
+.pillButton--primary > .pillButton__background,
+.pillButton--ghost > .pillButton__background,
+.pillButton--warn > .pillButton__background,
+.pillButton--danger > .pillButton__background {
+    border-radius: var(--radius-pill);
+}
+
+.pillButton--primary .pillButton__fill,
+.pillButton--danger .pillButton__fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Danger fills from its own stop pair; GradientFill reads the redefined stops */
+.pillButton--danger .pillButton__fill.gradientFill {
+    --gradient-start: var(--grad-danger-start);
+    --gradient-end: var(--grad-danger-end);
+}
+
+.pillButton--ghost > .pillButton__background,
+.pillButton--warn > .pillButton__background {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 1.5px;
+    border-color: var(--surface-border-strong);
+}
+
+.pillButton--warn > .pillButton__background {
+    border-color: var(--c-warn);
+}
+
+.pillButton--primary .pillButton__label,
+.pillButton--ghost .pillButton__label,
+.pillButton--warn .pillButton__label,
+.pillButton--danger .pillButton__label {
+    font-size: var(--text-label);
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+}
+
+.pillButton--primary .pillButton__label {
+    color: var(--c-on-primary);
+    -unity-font-definition: var(--font-body-semibold);
+}
+
+.pillButton--danger .pillButton__label {
+    color: var(--c-on-danger);
+    -unity-font-definition: var(--font-body-semibold);
+}
+
+.pillButton--ghost .pillButton__label {
+    color: var(--surface-fg);
+    -unity-font-definition: var(--font-body-medium);
+}
+
+.pillButton--warn .pillButton__label {
+    color: var(--c-warn);
+    -unity-font-definition: var(--font-body-medium);
+}
+
+.pillButton.pillButton--compact .pillButton__label {
+    font-size: var(--text-label-sm);
+}
+
+/* The leading icon takes the label colour */
+.pillButton--primary .pillButton__icon {
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.pillButton--danger .pillButton__icon {
+    -unity-background-image-tint-color: var(--c-on-danger);
+}
+
+.pillButton--ghost .pillButton__icon {
+    -unity-background-image-tint-color: var(--surface-fg);
+}
+
+.pillButton--warn .pillButton__icon {
+    -unity-background-image-tint-color: var(--c-warn);
+}
+
+/* Disabled variants: a half-strength outline with muted text */
+.pillButton--primary:disabled .pillButton__fill,
+.pillButton--danger:disabled .pillButton__fill {
+    display: none;
+}
+
+.pillButton--primary:disabled > .pillButton__background,
+.pillButton--ghost:disabled > .pillButton__background,
+.pillButton--warn:disabled > .pillButton__background,
+.pillButton--danger:disabled > .pillButton__background {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 1.5px;
+    border-color: var(--surface-border);
+}
+
+.pillButton--primary:disabled .pillButton__label,
+.pillButton--ghost:disabled .pillButton__label,
+.pillButton--warn:disabled .pillButton__label,
+.pillButton--danger:disabled .pillButton__label {
+    color: var(--surface-muted);
+}
+
+.pillButton--primary:disabled .pillButton__icon,
+.pillButton--ghost:disabled .pillButton__icon,
+.pillButton--warn:disabled .pillButton__icon,
+.pillButton--danger:disabled .pillButton__icon {
+    -unity-background-image-tint-color: var(--surface-muted);
+}

@@ -1,0 +1,52 @@
+/* ============================================================
+   AchievementRow.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.achievementRow {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    background-color: var(--surface-highlight);
+    border-width: 1px;
+    border-color: var(--surface-highlight-border);
+    border-radius: 12px;
+}
+
+.achievementRow__badge {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    margin-right: var(--space-3);
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.achievementRow__icon {
+    width: 18px;
+    height: 18px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.achievementRow__texts {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.achievementRow__title {
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.achievementRow__progress {
+    margin-top: 6px;
+}

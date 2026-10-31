@@ -1,0 +1,169 @@
+/* ============================================================
+   StatusChip.uss
+   StatusChip and StatusChipHost. Reads ThemeTokens only.
+   ============================================================ */
+
+.statusChip {
+    flex-direction: row;
+    align-items: center;
+    align-self: center;
+    height: 32px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    background-color: var(--surface-bg);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+}
+
+.statusChip__indicator {
+    width: 8px;
+    height: 8px;
+    margin-right: var(--space-2);
+    border-radius: 4px;
+    background-color: var(--surface-accent);
+}
+
+.statusChip--ok > .statusChip__indicator {
+    background-color: var(--c-success);
+}
+
+.statusChip--warn > .statusChip__indicator {
+    background-color: var(--c-warn);
+}
+
+.statusChip--fail > .statusChip__indicator {
+    background-color: var(--c-danger);
+}
+
+.statusChip.statusChip--warn {
+    border-color: var(--c-warn);
+}
+
+.statusChip.statusChip--fail {
+    border-color: var(--c-danger);
+}
+
+.statusChip__spinner {
+    margin-right: var(--space-2);
+}
+
+.statusChip .loadingIcon__image {
+    width: 14px;
+    height: 14px;
+    -unity-background-image-tint-color: var(--surface-accent);
+}
+
+.statusChip__label {
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+}
+
+.statusChipHost {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: center;
+}
+
+.statusChipHost > .statusChipHost__chip {
+    margin-top: var(--space-2);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: var(--motion-fast);
+}
+
+.statusChipHost > .statusChipHost__chip.statusChipHost__chip--shown {
+    opacity: 1;
+}
+
+.statusChip__icon {
+    display: none;
+    width: 16px;
+    height: 16px;
+    margin-right: var(--space-2);
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--surface-fg);
+}
+
+.statusChip--hasIcon > .statusChip__icon {
+    display: flex;
+}
+
+.statusChip--busy > .statusChip__icon {
+    display: none;
+}
+
+/* Filled (FS10_5): the chip takes its state's colour; text and icon switch to the matching foreground. */
+.statusChip.statusChip--filled {
+    border-width: 0;
+    background-color: var(--c-primary);
+}
+
+.statusChip--filled > .statusChip__label {
+    color: var(--c-on-primary);
+    -unity-font-definition: var(--font-body-semibold);
+}
+
+.statusChip--filled > .statusChip__icon {
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.statusChip--filled > .statusChip__indicator {
+    background-color: var(--c-on-primary);
+}
+
+.statusChip.statusChip--filled.statusChip--ok {
+    background-color: var(--c-success);
+}
+
+.statusChip.statusChip--filled.statusChip--warn {
+    background-color: var(--c-warn);
+}
+
+.statusChip--filled.statusChip--warn > .statusChip__label {
+    color: var(--c-on-warn);
+}
+
+.statusChip--filled.statusChip--warn > .statusChip__icon {
+    -unity-background-image-tint-color: var(--c-on-warn);
+}
+
+.statusChip--filled.statusChip--warn > .statusChip__indicator {
+    background-color: var(--c-on-warn);
+}
+
+.statusChip.statusChip--filled.statusChip--fail {
+    background-color: var(--c-danger);
+}
+
+/* Recording (FS08_4 "REC 00:12"): always filled red, a white dot, bold spaced text. */
+.statusChip.statusChip--recording {
+    height: 34px;
+    padding-left: 14px;
+    padding-right: 14px;
+    border-width: 0;
+    background-color: var(--c-record);
+}
+
+.statusChip--recording > .statusChip__indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: var(--c-on-record);
+}
+
+.statusChip--recording > .statusChip__label {
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    letter-spacing: 6px;
+    color: var(--c-on-record);
+}
+
+.statusChip--recording > .statusChip__icon {
+    -unity-background-image-tint-color: var(--c-on-record);
+}

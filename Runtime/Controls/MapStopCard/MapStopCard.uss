@@ -1,0 +1,83 @@
+/* ============================================================
+   MapStopCard.uss
+   Reads ThemeTokens only. FS09_1: the stop card under the map.
+   ============================================================ */
+
+.mapStopCard {
+    flex-direction: row;
+    align-items: center;
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+    padding-left: 18px;
+    padding-right: 18px;
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: 18px;
+    background-color: var(--surface-raised);
+}
+
+.mapStopCard__number {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    margin-right: var(--space-3);
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-color: var(--c-navy-2);
+    border-radius: var(--radius-pill);
+    background-color: var(--c-page-card);
+}
+
+.mapStopCard__numberLabel {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--c-navy-2);
+}
+
+/* The next and visited stops have a filled disc (FS09_1 shows the selected next stop filled). */
+.mapStopCard--next > .mapStopCard__number,
+.mapStopCard--visited > .mapStopCard__number {
+    background-color: var(--c-navy-2);
+}
+
+.mapStopCard--next .mapStopCard__numberLabel,
+.mapStopCard--visited .mapStopCard__numberLabel {
+    color: var(--c-on-primary);
+}
+
+.mapStopCard__texts {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.mapStopCard__title {
+    margin: 0;
+    padding: 0;
+    font-size: 15px;
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.mapStopCard__meta {
+    margin: 0;
+    margin-top: 2px;
+    padding: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+}
+
+.mapStopCard__action.pillButton.pillButton--compact {
+    height: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+    margin-left: var(--space-3);
+}

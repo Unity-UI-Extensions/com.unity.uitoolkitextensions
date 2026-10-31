@@ -1,0 +1,63 @@
+/* ============================================================
+   HoldToTalk.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.holdToTalk {
+    flex-direction: row;
+    align-items: center;
+    min-height: 56px;
+}
+
+.holdToTalk__mic {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    margin-right: var(--space-3);
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    transition-property: scale;
+    transition-duration: var(--motion-fast);
+}
+
+.holdToTalk--holding > .holdToTalk__mic {
+    scale: 1.1 1.1;
+}
+
+.holdToTalk:focus > .holdToTalk__mic {
+    border-width: 2px;
+    border-color: var(--surface-accent);
+}
+
+.holdToTalk__micIcon {
+    width: 26px;
+    height: 26px;
+    background-image: url("../../Assets/Icons/Mic.svg");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.holdToTalk__texts {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.holdToTalk__title {
+    padding-left: 0;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.holdToTalk__subtitle {
+    margin-top: 2px;
+    padding-left: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+    white-space: normal;
+}

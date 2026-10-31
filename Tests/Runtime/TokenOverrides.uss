@@ -1,0 +1,2 @@
+/* Test-only application override, demonstrating how an app can redefine a theme token. */
+:root { --c-panel: rgb(255, 0, 0); }

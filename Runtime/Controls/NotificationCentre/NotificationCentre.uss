@@ -1,0 +1,133 @@
+/* ============================================================
+   NotificationCentre.uss
+   Reads ThemeTokens only. FS10_6.
+   ============================================================ */
+
+.notificationCentre__section {
+    margin-bottom: 14px;
+    padding-top: var(--space-4);
+    padding-bottom: 6px;
+    padding-left: 18px;
+    padding-right: 18px;
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: 18px;
+    background-color: var(--surface-raised);
+}
+
+.notificationCentre__header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-1);
+}
+
+.notificationCentre__heading {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--surface-muted);
+}
+
+.notificationCentre__markAll {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-semibold);
+    -unity-font-style: bold;
+    color: var(--surface-accent);
+}
+
+.notificationCentre__markAll:focus {
+    border-bottom-width: 1px;
+    border-bottom-color: var(--surface-accent);
+}
+
+.notificationCentre__row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 58px;
+    padding-left: 2px;
+    padding-right: 2px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--surface-border);
+}
+
+.notificationCentre__row--last {
+    border-bottom-width: 0;
+}
+
+.notificationCentre__row:hover,
+.notificationCentre__row:active {
+    background-color: var(--surface-pressed);
+}
+
+.notificationCentre__row:focus {
+    border-left-width: 2px;
+    border-left-color: var(--surface-accent);
+}
+
+.notificationCentre__tile {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    margin-right: var(--space-3);
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background-color: var(--surface-tile);
+}
+
+.notificationCentre__icon {
+    width: 20px;
+    height: 20px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--surface-accent);
+}
+
+.notificationCentre__texts {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.notificationCentre__title {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-fg);
+    white-space: normal;
+}
+
+.notificationCentre__row--unread .notificationCentre__title {
+    -unity-font-definition: var(--font-body-semibold);
+    -unity-font-style: bold;
+}
+
+.notificationCentre__detail {
+    margin: 0;
+    margin-top: 2px;
+    padding: 0;
+    /* The board's 11.5, rounded down: UI Toolkit draws half points at the next whole point. */
+    font-size: 11px;
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+    white-space: normal;
+}
+
+.notificationCentre__dot {
+    display: none;
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    margin-left: var(--space-3);
+    border-radius: var(--radius-pill);
+    background-color: var(--c-primary);
+}
+
+.notificationCentre__row--unread > .notificationCentre__dot {
+    display: flex;
+}

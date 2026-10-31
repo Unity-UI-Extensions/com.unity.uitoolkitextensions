@@ -1,0 +1,74 @@
+/* ============================================================
+   ScreenHeaderCompact.uss
+   The compact variant of ScreenHeader. Reads ThemeTokens only;
+   the default variant keeps its original look.
+   ============================================================ */
+
+.screenHeader.screenHeader--compact > .screenHeader__notchSpacer {
+    height: 0;
+}
+
+.screenHeader--compact > .screenHeader__bar {
+    height: 56px;
+    min-height: 56px;
+}
+
+.screenHeader--compact .screenHeader__titles {
+    padding-left: 56px;
+    padding-right: 56px;
+}
+
+.screenHeader--compact .screenHeader__eyebrow {
+    margin-bottom: 2px;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-semibold);
+    letter-spacing: 22px;
+    color: var(--surface-muted);
+}
+
+.screenHeader--compact .screenHeader__title {
+    font-size: var(--text-subtitle);
+    -unity-font-definition: var(--font-display);
+    color: var(--surface-fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.screenHeader--compact .screenHeader__action1Button.toggleButton,
+.screenHeader--compact .screenHeader__action2Button.toggleButton,
+.screenHeader--compact .screenHeader__action3Button.toggleButton,
+.screenHeader--compact .screenHeader__action4Toggle.toggleButton {
+    width: 44px;
+    height: 44px;
+    border-width: 0;
+    border-radius: var(--radius-pill);
+}
+
+.screenHeader--compact .screenHeader__action1Button.toggleButton {
+    left: var(--space-1);
+}
+
+.screenHeader--compact .screenHeader__action2Button.toggleButton,
+.screenHeader--compact .screenHeader__action3Button.toggleButton {
+    right: var(--space-1);
+}
+
+.screenHeader--compact .screenHeader__action4Toggle.toggleButton {
+    left: auto;
+    right: 52px;
+}
+
+.screenHeader--compact .toggleButton:hover,
+.screenHeader--compact .toggleButton:active {
+    background-color: var(--surface-pressed);
+}
+
+.screenHeader--compact .toggleButton__image.toggleButton__image {
+    width: 22px;
+    height: 22px;
+    -unity-background-image-tint-color: var(--surface-fg);
+}
+
+.screenHeader--compact .screenHeader__action1Button .toggleButton__image {
+    background-image: url("../../Assets/Icons/ChevronLeft.svg");
+}

@@ -1,0 +1,8 @@
+/* ============================================================
+   BreakpointRoot.uss
+   The root fills its parent; descendants key off its classes.
+   ============================================================ */
+
+.breakpointRoot {
+    flex-grow: 1;
+}

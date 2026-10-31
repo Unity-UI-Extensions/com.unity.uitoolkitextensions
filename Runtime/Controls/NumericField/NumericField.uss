@@ -1,0 +1,110 @@
+/* ============================================================
+   NumericField.uss
+   NumericField and TransformGroup. Reads ThemeTokens only.
+   ============================================================ */
+
+.numericField {
+    flex-direction: row;
+    align-items: center;
+    min-height: 36px;
+}
+
+.numericField__label {
+    margin: 0;
+    margin-right: var(--space-2);
+    padding: 0;
+    min-width: 16px;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-muted);
+}
+
+.numericField--scrubbing > .numericField__label {
+    color: var(--surface-accent);
+}
+
+.numericField__box {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    height: 36px;
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
+    border-width: 1px;
+    border-color: var(--surface-input-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-input);
+}
+
+.numericField__input {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin: 0;
+}
+
+.numericField__input > .unity-base-field__input {
+    margin: 0;
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    font-size: var(--text-label-sm);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-fg);
+}
+
+.numericField__unit {
+    margin: 0;
+    margin-right: var(--space-1);
+    padding: 0;
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+}
+
+.numericField__step.numericField__step {
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    padding: 0;
+    border-width: 0;
+    border-radius: var(--radius-sm);
+    background-color: rgba(0, 0, 0, 0);
+    font-size: var(--text-label-sm);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+}
+
+.numericField__step.numericField__step:hover,
+.numericField__step.numericField__step:active {
+    background-color: var(--surface-pressed);
+}
+
+.transformGroup__section {
+    margin-bottom: var(--space-3);
+}
+
+.transformGroup__heading {
+    margin: 0;
+    margin-bottom: var(--space-1);
+    padding: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--surface-muted);
+}
+
+.transformGroup__row {
+    flex-direction: row;
+    /* USS has no :last-child, so the row swallows the last field's gap. */
+    margin-right: -8px;
+}
+
+.transformGroup__row > .transformGroup__field {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-right: var(--space-2);
+}

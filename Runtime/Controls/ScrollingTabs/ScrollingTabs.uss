@@ -1,0 +1,122 @@
+/* ============================================================
+   ScrollingTabs.uss
+   Reads ThemeTokens only. Set --scrollingTabs-fade-color on the
+   element to match the ground behind it (default --surface-bg).
+   ============================================================ */
+
+.scrollingTabs {
+    --scrollingTabs-fade-color: var(--surface-bg);
+    flex-direction: row;
+    height: 48px;
+}
+
+.scrollingTabs__scroll {
+    flex-grow: 1;
+}
+
+.scrollingTabs__row {
+    flex-direction: row;
+    align-items: center;
+    height: 48px;
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+}
+
+.scrollingTabs__tab {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+}
+
+.scrollingTabs__label {
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body-medium);
+    color: var(--surface-muted);
+}
+
+.scrollingTabs__count {
+    margin-left: var(--space-1);
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+}
+
+.scrollingTabs__tab--active > .scrollingTabs__label {
+    color: var(--surface-fg);
+    -unity-font-definition: var(--font-body-semibold);
+}
+
+.scrollingTabs:focus .scrollingTabs__tab--active > .scrollingTabs__label {
+    color: var(--surface-accent);
+}
+
+.scrollingTabs__indicator {
+    position: absolute;
+    bottom: 2px;
+    height: 3px;
+    border-radius: 2px;
+    background-color: var(--surface-accent);
+    transition-property: left, width;
+    transition-duration: var(--motion-base);
+    transition-timing-function: ease-out-cubic;
+}
+
+.scrollingTabs__search {
+    width: 44px;
+    padding-left: 0;
+    padding-right: 0;
+    background-image: url("../../Assets/Icons/Search.svg");
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-position-x: center;
+    background-position-y: center;
+    -unity-background-image-tint-color: var(--surface-fg);
+}
+
+/* Chips */
+.scrollingTabs--chips .scrollingTabs__tab {
+    height: 36px;
+    min-height: 36px;
+    margin-right: var(--space-2);
+    background-color: var(--surface-raised);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+}
+
+.scrollingTabs--chips .scrollingTabs__tab.scrollingTabs__tab--active {
+    background-color: var(--c-primary);
+    border-color: var(--c-primary);
+}
+
+.scrollingTabs--chips .scrollingTabs__tab--active > .scrollingTabs__label,
+.scrollingTabs--chips .scrollingTabs__tab--active > .scrollingTabs__count {
+    color: var(--c-on-primary);
+}
+
+/* Edge fades, shown on the sides that have more content */
+.scrollingTabs__fade {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 32px;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: var(--motion-fast);
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.scrollingTabs__fade--start {
+    left: 0;
+}
+
+.scrollingTabs__fade--end {
+    right: 0;
+}
+
+.scrollingTabs__fade.scrollingTabs__fade--visible {
+    opacity: 1;
+}

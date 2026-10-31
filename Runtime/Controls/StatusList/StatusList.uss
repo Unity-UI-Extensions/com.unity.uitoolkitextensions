@@ -1,0 +1,116 @@
+/* ============================================================
+   StatusList.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.statusList {
+    flex-direction: column;
+}
+
+.statusList__step {
+    flex-direction: row;
+    align-items: flex-start;
+    min-height: 40px;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+}
+
+.statusList__marker {
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    margin-right: var(--space-3);
+    flex-shrink: 0;
+    border-width: 2px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.statusList__step--done > .statusList__marker {
+    border-width: 0;
+    background-color: var(--c-success);
+    background-image: url("../../Assets/Icons/Check.svg");
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.statusList__step--failed > .statusList__marker {
+    border-width: 0;
+    background-color: var(--c-danger);
+    background-image: url("../../Assets/Icons/Close.svg");
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.statusList__spinner {
+    width: 20px;
+    height: 20px;
+    margin-right: var(--space-3);
+    flex-shrink: 0;
+}
+
+.statusList .statusList__spinner .loadingIcon__image {
+    width: 20px;
+    height: 20px;
+    -unity-background-image-tint-color: var(--surface-accent);
+}
+
+.statusList__texts {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.statusList__title {
+    font-size: var(--text-body);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+    white-space: normal;
+}
+
+.statusList__step--active .statusList__title,
+.statusList__step--done .statusList__title {
+    color: var(--surface-fg);
+}
+
+.statusList__step--active .statusList__title {
+    -unity-font-definition: var(--font-body-medium);
+}
+
+.statusList__step--failed .statusList__title {
+    color: var(--surface-fg);
+}
+
+.statusList__detail {
+    margin-top: 2px;
+    font-size: var(--text-caption);
+    color: var(--surface-muted);
+    white-space: normal;
+}
+
+.statusList__step--failed .statusList__detail {
+    color: var(--c-danger);
+}
+
+.statusList__bar {
+    height: 4px;
+    margin-top: var(--space-3);
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-border);
+    overflow: hidden;
+}
+
+.statusList__barFill {
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-accent);
+    transition-property: width;
+    transition-duration: var(--motion-base);
+    transition-timing-function: ease-out-cubic;
+}
+
+.statusList--complete .statusList__barFill {
+    background-color: var(--c-success);
+}
+
+.statusList--failed .statusList__barFill {
+    background-color: var(--c-danger);
+}

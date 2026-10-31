@@ -1,0 +1,45 @@
+/* ============================================================
+   EmptyState.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.emptyState {
+    align-items: center;
+    justify-content: center;
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-6);
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+}
+
+.emptyState__icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: var(--space-4);
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--surface-muted);
+}
+
+.emptyState__title {
+    font-size: var(--text-subtitle);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.emptyState__body {
+    max-width: 320px;
+    margin-top: var(--space-2);
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.emptyState__action {
+    min-width: 160px;
+    margin-top: var(--space-5);
+}

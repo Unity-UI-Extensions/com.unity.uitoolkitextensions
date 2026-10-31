@@ -1,0 +1,15 @@
+/* ============================================================
+   GradientFill.uss
+   The stops a GradientFill manipulator paints. Reads ThemeTokens only.
+   ============================================================ */
+
+.gradientFill {
+    --gradient-start: var(--grad-brand-start);
+    --gradient-end: var(--grad-brand-end);
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
+.gradientFill.gradientFill--navy {
+    --gradient-start: var(--c-navy);
+    --gradient-end: var(--c-navy-2);
+}

@@ -1,0 +1,89 @@
+/* ============================================================
+   ContextPill.uss
+   Reads ThemeTokens only. Dims with --motion-base.
+   ============================================================ */
+
+.contextPill {
+    flex-direction: row;
+    align-items: center;
+    align-self: flex-start;
+    flex-shrink: 1;
+    max-width: 100%;
+    height: 56px;
+    padding-left: 14px;
+    padding-right: 18px;
+    background-color: var(--surface-bg);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-pill);
+    transition-property: opacity;
+    transition-duration: var(--motion-base);
+}
+
+.contextPill:focus {
+    border-color: var(--surface-accent);
+}
+
+.contextPill.contextPill--dimmed {
+    opacity: 0.45;
+}
+
+/* Logo only: centred, at least as wide as it is tall */
+.contextPill.contextPill--logoOnly {
+    min-width: 56px;
+    justify-content: center;
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+.contextPill__logo {
+    height: 22px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.contextPill--tintLogo > .contextPill__logo {
+    -unity-background-image-tint-color: var(--surface-fg);
+}
+
+.contextPill__divider {
+    width: 1px;
+    height: 26px;
+    flex-shrink: 0;
+    margin-left: var(--space-3);
+    background-color: var(--surface-border);
+}
+
+.contextPill__texts {
+    flex-shrink: 1;
+    min-width: 0;
+    margin-left: var(--space-3);
+}
+
+.contextPill--noLogo > .contextPill__texts {
+    margin-left: 4px;
+}
+
+.contextPill__title {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-display);
+    color: var(--surface-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contextPill__subtitle {
+    margin: 0;
+    margin-top: 1px;
+    padding: 0;
+    font-size: var(--text-micro);
+    -unity-font-definition: var(--font-body-medium);
+    letter-spacing: 22px;
+    color: var(--surface-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

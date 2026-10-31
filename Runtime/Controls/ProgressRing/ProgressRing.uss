@@ -1,0 +1,37 @@
+/* ============================================================
+   ProgressRing.uss
+   Reads ThemeTokens only. The arc colours are variables on the
+   element so the component can read them in C#.
+   ============================================================ */
+
+.progressRing {
+    --progressRing-track: var(--surface-border);
+    --progressRing-fill: var(--surface-accent);
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.progressRing.progressRing--complete {
+    --progressRing-fill: var(--c-success);
+}
+
+.progressRing__centre {
+    align-items: center;
+    justify-content: center;
+}
+
+.progressRing__value {
+    font-size: var(--text-title);
+    -unity-font-definition: var(--font-display);
+    -unity-font-style: bold;
+    color: var(--surface-fg);
+    -unity-text-align: middle-center;
+}
+
+.progressRing__label {
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+    -unity-text-align: middle-center;
+}

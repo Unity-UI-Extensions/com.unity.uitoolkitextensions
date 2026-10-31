@@ -1,0 +1,137 @@
+/* ============================================================
+   BottomSheet.uss
+   Reads ThemeTokens only. The panel moves by a transition on
+   translate, so .reduce-motion (motion tokens at 0 ms) makes it instant.
+   ============================================================ */
+
+.bottomSheet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.bottomSheet__scrim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--c-scrim);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: var(--motion-base);
+}
+
+.bottomSheet--scrimVisible > .bottomSheet__scrim {
+    opacity: 1;
+}
+
+.bottomSheet__panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    flex-direction: column;
+    background-color: var(--surface-bg);
+    border-top-left-radius: var(--radius-sheet);
+    border-top-right-radius: var(--radius-sheet);
+    border-top-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-color: var(--surface-border);
+    border-left-color: var(--surface-border);
+    border-right-color: var(--surface-border);
+    transition-property: translate;
+    transition-duration: var(--motion-base);
+    transition-timing-function: ease-out-cubic;
+}
+
+.bottomSheet--dragging > .bottomSheet__panel {
+    transition-duration: 0s;
+}
+
+.bottomSheet__handle {
+    align-items: center;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+    min-height: 24px;
+}
+
+.bottomSheet__grabber {
+    width: 36px;
+    height: 5px;
+    border-top-left-radius: var(--radius-pill);
+    border-top-right-radius: var(--radius-pill);
+    border-bottom-left-radius: var(--radius-pill);
+    border-bottom-right-radius: var(--radius-pill);
+    background-color: var(--surface-muted);
+    opacity: 0.6;
+}
+
+.bottomSheet__handle:focus > .bottomSheet__grabber {
+    background-color: var(--surface-accent);
+    opacity: 1;
+}
+
+.bottomSheet__header {
+    flex-direction: row;
+    align-items: center;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+}
+
+.bottomSheet__content {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+}
+
+/* Footer: pinned to the visible bottom edge; counter-translated in step with the panel */
+.bottomSheet__footer {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--surface-bg);
+    border-top-width: 3px;
+    border-top-color: var(--surface-border);
+    transition-property: translate;
+    transition-duration: var(--motion-base);
+    transition-timing-function: ease-out-cubic;
+}
+
+.bottomSheet--dragging .bottomSheet__footer {
+    transition-duration: 0s;
+}
+
+.bottomSheet--hasFooter .bottomSheet__footer {
+    display: flex;
+}
+
+.bottomSheet--hasFooter.bottomSheet--peek .bottomSheet__footer,
+.bottomSheet--hasFooter.bottomSheet--hidden .bottomSheet__footer {
+    display: none;
+}
+
+/* Docked: a full-height right-hand column on wide layouts */
+.bottomSheet--docked > .bottomSheet__panel {
+    left: auto;
+    top: 0;
+    width: 360px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top-width: 0;
+    border-right-width: 0;
+}
+
+.bottomSheet--docked > .bottomSheet__panel > .bottomSheet__handle {
+    display: none;
+}
+
+.bottomSheet--docked > .bottomSheet__scrim {
+    display: none;
+}

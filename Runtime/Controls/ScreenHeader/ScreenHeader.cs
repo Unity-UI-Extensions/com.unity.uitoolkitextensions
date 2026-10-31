@@ -6,9 +6,22 @@ using UnityEngine.UIElements;
 
 namespace UnityUIToolkit.Extensions
 {
+    public enum ScreenHeaderVariant
+    {
+        /// <summary>
+        /// The original large header: a 120 px notch spacer, an 80 px bar and 64 px buttons.
+        /// </summary>
+        Default,
+
+        /// <summary>
+        /// A 56 px bar styled from ThemeTokens, with a back chevron and an optional eyebrow line.
+        /// </summary>
+        Compact,
+    }
+
     /// <summary>
     /// A configurable screen header bar: an optional notch spacer, a centered title, and up to four
-    /// edge buttons (action 1, action 2, action 3, and action 4 — a stateful on/off toggle).
+    /// edge buttons (action 1, action 2, action 3, and action 4, which is a stateful on/off toggle).
     ///
     /// The control owns no application state. Button icons are supplied by the host via the icon
     /// properties (or USS), and interactions are surfaced as events: <see cref="Action1Clicked"/>,
@@ -16,7 +29,15 @@ namespace UnityUIToolkit.Extensions
     /// The host is responsible for any persistence logic behind the action-4 toggle.
     /// </summary>
     /// <remarks>
-    /// The buttons provided are just examples for common interactions.
+    /// <para>The buttons provided are just examples for common interactions.</para>
+    /// <para>The <see cref="ScreenHeaderVariant.Compact"/> variant (<c>screenHeader--compact</c>) reads ThemeTokens, so it
+    /// works on deep and light surfaces: a 56 px bar, a back chevron on action 1 unless an icon is set, an optional
+    /// <see cref="Eyebrow"/> line above the title (<c>screenHeader__eyebrow</c>), and <see cref="TopInset"/> as the
+    /// notch spacer height. <see cref="SetActionIcon"/> takes any <see cref="Background"/> (texture, sprite or vector
+    /// image) and leaves the tint to USS.</para>
+    /// <para>Tokens read by the compact variant: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-pressed</c>,
+    /// <c>--radius-pill</c>, <c>--space-1</c>, <c>--space-2</c>, <c>--text-subtitle</c>, <c>--text-micro</c>,
+    /// <c>--font-display</c>, <c>--font-body-semibold</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ScreenHeader : VisualElement
@@ -25,7 +46,10 @@ namespace UnityUIToolkit.Extensions
         public const string NotchSpacerClass = "screenHeader__notchSpacer";
         public const string BarClass = "screenHeader__bar";
         public const string Action1ButtonClass = "screenHeader__action1Button";
+        public const string TitlesClass = "screenHeader__titles";
+        public const string EyebrowClass = "screenHeader__eyebrow";
         public const string TitleClass = "screenHeader__title";
+        public const string CompactClass = "screenHeader--compact";
         public const string Action2ButtonClass = "screenHeader__action2Button";
         public const string Action3ButtonClass = "screenHeader__action3Button";
         public const string Action4ToggleClass = "screenHeader__action4Toggle";
@@ -35,7 +59,10 @@ namespace UnityUIToolkit.Extensions
         public event Action Action3Clicked;
         public event Action<bool> Action4Toggled;
 
+        private readonly VisualElement notchSpacer;
+        private readonly Label eyebrowLabel;
         private readonly Label titleLabel;
+        private ScreenHeaderVariant variant;
         private readonly ToggleButton action1Button; // AKA Back button (left edge)
         private readonly ToggleButton action2Button;
         private readonly ToggleButton action3Button;
@@ -49,10 +76,14 @@ namespace UnityUIToolkit.Extensions
             this.ApplyControlStyles();
             AddToClassList(RootClass);
 
-            UIToolkitExtensions.CreateVisualElement(this, NotchSpacerClass);
+            notchSpacer = UIToolkitExtensions.CreateVisualElement(this, NotchSpacerClass);
 
             var bar = UIToolkitExtensions.CreateVisualElement(this, BarClass);
-            titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(bar, TitleClass);
+            var titles = UIToolkitExtensions.CreateVisualElement(bar, TitlesClass);
+            titles.pickingMode = PickingMode.Ignore;
+            eyebrowLabel = UIToolkitExtensions.CreateVisualElement<Label>(titles, EyebrowClass);
+            eyebrowLabel.style.display = DisplayStyle.None;
+            titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(titles, TitleClass);
 
             action1Button = UIToolkitExtensions.CreateVisualElement<ToggleButton>(bar, Action1ButtonClass);
             action1Button.OnClicked += () => Action1Clicked?.Invoke();
@@ -67,6 +98,62 @@ namespace UnityUIToolkit.Extensions
             action4Toggle.OnClicked += OnAction4Toggled;
 
             Configure(showAction1: true, showTitle: true, showAction2: false, showAction3: true, showAction4Toggle: true);
+        }
+
+        [UxmlAttribute("variant")]
+        public ScreenHeaderVariant Variant
+        {
+            get => variant;
+            set
+            {
+                variant = value;
+                EnableInClassList(CompactClass, variant == ScreenHeaderVariant.Compact);
+                if (variant == ScreenHeaderVariant.Compact)
+                {
+                    this.UseThemeTokens();
+                }
+            }
+        }
+
+        /// <summary>
+        /// A small line above the title, such as the parent page; empty hides it.
+        /// </summary>
+        [UxmlAttribute("eyebrow")]
+        public string Eyebrow
+        {
+            get => eyebrowLabel.text;
+            set
+            {
+                eyebrowLabel.text = value ?? string.Empty;
+                eyebrowLabel.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+            }
+        }
+
+        /// <summary>
+        /// The notch spacer height, normally the top safe-area inset. Unset keeps the USS height.
+        /// </summary>
+        [UxmlAttribute("top-inset")]
+        public float TopInset
+        {
+            get => notchSpacer.resolvedStyle.height;
+            set => notchSpacer.style.height = Mathf.Max(0f, value);
+        }
+
+        /// <summary>
+        /// Sets an action's icon (1 to 3, or 4 for the toggle) from a texture, sprite or vector image, tinted by USS.
+        /// A default value clears it, which shows the compact variant's back chevron again on action 1.
+        /// </summary>
+        public void SetActionIcon(int action, Background icon)
+        {
+            var button = action switch
+            {
+                1 => action1Button,
+                2 => action2Button,
+                3 => action3Button,
+                4 => action4Toggle,
+                _ => throw new ArgumentOutOfRangeException(nameof(action)),
+            };
+            button.SetIcon(icon);
         }
 
         [UxmlAttribute("title")]

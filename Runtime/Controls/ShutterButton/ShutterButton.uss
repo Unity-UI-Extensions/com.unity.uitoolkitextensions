@@ -1,0 +1,49 @@
+/* ============================================================
+   ShutterButton.uss
+   Reads ThemeTokens only.
+   ============================================================ */
+
+.shutterButton {
+    --shutter-progress: var(--c-on-record);
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 4px;
+    border-color: var(--c-fg);
+    border-radius: var(--radius-pill);
+}
+
+.shutterButton--small {
+    border-width: 3px;
+}
+
+.shutterButton__disc {
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    transition-property: scale, width, height, border-radius;
+    transition-duration: var(--motion-fast);
+}
+
+.shutterButton:active > .shutterButton__disc,
+.shutterButton--holding > .shutterButton__disc {
+    scale: 0.9 0.9;
+}
+
+.shutterButton:focus {
+    border-color: var(--surface-accent);
+}
+
+.shutterButton:disabled {
+    opacity: 0.4;
+}
+
+/* Recording (FS08_4): a red ring round a red rounded square. */
+.shutterButton.shutterButton--recording {
+    border-color: var(--c-record);
+}
+
+.shutterButton--recording > .shutterButton__disc {
+    scale: 1 1;
+    border-radius: 6px;
+    background-color: var(--c-record);
+}

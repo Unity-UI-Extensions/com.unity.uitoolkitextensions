@@ -1,0 +1,38 @@
+/* ============================================================
+   SegmentedControl.uss
+   QuadrantStepper themed with ThemeTokens. The rules use two-class
+   selectors so they win over the QuadrantStepper defaults that the
+   shared sheet declares on :root.
+   ============================================================ */
+
+.quadrantStepper.segmentedControl {
+    --quadrantStepper-background-color: var(--surface-raised);
+    --quadrantStepper-overlay-color: var(--c-primary);
+    --quadrantStepper-label-color: var(--surface-fg);
+    --quadrantStepper-label-selected-color: var(--c-on-primary);
+    --quadrantStepper-border-radius-medium: var(--radius-pill);
+    --quadrantStepper-focus-color: var(--surface-accent);
+    --quadrantStepper-icon-size: 20px;
+
+    min-width: 0;
+    min-height: 44px;
+    border-width: 1px;
+    border-color: var(--surface-border);
+}
+
+.quadrantStepper.segmentedControl > .quadrantStepper__segments > .quadrantStepper__segment {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+}
+
+.quadrantStepper.segmentedControl > .quadrantStepper__segments > .quadrantStepper__segment > .quadrantStepper__label {
+    font-size: var(--text-label);
+    -unity-font-definition: var(--font-body);
+}
+
+.quadrantStepper.segmentedControl > .quadrantStepper__segments > .quadrantStepper__segment > .quadrantStepper__icon {
+    margin-right: var(--space-2);
+}

@@ -1,0 +1,81 @@
+/* ============================================================
+   WayfinderCard.uss
+   Reads ThemeTokens only. The arrow is rotated in C#, without a
+   transition, so it never spins the long way round.
+   ============================================================ */
+
+.wayfinderCard {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    padding-left: 16px;
+    padding-right: 16px;
+    background-color: var(--surface-bg);
+    border-width: 1px;
+    border-color: var(--surface-border);
+    border-radius: var(--radius-card);
+}
+
+.wayfinderCard__disc {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.wayfinderCard__arrow,
+.wayfinderCard__check {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--c-on-primary);
+}
+
+.wayfinderCard__arrow {
+    background-image: url("../../Assets/Icons/ArrowUp.svg");
+}
+
+.wayfinderCard__check {
+    display: none;
+    background-image: url("../../Assets/Icons/Check.svg");
+}
+
+.wayfinderCard--arrived .wayfinderCard__arrow {
+    display: none;
+}
+
+.wayfinderCard--arrived .wayfinderCard__check {
+    display: flex;
+}
+
+.wayfinderCard__texts {
+    flex-shrink: 1;
+    flex-grow: 1;
+    margin-left: 14px;
+}
+
+.wayfinderCard__title {
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-subtitle);
+    -unity-font-definition: var(--font-display);
+    color: var(--surface-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wayfinderCard__detail {
+    margin: 0;
+    margin-top: 2px;
+    padding: 0;
+    font-size: var(--text-caption);
+    -unity-font-definition: var(--font-body);
+    color: var(--surface-muted);
+    white-space: normal;
+}

@@ -20,7 +20,7 @@ namespace UnityUIToolkit.Extensions
         private readonly Image loadingImage;
         private float rotationSpeed = 1f;
         private bool isAnimating;
-        private IVisualElementScheduledItem animationScheduledItem;
+        private DisplayedTimer animationScheduledItem;
 
         public LoadingIcon()
         {
@@ -78,7 +78,7 @@ namespace UnityUIToolkit.Extensions
             RemoveFromClassList(AnimatingClass);
             RemoveFromClassList(VisibleClass);
 
-            animationScheduledItem?.Pause();
+            animationScheduledItem?.Stop();
             animationScheduledItem = null;
 
             loadingImage.style.rotate = new Rotate(new Angle(0f, AngleUnit.Degree));
@@ -88,12 +88,12 @@ namespace UnityUIToolkit.Extensions
 
         private void AnimateRotation()
         {
-            animationScheduledItem?.Pause();
+            animationScheduledItem?.Stop();
 
             float degreesPerMs = 360f / (rotationSpeed * 1000f);
             float startTime = Time.realtimeSinceStartup * 1000f;
 
-            animationScheduledItem = schedule.Execute(() =>
+            animationScheduledItem = DisplayedTimer.Start(this, () =>
             {
                 if (!isAnimating)
                 {
@@ -103,7 +103,7 @@ namespace UnityUIToolkit.Extensions
                 float elapsed = (Time.realtimeSinceStartup * 1000f) - startTime;
                 float rotation = (elapsed * degreesPerMs) % 360f;
                 loadingImage.style.rotate = new Rotate(new Angle(rotation, AngleUnit.Degree));
-            }).Every(16);
+            }, 16);
         }
     }
 }

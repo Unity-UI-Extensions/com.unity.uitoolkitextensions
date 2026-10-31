@@ -1,0 +1,67 @@
+/* ============================================================
+   SkeletonTile.uss
+   Reads ThemeTokens only. The pulse is a slow opacity transition;
+   with .reduce-motion the component stops toggling it.
+   ============================================================ */
+
+.skeletonTile {
+    flex-direction: row;
+    flex-wrap: wrap;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: var(--motion-slow);
+    transition-timing-function: ease-in-out-sine;
+}
+
+.skeletonTile.skeletonTile--dim {
+    opacity: 0.45;
+}
+
+.skeletonTile__item {
+    flex-direction: column;
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    padding-bottom: var(--space-3);
+}
+
+.skeletonTile--row .skeletonTile__item {
+    flex-direction: row;
+    align-items: center;
+}
+
+.skeletonTile__thumb {
+    width: 100%;
+    border-radius: var(--radius-card);
+    background-color: var(--surface-skeleton);
+}
+
+.skeletonTile__avatar {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-skeleton);
+}
+
+.skeletonTile--row .skeletonTile__avatar {
+    margin-right: var(--space-3);
+}
+
+.skeletonTile__lines {
+    flex-grow: 1;
+}
+
+.skeletonTile--tile .skeletonTile__lines {
+    margin-top: var(--space-2);
+}
+
+.skeletonTile__line {
+    height: 12px;
+    margin-bottom: var(--space-2);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-skeleton);
+}
+
+.skeletonTile__line.skeletonTile__line--short {
+    width: 60%;
+}
