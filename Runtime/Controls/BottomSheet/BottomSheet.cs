@@ -233,6 +233,15 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
+        /// Sets <see cref="HalfRatio"/>; with <paramref name="animate"/> a sheet resting at half glides to its new height.
+        /// </summary>
+        public void SetHalfRatio(float ratio, bool animate)
+        {
+            halfRatio = Mathf.Clamp01(ratio);
+            ApplyLayout(animate);
+        }
+
+        /// <summary>
         /// Gap kept above the sheet at full height, normally the status bar and safe-area top.
         /// </summary>
         [UxmlAttribute("full-top-offset")]

@@ -146,7 +146,7 @@ namespace UnityUIToolkit.Extensions.Tests
             var bar = new StorageBar { SizeFormatter = bytes => $"{bytes / (1024 * 1024)} MiB" };
             bar.SetSegments(new[] { new StorageSegment("location", "Sample Location", 230L * 1024 * 1024) });
             var grid = new BadgeGrid();
-            grid.SetBadges(new[] { new BadgeInfo("talk", "Conversationalist", "Unlocked", true), new BadgeInfo("a", "First steps", "Unlocked", true), new BadgeInfo("b", "Explorer", "Locked", false) });
+            grid.SetBadges(new[] { new BadgeInfo("talk", "Conversationalist", "Unlocked", true), new BadgeInfo("a", "First steps", "Unlocked", true), new BadgeInfo("b", "Pathfinder", "Locked", false) });
             var row = new SettingsRow { TitleText = "Sample Tour", Trailing = SettingsRowTrailing.Custom };
             row.Add(new Switch());
             row.Add(new VisualElement { style = { width = 40, height = 40 } });
