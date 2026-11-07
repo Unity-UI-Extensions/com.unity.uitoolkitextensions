@@ -87,6 +87,27 @@ namespace UnityUIToolkit.Extensions.Tests
         }
 
         [UnityTest]
+        public IEnumerator TertiaryAction_IsOptional_AndClosesWithTertiary()
+        {
+            yield return MountDialog();
+            dialog.Show(Confirm());
+            yield return WaitFrames(2);
+            Assert.That(dialog.TertiaryButton.resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "No third action unless asked for");
+
+            var options = Confirm();
+            options.TertiaryText = "Move it instead";
+            var task = dialog.Show(options);
+            yield return WaitFrames(2);
+            Assert.That(dialog.TertiaryButton.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
+            Assert.AreEqual("Move it instead", dialog.TertiaryText);
+
+            Click(dialog.TertiaryButton);
+            yield return WaitFrames(2);
+            Assert.IsTrue(task.IsCompleted);
+            Assert.AreEqual(DialogAction.Tertiary, task.Result.Action);
+        }
+
+        [UnityTest]
         public IEnumerator Destructive_UsesDangerColour()
         {
             yield return MountDialog();

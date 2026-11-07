@@ -10,6 +10,11 @@ A theming contract and a set of app-shell, browsing and AR guidance components, 
 
 ### Changed
 
+- ContentGrid places rows at one measured height (`FixedHeight` virtualisation) instead of `DynamicHeight`, so scrolling back towards the start no longer jumps as rows scroll in; tiles size their thumbnails when bound, and a change of items refreshes the list rather than rebuilding it.
+- ModalDialog gains an optional third, link-style action under the main buttons: `DialogOptions.TertiaryText`, the `tertiary-text` UXML attribute, `TertiaryButton`, and `DialogAction.Tertiary` in the result. Null keeps the two-action layout.
+- BottomSheet leaves header controls and nested scroll views in charge of their pointers, capturing plain-header and handle drags only after the movement threshold.
+- ContentGrid suppresses recycled-row hover/selection backgrounds and ignores the click at the end of a scroll gesture; selection remains per tile.
+- SearchField's clear control is focusable and supports keyboard submit, including when hosted in a draggable sheet header.
 - Renamed `CaptionBar.Clear()` to `ClearCue()`, `SearchField.Clear()` to `ClearQuery()`, and `StatusChipHost.Clear()` to `ClearStatuses()`. Update custom callers to these names; inherited `VisualElement.Clear()` only removes children and does not perform control-specific cleanup.
 - Renamed private backing fields in EntryGate, BottomSheet, SideDrawer and ToastHost to avoid hiding Unity properties. Public properties and UXML attributes are unchanged.
 

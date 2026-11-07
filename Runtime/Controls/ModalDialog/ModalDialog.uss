@@ -155,6 +155,24 @@
     background-color: var(--c-danger);
 }
 
+.modalDialog__button.modalDialog__button--tertiary {
+    flex-grow: 0;
+    align-self: center;
+    height: 40px;
+    margin-top: var(--space-2);
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--c-primary);
+    -unity-font-style: normal;
+}
+
+.modalDialog__button.modalDialog__button--tertiary:hover,
+.modalDialog__button.modalDialog__button--tertiary:active {
+    background-color: var(--surface-pressed);
+}
+
 .modalDialog__button.modalDialog__button:focus {
     border-width: 2px;
     border-color: var(--surface-accent);

@@ -11,12 +11,23 @@
     flex-grow: 1;
 }
 
-.contentGrid__list .unity-list-view__item {
+/* ListView virtualises rows; only the individual tiles own interaction feedback. */
+.contentGrid__list .unity-list-view__item,
+.contentGrid__list .unity-list-view__item:hover,
+.contentGrid__list .unity-list-view__item:checked,
+.contentGrid__list .unity-collection-view__item,
+.contentGrid__list .unity-collection-view__item:hover,
+.contentGrid__list .unity-collection-view__item:checked {
     background-color: rgba(0, 0, 0, 0);
+    background-image: none;
 }
 
 .contentGrid__row {
     flex-direction: row;
+    /* The list places every row at one fixed height, measured from the tiles (ContentGrid.cs). The tiles keep their own height
+       rather than stretching or shrinking to the row's, so they can be measured, and so a row never squashes them. */
+    align-items: flex-start;
+    flex-shrink: 0;
     padding-left: var(--space-1);
     padding-right: var(--space-1);
 }
@@ -35,6 +46,7 @@
 
 .contentGrid__thumb {
     width: 100%;
+    flex-shrink: 0;
     border-radius: var(--radius-card);
     border-width: 2px;
     border-color: rgba(0, 0, 0, 0);

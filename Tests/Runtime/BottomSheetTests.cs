@@ -119,6 +119,87 @@ namespace UnityUIToolkit.Extensions.Tests
         }
 
         [UnityTest]
+        public IEnumerator HeaderControls_KeepTheirPointers_AndCategoriesCanBeReselected()
+        {
+            yield return MountSheet();
+            var tabs = new ScrollingTabs { Variant = ScrollingTabsVariant.Chips };
+            tabs.SetItems(new[] { new TabItem("first", "First"), new TabItem("second", "Second") });
+            var selected = new List<string>();
+            tabs.SelectionChanged += (id, _) => selected.Add(id);
+            sheet.Header.Add(tabs);
+            var input = new TextField();
+            sheet.Header.Add(input);
+            var button = new Button { text = "Close" };
+            sheet.Header.Add(button);
+            sheet.SnapTo(SheetDetent.Half);
+            yield return WaitFrames(3);
+
+            foreach (var index in new[] { 1, 0, 1, 0 })
+            {
+                var tab = tabs.TabElement(index);
+                var position = tab.worldBound.center;
+                SendPointer<PointerDownEvent>(tab, position);
+                Assert.IsFalse(sheet.Panel.HasPointerCapture(PointerId.mousePointerId), "the sheet must not steal a chip tap");
+                SendPointer<PointerUpEvent>(tab, position);
+                Click(tab);
+                Assert.That(tabs.SelectedIndex, Is.EqualTo(index));
+            }
+            Assert.That(selected, Is.EqualTo(new[] { "second", "first", "second", "first" }));
+
+            foreach (var control in new VisualElement[] { input.Q(TextField.textInputUssName), button, tabs.ScrollView.contentContainer })
+            {
+                Assert.That(control, Is.Not.Null);
+                var position = control.worldBound.center;
+                SendPointer<PointerDownEvent>(control, position);
+                SendPointer<PointerMoveEvent>(sheet.Panel, position + new Vector2(0f, 60f));
+                Assert.IsFalse(sheet.Panel.HasPointerCapture(PointerId.mousePointerId));
+                Assert.IsFalse(sheet.ClassListContains(BottomSheet.DraggingClass));
+                SendPointer<PointerUpEvent>(control, position);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator HeaderSearchClear_KeepsPointer_AndClearsQuery()
+        {
+            yield return MountSheet();
+            var search = new SearchField { DebounceMs = 0 };
+            sheet.Header.Add(search);
+            var queries = new List<string>();
+            search.QueryChanged += queries.Add;
+            search.TextField.value = "turbine";
+            sheet.SnapTo(SheetDetent.Half);
+            yield return WaitFrames(3);
+
+            var clear = search.Q(className: SearchField.ClearClass);
+            var position = clear.worldBound.center;
+            SendPointer<PointerDownEvent>(clear, position);
+            Assert.IsFalse(sheet.Panel.HasPointerCapture(PointerId.mousePointerId));
+            SendPointer<PointerUpEvent>(clear, position);
+            Assert.That(search.Value, Is.Empty);
+            Assert.That(queries, Is.EqualTo(new[] { "turbine", string.Empty }));
+        }
+
+        [UnityTest]
+        public IEnumerator PlainHeader_DragsOnlyAfterMovementThreshold()
+        {
+            yield return MountSheet();
+            var title = new Label("Title");
+            sheet.Header.Add(title);
+            sheet.SnapTo(SheetDetent.Half);
+            yield return WaitFrames(2);
+            var start = title.worldBound.center;
+
+            SendPointer<PointerDownEvent>(title, start);
+            Assert.IsFalse(sheet.Panel.HasPointerCapture(PointerId.mousePointerId));
+            SendPointer<PointerMoveEvent>(sheet.Panel, start + new Vector2(0f, 60f));
+            Assert.IsTrue(sheet.ClassListContains(BottomSheet.DraggingClass));
+            Assert.IsTrue(sheet.Panel.HasPointerCapture(PointerId.mousePointerId));
+            SendPointer<PointerUpEvent>(sheet.Panel, start + new Vector2(0f, 60f));
+            Assert.IsFalse(sheet.Panel.HasPointerCapture(PointerId.mousePointerId));
+            Assert.IsFalse(sheet.ClassListContains(BottomSheet.DraggingClass));
+        }
+
+        [UnityTest]
         public IEnumerator FastDownwardFling_MovesOneDetentDown()
         {
             yield return MountSheet();

@@ -584,8 +584,18 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
+            if (evt.currentTarget == header)
+            {
+                for (var element = evt.target as VisualElement; element != null && element != header; element = element.parent)
+                {
+                    if (element.focusable || element is ScrollView)
+                    {
+                        return;
+                    }
+                }
+            }
+
             DragStart(evt.pointerId, evt.position.y, evt.timestamp / 1000f);
-            sheetPanel.CapturePointer(evt.pointerId);
         }
 
         private void OnPointerMove(PointerMoveEvent evt)
@@ -598,6 +608,7 @@ namespace UnityUIToolkit.Extensions
             DragMove(evt.position.y, evt.timestamp / 1000f);
             if (isDragging)
             {
+                sheetPanel.CapturePointer(evt.pointerId);
                 evt.StopPropagation();
             }
         }

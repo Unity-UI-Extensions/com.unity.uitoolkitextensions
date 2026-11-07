@@ -30,6 +30,11 @@ namespace UnityUIToolkit.Extensions
         None,
         Primary,
         Secondary,
+
+        /// <summary>
+        /// The optional third, link-style action under the main actions.
+        /// </summary>
+        Tertiary,
     }
 
     /// <summary>
@@ -45,6 +50,12 @@ namespace UnityUIToolkit.Extensions
         /// Leave null for a single-action dialog.
         /// </summary>
         public string SecondaryText;
+
+        /// <summary>
+        /// An optional third, link-style action shown under the main actions, for a less common choice such as switching to
+        /// another task. Leave null for none.
+        /// </summary>
+        public string TertiaryText;
 
         public DialogVariant Variant = DialogVariant.Default;
 
@@ -133,6 +144,7 @@ namespace UnityUIToolkit.Extensions
         public const string ButtonClass = "modalDialog__button";
         public const string PrimaryButtonClass = "modalDialog__button--primary";
         public const string SecondaryButtonClass = "modalDialog__button--secondary";
+        public const string TertiaryButtonClass = "modalDialog__button--tertiary";
         public const string OpenClass = "modalDialog--open";
         public const string DestructiveClass = "modalDialog--destructive";
         public const string HasInputClass = "modalDialog--hasInput";
@@ -178,6 +190,13 @@ namespace UnityUIToolkit.Extensions
 
         public Button PrimaryButton => primaryButton;
         public Button SecondaryButton => secondaryButton;
+
+        private Button tertiaryButton;
+
+        /// <summary>
+        /// The optional third action. Hidden while <see cref="TertiaryText"/> is empty.
+        /// </summary>
+        public Button TertiaryButton => tertiaryButton;
         public TextField InputField => inputField;
 
         /// <summary>
@@ -222,6 +241,20 @@ namespace UnityUIToolkit.Extensions
                 var single = string.IsNullOrEmpty(value);
                 secondaryButton.style.display = single ? DisplayStyle.None : DisplayStyle.Flex;
                 EnableInClassList(SingleActionClass, single);
+            }
+        }
+
+        /// <summary>
+        /// Text of the optional third, link-style action under the main actions. Empty or null hides it.
+        /// </summary>
+        [UxmlAttribute("tertiary-text")]
+        public string TertiaryText
+        {
+            get => tertiaryButton.text;
+            set
+            {
+                tertiaryButton.text = value ?? string.Empty;
+                tertiaryButton.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
             }
         }
 
@@ -291,6 +324,10 @@ namespace UnityUIToolkit.Extensions
             primaryButton.AddToClassList(PrimaryButtonClass);
             primaryButton.MakePill();
 
+            // The third action sits under the row, styled as a link, so the two main choices keep their weight.
+            tertiaryButton = UIToolkitExtensions.CreateButton(card, string.Empty, () => Close(DialogAction.Tertiary), className: ButtonClass);
+            tertiaryButton.AddToClassList(TertiaryButtonClass);
+
             card.RegisterCallback<NavigationMoveEvent>(OnNavigationMove, TrickleDown.TrickleDown);
             RegisterCallback<NavigationCancelEvent>(OnNavigationCancel);
             RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
@@ -299,6 +336,7 @@ namespace UnityUIToolkit.Extensions
             TitleText = string.Empty;
             BodyText = string.Empty;
             SecondaryText = null;
+            TertiaryText = null;
             Variant = DialogVariant.Default;
         }
 
@@ -319,6 +357,7 @@ namespace UnityUIToolkit.Extensions
             BodyText = options.Body;
             PrimaryText = options.PrimaryText;
             SecondaryText = options.SecondaryText;
+            TertiaryText = options.TertiaryText;
             Variant = options.Variant;
             Dismissible = options.Dismissible;
             SetHeader(options.Header);

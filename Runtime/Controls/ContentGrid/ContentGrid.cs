@@ -134,6 +134,11 @@ namespace UnityUIToolkit.Extensions
 
         private int fixedColumns;
         private float boundWidth = float.NaN;
+        // The width every thumbnail has at the bound width, once one has been laid out, so a row is the right height on its first
+        // layout rather than one pass later. NaN until measured, and again after the width or the columns change.
+        private float measuredThumbWidth = float.NaN;
+        // A row height measured this frame and waiting to be applied to the list.
+        private float pendingRowHeight = float.NaN;
         private int columns = 2;
         private float minTileWidth = 150f;
         private float thumbnailAspect = 1f;
@@ -290,7 +295,11 @@ namespace UnityUIToolkit.Extensions
                 makeItem = MakeRow,
                 bindItem = BindRow,
                 selectionType = UnityEngine.UIElements.SelectionType.None,
-                virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight,
+                // Every row is the same height, so rows are placed by index. With DynamicHeight the list estimated the height of a
+                // row scrolling in from the top, measured it, then corrected the scroll offset a frame later: a visible jump on every
+                // scroll back towards the start. The height is measured from the rows themselves (OnRowGeometryChanged).
+                // Legacy: virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight.
+                virtualizationMethod = CollectionVirtualizationMethod.FixedHeight,
                 showAlternatingRowBackgrounds = AlternatingRowBackground.None,
                 horizontalScrollingEnabled = false,
             };
@@ -407,6 +416,8 @@ namespace UnityUIToolkit.Extensions
             if (!float.IsNaN(rowWidth) && !Mathf.Approximately(rowWidth, boundWidth))
             {
                 boundWidth = rowWidth;
+                // The thumbnails take a new width, so the rows measure again.
+                measuredThumbWidth = float.NaN;
                 list.RefreshItems();
             }
 
@@ -425,7 +436,8 @@ namespace UnityUIToolkit.Extensions
             columns = next;
             skeleton.Columns = columns;
             skeleton.Count = columns * 2;
-            RebuildRows();
+            measuredThumbWidth = float.NaN;
+            RebuildRows(rebuild: true);
         }
 
         /// <summary>
@@ -438,7 +450,12 @@ namespace UnityUIToolkit.Extensions
             return float.IsNaN(width) || width <= 0f ? float.NaN : width;
         }
 
-        private void RebuildRows()
+        /// <summary>
+        /// Recounts the rows. A change of items refreshes the list, which keeps its scroll offset and its recycled rows, as when a
+        /// page of items is appended; a change of columns rebuilds it, since every row's tiles change.
+        /// </summary>
+        /// <remarks>Legacy: every change rebuilt the list, which also forgot every measured row height.</remarks>
+        private void RebuildRows(bool rebuild = false)
         {
             rows.Clear();
             var rowCount = columns > 0 ? Mathf.CeilToInt(items.Count / (float)columns) : 0;
@@ -447,7 +464,57 @@ namespace UnityUIToolkit.Extensions
                 rows.Add(i);
             }
 
-            list.Rebuild();
+            if (rebuild)
+            {
+                list.Rebuild();
+            }
+            else
+            {
+                list.RefreshItems();
+            }
+        }
+
+        /// <summary>
+        /// Every tile is the same height and a row is as tall as its tiles, so the first tile to lay out sets the list's fixed item
+        /// height, and a tile that lays out at a new height (after a width or column change) sets it again. The tiles are measured,
+        /// not the rows: the list forces each row to the fixed height, and the tiles are kept at their own height (ContentGrid.uss).
+        /// Applied after the layout pass, since the setter rebuilds the list, which must not happen inside a tile's own geometry event.
+        /// </summary>
+        private void OnTileGeometryChanged(float height)
+        {
+            if (float.IsNaN(height) || height <= 0f || Mathf.Abs(height - list.fixedItemHeight) < 0.5f || Mathf.Approximately(pendingRowHeight, height))
+            {
+                return;
+            }
+
+            pendingRowHeight = height;
+            list.schedule.Execute(ApplyRowHeight);
+        }
+
+        private void ApplyRowHeight()
+        {
+            var height = pendingRowHeight;
+            pendingRowHeight = float.NaN;
+            if (!float.IsNaN(height) && Mathf.Abs(height - list.fixedItemHeight) >= 0.5f)
+            {
+                list.fixedItemHeight = height;
+                // The setter only refreshes, which leaves the rows already made at their old forced height; a rebuild makes them again.
+                list.Rebuild();
+            }
+        }
+
+        /// <summary>
+        /// Keeps a thumbnail's shape as it takes its width, and remembers that width so later rows are sized when bound.
+        /// </summary>
+        private void OnThumbGeometryChanged(VisualElement thumb, float width)
+        {
+            if (float.IsNaN(width) || width <= 0f)
+            {
+                return;
+            }
+
+            measuredThumbWidth = width;
+            thumb.style.height = width / thumbnailAspect;
         }
 
         private void UpdateState()
@@ -489,6 +556,12 @@ namespace UnityUIToolkit.Extensions
                 var tile = row[c];
                 var index = (rowIndex * columns) + c;
                 tile.style.width = Length.Percent(100f / columns);
+                if (!float.IsNaN(measuredThumbWidth))
+                {
+                    // Sized now, so a fresh row is measured at its true height on its first layout.
+                    tile.Q(className: ThumbClass).style.height = measuredThumbWidth / thumbnailAspect;
+                }
+
                 if (index >= items.Count)
                 {
                     tile.userData = null;
@@ -504,9 +577,10 @@ namespace UnityUIToolkit.Extensions
         private VisualElement MakeTile()
         {
             var tile = UIToolkitExtensions.CreateVisualElement(TileClass);
+            tile.RegisterCallback<GeometryChangedEvent>(evt => OnTileGeometryChanged(evt.newRect.height));
             var thumb = UIToolkitExtensions.CreateVisualElement(tile, ThumbClass);
             thumb.pickingMode = PickingMode.Ignore;
-            thumb.RegisterCallback<GeometryChangedEvent>(evt => thumb.style.height = evt.newRect.width / thumbnailAspect);
+            thumb.RegisterCallback<GeometryChangedEvent>(evt => OnThumbGeometryChanged(thumb, evt.newRect.width));
 
             var badge = UIToolkitExtensions.CreateVisualElement<Label>(thumb, BadgeClass).MakePill();
             badge.pickingMode = PickingMode.Ignore;
@@ -630,6 +704,7 @@ namespace UnityUIToolkit.Extensions
             {
                 // Moved before the hold: it is a scroll, not a drag.
                 CancelPress();
+                suppressNextClick = true;
                 return;
             }
 

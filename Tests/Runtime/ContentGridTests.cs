@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -43,6 +44,33 @@ namespace UnityUIToolkit.Extensions.Tests
             yield return WaitFrames(4);
             Assert.That(grid.ColumnCount, Is.EqualTo(5), "tablet width");
             Assert.That(grid.ListView.itemsSource.Count, Is.EqualTo(2), "7 items in 5 columns is 2 rows");
+        }
+
+        [UnityTest]
+        public IEnumerator Rows_ShareOneMeasuredHeight_AndANewPageKeepsTheScrollOffset()
+        {
+            // Rows are placed at one fixed height measured from the rows themselves, so scrolling back up never corrects the
+            // offset after measuring a row (the jump DynamicHeight gave), and appending a page leaves the view where it was.
+            var grid = new ContentGrid { MinTileWidth = 150f };
+            grid.SetItems(Items(10));
+            yield return MountGrid(grid);
+
+            var row = grid.TileFor("id0").parent;
+            Assert.That(grid.ListView.virtualizationMethod, Is.EqualTo(CollectionVirtualizationMethod.FixedHeight));
+            Assert.That(row.layout.height, Is.GreaterThan(150f), "a thumbnail and two lines, not the list's default row");
+            Assert.That(grid.ListView.fixedItemHeight, Is.EqualTo(row.layout.height).Within(0.5f), "the list's row height is the rows' own");
+
+            var scroll = grid.ListView.Q<ScrollView>();
+            scroll.scrollOffset = new Vector2(0f, row.layout.height * 1.5f);
+            yield return WaitFrames(2);
+            var offset = scroll.scrollOffset.y;
+            Assert.That(offset, Is.GreaterThan(0f));
+
+            grid.SetItems(Items(20));
+            yield return WaitFrames(4);
+            Assert.That(grid.ListView.itemsSource.Count, Is.EqualTo(10));
+            Assert.That(scroll.scrollOffset.y, Is.EqualTo(offset).Within(0.5f), "a new page leaves the view where it was");
+            Assert.That(grid.ListView.fixedItemHeight, Is.EqualTo(row.layout.height).Within(0.5f));
         }
 
         [UnityTest]
@@ -182,6 +210,52 @@ namespace UnityUIToolkit.Extensions.Tests
             SendPointer<PointerMoveEvent>(tile, start + new Vector2(0f, -40f));
             Assert.That(drags, Is.EqualTo(new[] { "id2" }));
             SendPointer<PointerUpEvent>(tile, start + new Vector2(0f, -40f));
+        }
+
+        [UnityTest]
+        public IEnumerator RecycledRows_HaveNoHoverOrSelectionBackground()
+        {
+            var grid = new ContentGrid { Columns = 2 };
+            grid.SetItems(Items(4));
+            yield return MountGrid(grid);
+            var row = grid.ListView.Q(className: "unity-collection-view__item");
+            Assert.That(row, Is.Not.Null);
+            var states = typeof(VisualElement).GetProperty("pseudoStates", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(states, Is.Not.Null);
+
+            foreach (var state in new[] { "Hover", "Checked", "Hover, Checked, Focus" })
+            {
+                states.SetValue(row, System.Enum.Parse(states.PropertyType, state));
+                yield return WaitFrames(2);
+                Assert.That(row.resolvedStyle.backgroundColor.a, Is.EqualTo(0f), state);
+                Assert.That(row.resolvedStyle.backgroundImage, Is.EqualTo(default(Background)), state);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator Scrolling_DoesNotTapOrSelectATile_AndNextTapStillWorks()
+        {
+            var grid = new ContentGrid { Columns = 2, SelectionMode = GridSelectionMode.Single };
+            grid.SetItems(Items(4));
+            var tapped = new List<string>();
+            grid.ItemTapped += item => tapped.Add(item.Id);
+            yield return MountGrid(grid);
+
+            var tile = grid.TileFor("id0");
+            var start = tile.worldBound.center;
+            SendPointer<PointerDownEvent>(tile, start);
+            SendPointer<PointerMoveEvent>(tile, start + new Vector2(0f, 30f));
+            SendPointer<PointerUpEvent>(tile, start + new Vector2(0f, 30f));
+            Assert.That(tapped, Is.Empty);
+            Assert.That(grid.SelectedIds, Is.Empty);
+            Assert.IsFalse(tile.ClassListContains(ContentGrid.ArmedClass));
+            Assert.That(grid.ListView.selectionType, Is.EqualTo(SelectionType.None));
+
+            SendPointer<PointerDownEvent>(tile, start);
+            SendPointer<PointerUpEvent>(tile, start);
+            Assert.That(tapped, Is.EqualTo(new[] { "id0" }));
+            Assert.That(grid.SelectedIds, Is.EqualTo(new[] { "id0" }));
+            Assert.IsFalse(grid.TileFor("id1").ClassListContains(ContentGrid.SelectedClass));
         }
 
         [UnityTest]

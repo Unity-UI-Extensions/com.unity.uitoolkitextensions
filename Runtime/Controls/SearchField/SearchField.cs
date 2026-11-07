@@ -133,7 +133,13 @@ namespace UnityUIToolkit.Extensions
             countLabel.pickingMode = PickingMode.Ignore;
 
             clearButton = UIToolkitExtensions.CreateVisualElement(this, ClearClass);
+            clearButton.focusable = true;
             clearButton.RegisterCallback<ClickEvent>(evt =>
+            {
+                evt.StopPropagation();
+                ClearQuery();
+            });
+            clearButton.RegisterCallback<NavigationSubmitEvent>(evt =>
             {
                 evt.StopPropagation();
                 ClearQuery();
@@ -162,7 +168,8 @@ namespace UnityUIToolkit.Extensions
             if (hadValue)
             {
                 Cleared?.Invoke();
-                RaiseQuery();
+                lastRaisedQuery = Value;
+                QueryChanged?.Invoke(lastRaisedQuery);
             }
         }
 
