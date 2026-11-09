@@ -49,7 +49,7 @@ A theming contract and a set of app-shell, browsing and AR guidance components, 
 - **ToolRail** - icon tools in a pill, as an action toolbar or a mode rail with one active tool; disabled and warning tools; horizontal, vertical or chosen from the parent's shape.
 - **GestureHint** - the first-use chip that teaches move, rotate, scale and raise, in touch or mouse wording, dismissed by a tap or the first gesture.
 - **EntryGate** - the full-screen gate before an experience or the camera: a deep gradient backdrop, optional logos, a message or hero layout, the requirements Start unlocks, a content slot, primary and secondary actions, a cancel link and consent links.
-- **AudioGuidePlayer** - controls for a guide or a video: play, pause and replay, a scrubber, 15 second skips, loop, rate and the transcript line. It holds no media; the owner reports the state and answers the requests.
+- **AudioGuidePlayer** - controls for a guide or a video: play, pause and replay, a scrubber, 15 second skips, loop, rate and the transcript line. It holds no media; the owner reports the state and answers the requests. An optional mute button (`ShowMute`, `IsMuted`, `MuteToggled`; hidden by default) shows a speaker or a crossed-out speaker.
 - **CaptionBar** - captions with a speaker column, clamped to a number of lines that follows the text scale, cross-fading between cues.
 - **PromptChoices** - numbered prompt rows for talking to a character, with used prompts dimmed and number keys.
 - **SpeechInputPanel** and **HoldToTalk** - the listening panel (status, level meter, partial and final transcript, match or no match, actions) and the hold-to-talk row that tells a hold from a tap.

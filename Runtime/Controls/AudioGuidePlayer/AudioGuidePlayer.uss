@@ -102,6 +102,25 @@
     -unity-background-image-tint-color: var(--surface-accent);
 }
 
+.audioGuidePlayer__mute {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    background-image: url("../../Assets/Icons/Volume-on.svg");
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    background-position-x: center;
+    background-position-y: center;
+    -unity-background-image-tint-color: var(--surface-muted);
+}
+
+.audioGuidePlayer--muted .audioGuidePlayer__mute {
+    background-color: var(--surface-pressed);
+    background-image: url("../../Assets/Icons/Volume-off.svg");
+    -unity-background-image-tint-color: var(--surface-accent);
+}
+
 .audioGuidePlayer__rate {
     min-width: 40px;
     height: 40px;
@@ -115,6 +134,7 @@
 
 .audioGuidePlayer__skip:hover,
 .audioGuidePlayer__loop:hover,
+.audioGuidePlayer__mute:hover,
 .audioGuidePlayer__rate:hover {
     background-color: var(--surface-pressed);
 }

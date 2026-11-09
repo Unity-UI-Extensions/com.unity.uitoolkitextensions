@@ -24,26 +24,28 @@ namespace UnityUIToolkit.Extensions
 
     /// <summary>
     /// Media controls for an audio guide or a video: play, pause and replay, a scrubber, optional 15 second skips,
-    /// loop and playback rate, and the transcript line for the current position.
+    /// loop, optional mute and playback rate, and the transcript line for the current position.
     /// </summary>
     /// <remarks>
     /// <para>The player holds no media. The owner sets <see cref="Duration"/>, <see cref="Position"/>,
-    /// <see cref="IsPlaying"/>, <see cref="IsLooping"/> and <see cref="Rate"/> from its audio or video source (each frame
+    /// <see cref="IsPlaying"/>, <see cref="IsLooping"/>, <see cref="IsMuted"/> and <see cref="Rate"/> from its audio or video source (each frame
     /// for the position) and answers the request events. While the user drags the scrubber, position updates are held
     /// back so the thumb stays under the finger.</para>
-    /// <para>Props: <c>title-text</c>, <c>duration</c>, <c>position</c>, <c>is-playing</c>, <c>is-looping</c>, <c>rate</c>,
-    /// <c>show-skip</c>, <c>show-rate</c>, <c>show-loop</c>. Methods: <see cref="SetCues"/>, <see cref="SetRates"/>.
+    /// <para>Props: <c>title-text</c>, <c>duration</c>, <c>position</c>, <c>is-playing</c>, <c>is-looping</c>, <c>is-muted</c>,
+    /// <c>rate</c>, <c>show-skip</c>, <c>show-rate</c>, <c>show-loop</c>, <c>show-mute</c>. Methods: <see cref="SetCues"/>,
+    /// <see cref="SetRates"/>.
     /// Events: <see cref="PlayPauseRequested"/> (true to play), <see cref="ReplayRequested"/>,
     /// <see cref="SeekRequested"/> (seconds), <see cref="SkipRequested"/> (plus or minus seconds),
-    /// <see cref="LoopToggled"/>, <see cref="RateChanged"/>, <see cref="CueChanged"/> (index, text; -1 before the first).</para>
+    /// <see cref="LoopToggled"/>, <see cref="MuteToggled"/> (true when muted), <see cref="RateChanged"/>,
+    /// <see cref="CueChanged"/> (index, text; -1 before the first).</para>
     /// <para>Keyboard: submit (Enter, Space) plays or pauses; Left and Right request a seek of 5 seconds.</para>
     /// <para>USS classes: <c>audioGuidePlayer</c> (root), <c>audioGuidePlayer__row</c>, <c>audioGuidePlayer__play</c>,
     /// <c>audioGuidePlayer__playIcon</c>, <c>audioGuidePlayer__skip</c>, <c>audioGuidePlayer__texts</c>,
     /// <c>audioGuidePlayer__title</c>, <c>audioGuidePlayer__time</c>, <c>audioGuidePlayer__loop</c>,
-    /// <c>audioGuidePlayer__rate</c>, <c>audioGuidePlayer__scrubber</c>, <c>audioGuidePlayer__track</c>,
+    /// <c>audioGuidePlayer__mute</c>, <c>audioGuidePlayer__rate</c>, <c>audioGuidePlayer__scrubber</c>, <c>audioGuidePlayer__track</c>,
     /// <c>audioGuidePlayer__fill</c>, <c>audioGuidePlayer__thumb</c>, <c>audioGuidePlayer__cue</c>.</para>
     /// <para>Modifier classes: <c>audioGuidePlayer--playing</c>, <c>audioGuidePlayer--ended</c>,
-    /// <c>audioGuidePlayer--looping</c>, <c>audioGuidePlayer--scrubbing</c>.</para>
+    /// <c>audioGuidePlayer--looping</c>, <c>audioGuidePlayer--muted</c>, <c>audioGuidePlayer--scrubbing</c>.</para>
     /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-fg-soft</c>,
     /// <c>--surface-muted</c>, <c>--surface-accent</c>, <c>--surface-pressed</c>, <c>--c-accent</c>, <c>--c-on-primary</c>,
     /// <c>--grad-brand-start/end</c> (play button, through <see cref="GradientFill"/>), <c>--radius-card</c>,
@@ -62,6 +64,7 @@ namespace UnityUIToolkit.Extensions
         public const string TitleClass = "audioGuidePlayer__title";
         public const string TimeClass = "audioGuidePlayer__time";
         public const string LoopClass = "audioGuidePlayer__loop";
+        public const string MuteClass = "audioGuidePlayer__mute";
         public const string RateClass = "audioGuidePlayer__rate";
         public const string ScrubberClass = "audioGuidePlayer__scrubber";
         public const string TrackClass = "audioGuidePlayer__track";
@@ -71,6 +74,7 @@ namespace UnityUIToolkit.Extensions
         public const string PlayingClass = "audioGuidePlayer--playing";
         public const string EndedClass = "audioGuidePlayer--ended";
         public const string LoopingClass = "audioGuidePlayer--looping";
+        public const string MutedClass = "audioGuidePlayer--muted";
         public const string ScrubbingClass = "audioGuidePlayer--scrubbing";
 
         /// <summary>
@@ -90,6 +94,7 @@ namespace UnityUIToolkit.Extensions
         private readonly Label titleLabel;
         private readonly Label timeLabel;
         private readonly VisualElement loopButton;
+        private readonly VisualElement muteButton;
         private readonly Label rateButton;
         private readonly VisualElement scrubber;
         private readonly VisualElement fill;
@@ -103,6 +108,7 @@ namespace UnityUIToolkit.Extensions
         private float position;
         private bool isPlaying;
         private bool isLooping;
+        private bool isMuted;
         private float rate = 1f;
         private int cueIndex = -1;
 
@@ -115,6 +121,11 @@ namespace UnityUIToolkit.Extensions
         public event Action<float> SeekRequested;
         public event Action<float> SkipRequested;
         public event Action<bool> LoopToggled;
+
+        /// <summary>
+        /// Raised from the mute button with the new state: true when the sound is now off.
+        /// </summary>
+        public event Action<bool> MuteToggled;
         public event Action<float> RateChanged;
         public event Action<int, string> CueChanged;
 
@@ -200,6 +211,20 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
+        /// <summary>
+        /// True while the source's sound is off; the mute button shows a crossed-out speaker.
+        /// </summary>
+        [UxmlAttribute("is-muted")]
+        public bool IsMuted
+        {
+            get => isMuted;
+            set
+            {
+                isMuted = value;
+                EnableInClassList(MutedClass, isMuted);
+            }
+        }
+
         [UxmlAttribute("rate")]
         public float Rate
         {
@@ -236,6 +261,16 @@ namespace UnityUIToolkit.Extensions
             set => loopButton.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
+        /// <summary>
+        /// Shows the mute button. Off by default, for sources without sound.
+        /// </summary>
+        [UxmlAttribute("show-mute")]
+        public bool ShowMute
+        {
+            get => muteButton.style.display != DisplayStyle.None;
+            set => muteButton.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
         public AudioGuidePlayer()
         {
             this.ApplyControlStyles();
@@ -264,6 +299,14 @@ namespace UnityUIToolkit.Extensions
             texts.pickingMode = PickingMode.Ignore;
             titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass);
             timeLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TimeClass);
+
+            muteButton = UIToolkitExtensions.CreateVisualElement(row, MuteClass);
+            muteButton.RegisterCallback<ClickEvent>(evt =>
+            {
+                evt.StopPropagation();
+                IsMuted = !isMuted;
+                MuteToggled?.Invoke(isMuted);
+            });
 
             loopButton = UIToolkitExtensions.CreateVisualElement(row, LoopClass);
             loopButton.RegisterCallback<ClickEvent>(evt =>
@@ -304,6 +347,7 @@ namespace UnityUIToolkit.Extensions
 
             TitleText = null;
             ShowSkip = false;
+            ShowMute = false;
             Rate = 1f;
             cueLabel.style.display = DisplayStyle.None;
             Refresh();

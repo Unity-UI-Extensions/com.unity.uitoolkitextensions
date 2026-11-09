@@ -381,6 +381,31 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.That(cues, Is.EqualTo(new[] { "Welcome to the hall.", "The blades turn slowly." }));
             Assert.That(player.Q<Label>(className: AudioGuidePlayer.CueClass).text, Is.EqualTo("The blades turn slowly."));
         }
+
+        [UnityTest]
+        public IEnumerator MuteIsHiddenUntilShown_AndToggles()
+        {
+            var player = new AudioGuidePlayer { Duration = 60f };
+            var mutes = new List<bool>();
+            player.MuteToggled += mutes.Add;
+            yield return Mount(player);
+
+            var mute = player.Q(className: AudioGuidePlayer.MuteClass);
+            Assert.IsFalse(player.ShowMute, "hidden by default, for sources without sound");
+            Assert.That(mute.resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
+
+            player.ShowMute = true;
+            yield return null;
+            Assert.That(mute.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
+            Click(mute);
+            Click(mute);
+            Assert.That(mutes, Is.EqualTo(new[] { true, false }));
+            Assert.IsFalse(player.ClassListContains(AudioGuidePlayer.MutedClass));
+
+            player.IsMuted = true;
+            Assert.IsTrue(player.ClassListContains(AudioGuidePlayer.MutedClass), "the owner sets the state from its source");
+            Assert.That(mutes, Is.EqualTo(new[] { true, false }), "setting the state raises no request");
+        }
     }
 
     public class ToastProgressAndCoachingActionTests : UIDocumentTestBase
