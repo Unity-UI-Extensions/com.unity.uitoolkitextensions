@@ -10,7 +10,7 @@
       "twitter": "@SimonDarksideJ"
     }
   ],
-  "unity": "6000.0",
+  "unity": "6000.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Unity-UI-Extensions/com.unity.uitoolkitextensions.git"
@@ -34,6 +34,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "com.unity.modules.uielements": "1.0.0"
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.modules.vectorgraphics": "1.0.0"
   }
 }

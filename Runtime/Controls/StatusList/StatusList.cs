@@ -41,17 +41,7 @@ namespace UnityUIToolkit.Extensions
     /// detail) and an overall bar. Raises <see cref="AllDone"/> when every step is done.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>show-bar</c>, <c>progress</c> (negative: derived from the done steps).
-    /// Methods: <see cref="SetSteps"/>, <see cref="SetState"/>. Events: <see cref="StepChanged"/>,
-    /// <see cref="AllDone"/>.</para>
-    /// <para>USS classes: <c>statusList</c> (root), <c>statusList__steps</c>, <c>statusList__step</c>,
-    /// <c>statusList__marker</c>, <c>statusList__spinner</c>, <c>statusList__texts</c>, <c>statusList__title</c>,
-    /// <c>statusList__detail</c>, <c>statusList__bar</c>, <c>statusList__barFill</c>.</para>
-    /// <para>Modifier classes: <c>statusList__step--pending</c>, <c>--active</c>, <c>--done</c>, <c>--failed</c>
-    /// on a step; <c>statusList--complete</c> and <c>statusList--failed</c> on the root.</para>
-    /// <para>Tokens read: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-border</c>,
-    /// <c>--surface-accent</c>, <c>--c-success</c>, <c>--c-danger</c>, <c>--radius-pill</c>, <c>--space-1..4</c>,
-    /// <c>--text-body</c>, <c>--text-caption</c>, <c>--font-body</c>, <c>--font-body-medium</c>, <c>--motion-base</c>.</para>
+    /// <para>The classes <c>statusList--complete</c> and <c>statusList--failed</c> go on the root.</para>
     /// </remarks>
     [UxmlElement]
     public partial class StatusList : VisualElement
@@ -85,9 +75,6 @@ namespace UnityUIToolkit.Extensions
         private float progress = -1f;
         private bool raisedAllDone;
 
-        /// <summary>
-        /// Raised when a step changes state: its id and new state.
-        /// </summary>
         public event Action<string, StepState> StepChanged;
 
         /// <summary>
@@ -115,7 +102,7 @@ namespace UnityUIToolkit.Extensions
         public bool ShowBar
         {
             get => bar.style.display != DisplayStyle.None;
-            set => bar.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => bar.SetDisplayed(value);
         }
 
         public StatusList()
@@ -126,8 +113,7 @@ namespace UnityUIToolkit.Extensions
 
             stepsRoot = UIToolkitExtensions.CreateVisualElement(this, StepsClass);
             bar = UIToolkitExtensions.CreateVisualElement(this, BarClass).MakePill();
-            barFill = UIToolkitExtensions.CreateVisualElement(bar, BarFillClass).MakePill();
-            barFill.pickingMode = PickingMode.Ignore;
+            barFill = UIToolkitExtensions.CreateVisualElement(bar, BarFillClass).MakePill().IgnorePicking();
 
             UpdateBar();
         }
@@ -195,9 +181,6 @@ namespace UnityUIToolkit.Extensions
             return true;
         }
 
-        /// <summary>
-        /// The row element for a step, for tests and focus.
-        /// </summary>
         public VisualElement StepElement(string id) => rows.Find(r => r.Step.Id == id)?.Element;
 
         private Row CreateRow(StatusStep source)
@@ -205,8 +188,7 @@ namespace UnityUIToolkit.Extensions
             var step = new StatusStep(source.Id, source.Title, source.Detail, source.State);
             var element = UIToolkitExtensions.CreateVisualElement(stepsRoot, StepClass);
 
-            var marker = UIToolkitExtensions.CreateVisualElement(element, MarkerClass);
-            marker.pickingMode = PickingMode.Ignore;
+            var marker = UIToolkitExtensions.CreateVisualElement(element, MarkerClass).IgnorePicking();
 
             var spinner = new LoadingIcon();
             spinner.AddToClassList(SpinnerClass);
@@ -220,17 +202,25 @@ namespace UnityUIToolkit.Extensions
             return new Row { Step = step, Element = element, Marker = marker, Spinner = spinner, Detail = detail };
         }
 
+        private static readonly string[] StateClasses =
+        {
+            StepClass + "--pending",
+            StepClass + "--active",
+            StepClass + "--done",
+            StepClass + "--failed",
+        };
+
         private static void ApplyState(Row row)
         {
             var state = row.Step.State;
-            foreach (StepState value in Enum.GetValues(typeof(StepState)))
+            for (var i = 0; i < StateClasses.Length; i++)
             {
-                row.Element.EnableInClassList($"{StepClass}--{value.ToString().ToLowerInvariant()}", value == state);
+                row.Element.EnableInClassList(StateClasses[i], i == (int)state);
             }
 
             var active = state == StepState.Active;
-            row.Marker.style.display = active ? DisplayStyle.None : DisplayStyle.Flex;
-            row.Spinner.style.display = active ? DisplayStyle.Flex : DisplayStyle.None;
+            row.Marker.SetDisplayed(!active);
+            row.Spinner.SetDisplayed(active);
             if (active)
             {
                 row.Spinner.PlayLoading();
@@ -240,8 +230,7 @@ namespace UnityUIToolkit.Extensions
                 row.Spinner.StopLoading();
             }
 
-            row.Detail.text = row.Step.Detail ?? string.Empty;
-            row.Detail.style.display = string.IsNullOrEmpty(row.Step.Detail) ? DisplayStyle.None : DisplayStyle.Flex;
+            row.Detail.SetTextOrHide(row.Step.Detail);
         }
 
         private float DerivedProgress()
@@ -251,7 +240,15 @@ namespace UnityUIToolkit.Extensions
                 return 0f;
             }
 
-            var done = rows.FindAll(r => r.Step.State == StepState.Done).Count;
+            var done = 0;
+            for (var i = 0; i < rows.Count; i++)
+            {
+                if (rows[i].Step.State == StepState.Done)
+                {
+                    done++;
+                }
+            }
+
             return (float)done / rows.Count;
         }
 

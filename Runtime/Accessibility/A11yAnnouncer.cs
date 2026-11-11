@@ -9,7 +9,7 @@ using UnityEngine.Accessibility;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// Specifies how an <see cref="A11yAnnouncer"/> announcement is prioritized.
+    /// The priority of an <see cref="A11yAnnouncer"/> announcement.
     /// </summary>
     public enum A11yPoliteness
     {
@@ -30,13 +30,13 @@ namespace UnityUIToolkit.Extensions
     /// Examples include a completed step, a caption, or a status change.
     /// </summary>
     /// <remarks>
-    /// <para>When Unity's accessibility module is present and a screen reader is enabled, announcements are sent
+    /// <para>When Unity's accessibility module is present and a screen reader is on, the class sends announcements
     /// through <c>AssistiveSupport</c>. The <see cref="Announced"/> event is raised for every accepted announcement,
-    /// whether or not platform screen-reader support is available.</para>
-    /// <para>Polite announcements with identical text are suppressed within <see cref="RepeatWindowMs"/> of the
-    /// previous announcement. This prevents frequently refreshed statuses from being announced repeatedly.</para>
-    /// <para><see cref="CaptionBar"/> announces each cue when its <c>announce</c> property is enabled. For toasts,
-    /// status chips, and loading steps, the app can call <see cref="Announce"/> from their events.</para>
+    /// with or without platform screen-reader support.</para>
+    /// <para>The class ignores a polite announcement with identical text within <see cref="RepeatWindowMs"/> of the
+    /// previous one. This stops frequently refreshed statuses from repeating.</para>
+    /// <para><see cref="CaptionBar"/> announces each cue when its <c>announce</c> property is on. For toasts,
+    /// status chips and loading steps, the app can call <see cref="Announce"/> from their events.</para>
     /// </remarks>
     public static class A11yAnnouncer
     {
@@ -49,13 +49,10 @@ namespace UnityUIToolkit.Extensions
         public static event Action<string, A11yPoliteness> Announced;
 
         /// <summary>
-        /// Gets or sets the time window, in milliseconds, during which an identical polite announcement is suppressed.
+        /// The time window, in milliseconds, during which an identical polite announcement is ignored.
         /// </summary>
         public static int RepeatWindowMs { get; set; } = 1500;
 
-        /// <summary>
-        /// Gets a value indicating whether the platform reports that a screen reader is enabled.
-        /// </summary>
         public static bool IsScreenReaderOn
         {
             get
@@ -72,11 +69,8 @@ namespace UnityUIToolkit.Extensions
         /// Sends an announcement to the platform screen reader when one is available and raises
         /// <see cref="Announced"/>. Empty or whitespace-only text is ignored.
         /// </summary>
-        /// <param name="text">The announcement text.</param>
-        /// <param name="politeness">The priority of the announcement.</param>
         /// <returns>
-        /// <see langword="true"/> if the announcement was accepted; otherwise, <see langword="false"/> if the text is
-        /// empty or whitespace, or if a polite repeat was suppressed.
+        /// False when the text is empty or whitespace, or when a polite repeat was ignored. Otherwise true.
         /// </returns>
         public static bool Announce(string text, A11yPoliteness politeness = A11yPoliteness.Polite)
         {
@@ -105,9 +99,6 @@ namespace UnityUIToolkit.Extensions
             return true;
         }
 
-        /// <summary>
-        /// Notifies the platform screen reader that the current screen has changed.
-        /// </summary>
         public static void ScreenChanged()
         {
 #if UITK_ACCESSIBILITY
@@ -119,7 +110,7 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Notifies the platform screen reader that part of the current screen has changed, such as when a sheet opens.
+        /// Tells the screen reader that part of the screen has changed, such as when a sheet opens.
         /// </summary>
         public static void LayoutChanged()
         {
@@ -131,9 +122,6 @@ namespace UnityUIToolkit.Extensions
 #endif
         }
 
-        /// <summary>
-        /// Clears the previous announcement used for polite-repeat suppression.
-        /// </summary>
         public static void ResetRepeat()
         {
             lastText = null;

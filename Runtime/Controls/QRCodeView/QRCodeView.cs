@@ -11,17 +11,15 @@ namespace UnityUIToolkit.Extensions
     /// Draws a QR code for a string, such as a visitor link, with a quiet zone, dark modules on a light ground.
     /// </summary>
     /// <remarks>
-    /// <para>Encoding is self-contained (<see cref="QrEncoder"/>); no barcode library is needed. The code is drawn as
+    /// <para>Encoding is self-contained (<see cref="QrEncoder"/>), so no barcode library is needed. The code is drawn as
     /// a point-filtered texture, one pixel per module, scaled to the element's size.</para>
-    /// <para>Props: <c>text</c>, <c>error-correction</c> (default Medium), <c>quiet-zone</c> (modules of light border,
-    /// default 4, the minimum scanners expect), <c>size</c> (sets width and height; 0 keeps the USS size of 200 px).
-    /// Methods: <see cref="CreateTexture"/> returns a new texture you own, at a chosen scale, to share or save as an
-    /// image. <see cref="Texture"/> is the view's own texture; it is destroyed when the view leaves its panel.</para>
-    /// <para>Text that does not fit in a QR code logs a warning and leaves the view empty.</para>
-    /// <para>USS classes: <c>qrCodeView</c> (root). Modifier: <c>qrCodeView--empty</c> (no text, or too long).</para>
+    /// <para>The default <c>error-correction</c> is Medium. The default <c>quiet-zone</c> is 4 modules, the minimum scanners expect.
+    /// A <c>size</c> of 0 keeps the USS size of 200 px.
+    /// <see cref="Texture"/> is the view's own texture. The view destroys it when it leaves its panel.</para>
+    /// <para>Text that does not fit in a QR code logs a warning and leaves the view empty.
+    /// The class <c>qrCodeView--empty</c> marks a view with no text or too much text.</para>
     /// <para>Custom properties on the root: <c>--qr-dark</c> (default <c>--c-navy-2</c>) and <c>--qr-light</c>
     /// (default white). Keep them high in contrast so the code scans.</para>
-    /// <para>Tokens read: <c>--c-navy-2</c>, <c>--radius-sm</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class QRCodeView : VisualElement
@@ -43,7 +41,7 @@ namespace UnityUIToolkit.Extensions
         private Color lightColor = Color.white;
 
         /// <summary>
-        /// The content to encode; empty clears the view.
+        /// The content to encode. Empty clears the view.
         /// </summary>
         [UxmlAttribute("text")]
         public string Text
@@ -91,14 +89,12 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 size = Mathf.Max(0f, value);
-                style.width = size > 0f ? new StyleLength(size) : new StyleLength(StyleKeyword.Null);
-                style.height = size > 0f ? new StyleLength(size) : new StyleLength(StyleKeyword.Null);
+                var length = size > 0f ? new StyleLength(size) : new StyleLength(StyleKeyword.Null);
+                style.width = length;
+                style.height = length;
             }
         }
 
-        /// <summary>
-        /// The encoded code, or null when the view is empty.
-        /// </summary>
         public QrCode Code => code;
 
         /// <summary>
@@ -141,10 +137,10 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Draws the code into a new readable texture the caller owns, for sharing or saving with
+        /// Draws the code into a new readable texture that the caller owns, for sharing or saving with
         /// <c>ImageConversion.EncodeToPNG</c>. Returns null when the view is empty.
         /// </summary>
-        /// <param name="pixelsPerModule">The scale; 8 gives about 300 px for a short link.</param>
+        /// <param name="pixelsPerModule">The scale. 8 gives about 300 px for a short link.</param>
         public Texture2D CreateTexture(int pixelsPerModule = 8)
         {
             return code == null ? null : Draw(code, quietZone, Mathf.Max(1, pixelsPerModule), darkColor, lightColor);
@@ -229,21 +225,7 @@ namespace UnityUIToolkit.Extensions
 
         private void ReleaseTexture()
         {
-            if (texture == null)
-            {
-                return;
-            }
-
-            if (Application.isPlaying)
-            {
-                Object.Destroy(texture);
-            }
-            else
-            {
-                Object.DestroyImmediate(texture);
-            }
-
-            texture = null;
+            ProceduralTextureUtility.Release(ref texture);
         }
     }
 }

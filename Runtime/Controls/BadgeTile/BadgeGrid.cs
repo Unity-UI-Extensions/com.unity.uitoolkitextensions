@@ -40,13 +40,10 @@ namespace UnityUIToolkit.Extensions
     }
 
     /// <summary>
-    /// A card holding a grid of <see cref="BadgeTile"/>s, three to a row by default (FS10_8).
+    /// A card holding a grid of <see cref="BadgeTile"/>s, three to a row by default.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>columns</c> (default 3), <c>card</c> (draw the card behind the grid, default true). Methods:
-    /// <see cref="SetBadges"/>, <see cref="TileElement"/>. Event: <see cref="BadgeTapped"/> (id).</para>
-    /// <para>USS classes: <c>badgeGrid</c> (root), <c>badgeGrid__cell</c>. Modifier: <c>badgeGrid--card</c>.</para>
-    /// <para>Tokens read: <c>--surface-raised</c>, <c>--surface-border</c>, <c>--space-1..4</c>.</para>
+    /// <para><c>columns</c> defaults to 3. <c>card</c> draws the card behind the grid; it defaults to true.</para>
     /// </remarks>
     [UxmlElement]
     public partial class BadgeGrid : VisualElement
@@ -58,7 +55,6 @@ namespace UnityUIToolkit.Extensions
         private readonly List<BadgeInfo> badges = new();
         private readonly Dictionary<string, BadgeTile> tiles = new();
         private int columns = 3;
-        private bool card = true;
 
         public event Action<string> BadgeTapped;
 
@@ -81,12 +77,8 @@ namespace UnityUIToolkit.Extensions
         [UxmlAttribute("card")]
         public bool Card
         {
-            get => card;
-            set
-            {
-                card = value;
-                EnableInClassList(CardClass, card);
-            }
+            get => ClassListContains(CardClass);
+            set => EnableInClassList(CardClass, value);
         }
 
         public BadgeGrid()
@@ -128,15 +120,11 @@ namespace UnityUIToolkit.Extensions
     }
 
     /// <summary>
-    /// The badge summary card (FS10_8): "4 of 9 unlocked", the experience name and a progress bar.
+    /// The badge summary card: "4 of 9 unlocked", the experience name and a progress bar.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>title-text</c>, <c>detail</c>, <c>progress</c> (0 to 1). Method: <see cref="SetCounts"/>
-    /// (sets the progress from unlocked and total; the title stays the app's text).</para>
-    /// <para>USS classes: <c>badgeSummaryCard</c> (root), <c>badgeSummaryCard__header</c>, <c>badgeSummaryCard__title</c>,
-    /// <c>badgeSummaryCard__detail</c>, <c>badgeSummaryCard__bar</c> (a <see cref="LinearProgress"/>).</para>
-    /// <para>Tokens read: <c>--surface-raised</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--space-2..4</c>, <c>--text-caption</c>, <c>--font-display</c>.</para>
+    /// <para><c>progress</c> is 0 to 1. <see cref="SetCounts"/> sets the progress from unlocked and total; the title stays
+    /// the app's text. The bar is a <see cref="LinearProgress"/>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class BadgeSummaryCard : VisualElement
@@ -166,8 +154,7 @@ namespace UnityUIToolkit.Extensions
             get => detail.text;
             set
             {
-                detail.text = value ?? string.Empty;
-                detail.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                detail.SetTextOrHide(value);
             }
         }
 

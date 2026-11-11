@@ -14,7 +14,7 @@ namespace UnityUIToolkit.Extensions
     public enum SegmentSizing
     {
         /// <summary>
-        /// Every segment gets the same width (the original behaviour).
+        /// Every segment gets the same width.
         /// </summary>
         Equal,
 
@@ -26,20 +26,12 @@ namespace UnityUIToolkit.Extensions
 
     /// <summary>
     /// A segmented stepper-like control split into "quadrants" (segments).
-    /// One segment can be active at a time; a colored overlay slides between segments.
+    /// One segment is active at a time. A coloured overlay slides between segments.
     /// </summary>
     /// <remarks>
-    /// <para>Segments can carry an icon (<see cref="SetSegmentIcon"/>), can be disabled
-    /// (<see cref="SetSegmentEnabled"/>) and can size to their content (<see cref="Sizing"/>).
-    /// The control is focusable: Left/Right (or gamepad navigation) move to the previous or next
-    /// enabled segment, Home/End to the first or last.</para>
-    /// <para>USS classes: <c>quadrantStepper</c> (root), <c>quadrantStepper__overlay</c>,
-    /// <c>quadrantStepper__segments</c>, <c>quadrantStepper__segment</c>, <c>quadrantStepper__icon</c>,
-    /// <c>quadrantStepper__label</c>.</para>
-    /// <para>Modifier classes: <c>is-selected</c> (selected segment, its icon and label),
-    /// <c>quadrantStepper__segment--disabled</c>, <c>quadrantStepper__segment--hasIcon</c>,
-    /// <c>quadrantStepper--content</c> (content sizing), <c>quadrantStepper--scrollable</c>
-    /// (content sizing and wider than the control).</para>
+    /// <para>The control is focusable. Left and Right (or gamepad navigation) move to the previous or next
+    /// enabled segment. Home and End move to the first or last.</para>
+    /// <para>The class <c>quadrantStepper--scrollable</c> is set when the sizing is content and the row is wider than the control.</para>
     /// </remarks>
     [UxmlElement]
     public partial class QuadrantStepper : VisualElement
@@ -69,7 +61,7 @@ namespace UnityUIToolkit.Extensions
         private ValueAnimation<float> overlayAnimation;
         private float overlayLeft;
 
-        // Content sizing: horizontal scroll offset shared by the overlay and the segment row.
+        // Content sizing: the overlay and the segment row share one horizontal scroll offset.
         private const float DragSlop = 8f;
         private const float WheelStep = 20f;
         private float scrollOffset;
@@ -79,7 +71,7 @@ namespace UnityUIToolkit.Extensions
         private bool isDragging;
         private bool suppressNextClick;
 
-        // Horizontal-only shrink: 2.5% inset per side (5% total width reduction).
+        // Horizontal-only shrink: 1.5% inset per side (3% in total).
         private const float OverlayInsetPercentPerSideX = 0.015f;
 
         private const int DefaultOverlayAnimationDurationMs = 170;
@@ -90,18 +82,8 @@ namespace UnityUIToolkit.Extensions
 
         public event Action<int, string> SelectionChanged;
 
-        public string SelectedText
-        {
-            get
-            {
-                if (selectedIndex < 0 || selectedIndex >= labels.Count)
-                {
-                    return string.Empty;
-                }
-
-                return labels[selectedIndex].text;
-            }
-        }
+        public string SelectedText =>
+            selectedIndex >= 0 && selectedIndex < labels.Count ? labels[selectedIndex].text : string.Empty;
 
         public int SegmentCount => segments.Count;
 
@@ -134,8 +116,8 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// The selected segment, or -1 for none. Setting it does not raise <see cref="SelectionChanged"/>;
-        /// out-of-range values are clamped.
+        /// The selected segment, or -1 for none. Setting it does not raise <see cref="SelectionChanged"/>.
+        /// The control clamps out-of-range values.
         /// </summary>
         [UxmlAttribute("selected-index")]
         public int SelectedIndex
@@ -274,15 +256,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            var clampedIndex = defaultSelectedIndex;
-            if (clampedIndex < -1)
-            {
-                clampedIndex = -1;
-            }
-            else if (clampedIndex >= options.Count)
-            {
-                clampedIndex = options.Count - 1;
-            }
+            var clampedIndex = Mathf.Clamp(defaultSelectedIndex, -1, options.Count - 1);
 
             SetSelectedIndexInternal(clampedIndex, notify: false, animate: false);
         }
@@ -312,9 +286,8 @@ namespace UnityUIToolkit.Extensions
         {
             ValidateIndex(index);
 
-            var hasIcon = icon.texture != null || icon.sprite != null || icon.vectorImage != null || icon.renderTexture != null;
-            icons[index].style.backgroundImage = hasIcon ? new StyleBackground(icon) : new StyleBackground(StyleKeyword.None);
-            icons[index].style.display = hasIcon ? DisplayStyle.Flex : DisplayStyle.None;
+            var hasIcon = icons[index].SetImageOrNone(icon);
+            icons[index].SetDisplayed(hasIcon);
             segments[index].EnableInClassList(SegmentHasIconClass, hasIcon);
         }
 
@@ -462,7 +435,7 @@ namespace UnityUIToolkit.Extensions
             }
             catch (InvalidOperationException)
             {
-                // UI Toolkit animations are pooled/recycled; Stop() can throw if the object was already recycled even though we still hold a reference.
+                // UI Toolkit recycles animations. Stop() can throw when the object is already recycled, even while this class still holds a reference.
             }
             finally
             {
@@ -539,9 +512,7 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// The overlay rectangle for a segment, in the control's coordinates before scrolling.
-        /// </summary>
+        // The overlay rectangle for a segment, in the control's coordinates before scrolling.
         private bool TryGetOverlayRect(int index, out float left, out float width)
         {
             left = 0f;

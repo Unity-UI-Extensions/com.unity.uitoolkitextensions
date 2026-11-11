@@ -33,26 +33,18 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
 
             focusable = true;
-            this.AddManipulator(new Clickable(OnClickedHandler));
+            this.AddManipulator(new Clickable(() => Clicked?.Invoke()));
 
-            imageContainer = UIToolkitExtensions.CreateVisualElement(this, ImageClass);
-            imageContainer.pickingMode = PickingMode.Ignore;
+            imageContainer = UIToolkitExtensions.CreateVisualElement(this, ImageClass).IgnorePicking();
 
-            noImageOverlay = UIToolkitExtensions.CreateVisualElement(this, NoImageOverlayClass);
-            noImageOverlay.pickingMode = PickingMode.Ignore;
+            noImageOverlay = UIToolkitExtensions.CreateVisualElement(this, NoImageOverlayClass).IgnorePicking();
 
-            iconElement = UIToolkitExtensions.CreateVisualElement(noImageOverlay, IconClass);
-            iconElement.pickingMode = PickingMode.Ignore;
+            iconElement = UIToolkitExtensions.CreateVisualElement(noImageOverlay, IconClass).IgnorePicking();
 
             uploadNewImageLabel = UIToolkitExtensions.CreateVisualElement<Label>(noImageOverlay, UploadLabelClass);
             uploadNewImageLabel.text = string.Empty;
             uploadNewImageLabel.style.display = DisplayStyle.None;
             uploadNewImageLabel.pickingMode = PickingMode.Ignore;
-        }
-
-        private void OnClickedHandler()
-        {
-            Clicked?.Invoke();
         }
 
         [UxmlAttribute("image")]

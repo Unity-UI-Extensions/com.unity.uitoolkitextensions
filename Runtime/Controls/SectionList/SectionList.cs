@@ -67,16 +67,6 @@ namespace UnityUIToolkit.Extensions
     /// Each section is a <see cref="CollapsibleSection"/>; rows are <see cref="SettingsRow"/>s unless a
     /// <see cref="RowFactory"/> builds them.
     /// </summary>
-    /// <remarks>
-    /// <para>Props: <c>single-open</c>. Methods: <see cref="SetSections"/>, <see cref="SetExpanded"/>.
-    /// Properties: <see cref="ExpandedIds"/>, <see cref="RowFactory"/>. Events: <see cref="SectionToggled"/>
-    /// (section id, expanded), <see cref="RowAction"/> (section id, row).</para>
-    /// <para>USS classes: <c>sectionList</c> (root), <c>sectionList__section</c> (the CollapsibleSection),
-    /// <c>sectionList__count</c>, <c>sectionList__chevron</c>, <c>sectionList__row</c>.</para>
-    /// <para>Tokens read: <c>--surface-muted</c>, <c>--surface-border</c>, <c>--radius-pill</c>, <c>--space-1..2</c>,
-    /// <c>--text-caption</c>, <c>--font-body-medium</c>, <c>--motion-base</c>, plus those of CollapsibleSection
-    /// (card variant) and SettingsRow.</para>
-    /// </remarks>
     [UxmlElement]
     public partial class SectionList : VisualElement
     {
@@ -92,13 +82,10 @@ namespace UnityUIToolkit.Extensions
         private bool suppressToggleEvents;
 
         /// <summary>
-        /// Raised when a section opens or closes: its id and whether it is open.
+        /// Raised when a section opens or closes, with its id and whether it is open.
         /// </summary>
         public event Action<string, bool> SectionToggled;
 
-        /// <summary>
-        /// Raised when a row is tapped: the section id and the row.
-        /// </summary>
         public event Action<string, SectionListRow> RowAction;
 
         /// <summary>
@@ -109,9 +96,6 @@ namespace UnityUIToolkit.Extensions
 
         public IReadOnlyList<SectionListSection> Sections => sections;
 
-        /// <summary>
-        /// Opening one section closes the others.
-        /// </summary>
         [UxmlAttribute("single-open")]
         public bool SingleOpen
         {
@@ -206,9 +190,6 @@ namespace UnityUIToolkit.Extensions
             return true;
         }
 
-        /// <summary>
-        /// The CollapsibleSection for a section id, for tests and focus.
-        /// </summary>
         public CollapsibleSection SectionElement(string id) => sectionElements.TryGetValue(id, out var element) ? element : null;
 
         private CollapsibleSection BuildSection(SectionListSection section)

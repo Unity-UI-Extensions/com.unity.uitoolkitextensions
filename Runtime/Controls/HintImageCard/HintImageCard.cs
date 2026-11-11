@@ -38,31 +38,10 @@ namespace UnityUIToolkit.Extensions
     /// <remarks>
     /// <para>Without a picture, a gradient placeholder fills the image. <see cref="Embedded"/> drops the card's own
     /// background and uses a smaller image, for use inside another card.</para>
-    /// <para>Props: <c>text</c>, <c>tag-text</c> (default "Hint", shown in capitals; empty hides the tag),
-    /// <c>embedded</c>, <c>show-proximity</c>, <c>proximity-labels</c> (comma separated, default "Far,Near,Found",
-    /// shown in capitals), <c>proximity</c> (the current segment, -1 for none).
-    /// Methods: <see cref="SetImage"/>, <see cref="SetProximity"/>, <see cref="SetProximityLabels"/>.</para>
+    /// <para>The tag text defaults to "Hint". The proximity labels default to "Far,Near,Found", shown in capitals.</para>
     /// <para>State machine: <c>state</c> (a <see cref="HintState"/>) moves the strip (Far, Near, Found are its three
     /// segments), shows a moving bar while Loading, and on Failed shows the tips (<see cref="SetTips"/>) and the
-    /// actions (<c>retry-text</c>, default "Try again"; <c>skip-text</c>, empty hides it). Also <c>location-name</c>
-    /// and <c>distance</c> (metres, negative hides it) above the guidance. Events: <see cref="RetryRequested"/>,
-    /// <see cref="SkipRequested"/>, <see cref="StateChanged"/>.</para>
-    /// <para>USS classes: <c>hintImageCard</c> (root), <c>hintImageCard__row</c>, <c>hintImageCard__image</c>,
-    /// <c>hintImageCard__placeholder</c>, <c>hintImageCard__picture</c>, <c>hintImageCard__tag</c>,
-    /// <c>hintImageCard__text</c>, <c>hintImageCard__proximity</c>, <c>hintImageCard__segment</c>,
-    /// <c>hintImageCard__segmentFill</c>, <c>hintImageCard__segmentLabel</c>, <c>hintImageCard__texts</c>,
-    /// <c>hintImageCard__heading</c>, <c>hintImageCard__location</c>, <c>hintImageCard__distance</c>,
-    /// <c>hintImageCard__loading</c> (a <see cref="LinearProgress"/>), <c>hintImageCard__tips</c>,
-    /// <c>hintImageCard__tip</c>, <c>hintImageCard__actions</c>, <c>hintImageCard__retry</c>,
-    /// <c>hintImageCard__skip</c>.</para>
-    /// <para>Modifier classes: <c>hintImageCard--embedded</c>, <c>hintImageCard--hasImage</c>,
-    /// <c>hintImageCard__segment--current</c>, <c>hintImageCard--loading</c>, <c>--far</c>, <c>--near</c>,
-    /// <c>--found</c>, <c>--failed</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-border-strong</c>,
-    /// <c>--surface-fg</c>, <c>--surface-fg-soft</c>, <c>--surface-muted</c>, <c>--c-bg</c>, <c>--c-fg-muted</c>,
-    /// <c>--c-primary</c>, <c>--c-on-primary</c>, <c>--radius-card</c>, <c>--radius-input</c>, <c>--radius-sm</c>,
-    /// <c>--radius-pill</c>, <c>--space-3</c>, <c>--text-label</c>, <c>--text-micro</c>,
-    /// <c>--font-body</c>, <c>--font-body-medium</c>, <c>--font-body-semibold</c>.</para>
+    /// actions (<c>retry-text</c>, default "Try again"; <c>skip-text</c>, empty hides it).</para>
     /// </remarks>
     [UxmlElement]
     public partial class HintImageCard : VisualElement
@@ -150,7 +129,7 @@ namespace UnityUIToolkit.Extensions
         public bool ShowProximity
         {
             get => proximityStrip.style.display != DisplayStyle.None;
-            set => proximityStrip.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => proximityStrip.SetDisplayed(value);
         }
 
         /// <summary>
@@ -253,37 +232,27 @@ namespace UnityUIToolkit.Extensions
             this.UseThemeTokens();
             AddToClassList(RootClass);
 
-            var row = UIToolkitExtensions.CreateVisualElement(this, RowClass);
-            row.pickingMode = PickingMode.Ignore;
+            var row = UIToolkitExtensions.CreateVisualElement(this, RowClass).IgnorePicking();
 
-            var image = UIToolkitExtensions.CreateVisualElement(row, ImageClass);
-            image.pickingMode = PickingMode.Ignore;
-            var placeholder = UIToolkitExtensions.CreateVisualElement(image, PlaceholderClass);
-            placeholder.pickingMode = PickingMode.Ignore;
+            var image = UIToolkitExtensions.CreateVisualElement(row, ImageClass).IgnorePicking();
+            var placeholder = UIToolkitExtensions.CreateVisualElement(image, PlaceholderClass).IgnorePicking();
             placeholder.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
-            picture = UIToolkitExtensions.CreateVisualElement(image, PictureClass);
-            picture.pickingMode = PickingMode.Ignore;
-            tagLabel = UIToolkitExtensions.CreateVisualElement<Label>(image, TagClass).MakePill();
-            tagLabel.pickingMode = PickingMode.Ignore;
+            picture = UIToolkitExtensions.CreateVisualElement(image, PictureClass).IgnorePicking();
+            tagLabel = UIToolkitExtensions.CreateVisualElement<Label>(image, TagClass).MakePill().IgnorePicking();
 
-            var texts = UIToolkitExtensions.CreateVisualElement(row, TextsClass);
-            texts.pickingMode = PickingMode.Ignore;
-            heading = UIToolkitExtensions.CreateVisualElement(texts, HeadingClass);
-            heading.pickingMode = PickingMode.Ignore;
+            var texts = UIToolkitExtensions.CreateVisualElement(row, TextsClass).IgnorePicking();
+            heading = UIToolkitExtensions.CreateVisualElement(texts, HeadingClass).IgnorePicking();
             locationLabel = UIToolkitExtensions.CreateVisualElement<Label>(heading, LocationClass);
             distanceLabel = UIToolkitExtensions.CreateVisualElement<Label>(heading, DistanceClass);
-            textLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TextClass);
-            textLabel.pickingMode = PickingMode.Ignore;
+            textLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TextClass).IgnorePicking();
 
             loading = new LinearProgress { Indeterminate = true };
             loading.AddToClassList(LoadingClass);
             Add(loading);
 
-            proximityStrip = UIToolkitExtensions.CreateVisualElement(this, ProximityClass);
-            proximityStrip.pickingMode = PickingMode.Ignore;
+            proximityStrip = UIToolkitExtensions.CreateVisualElement(this, ProximityClass).IgnorePicking();
 
-            tips = UIToolkitExtensions.CreateVisualElement(this, TipsClass);
-            tips.pickingMode = PickingMode.Ignore;
+            tips = UIToolkitExtensions.CreateVisualElement(this, TipsClass).IgnorePicking();
             actions = UIToolkitExtensions.CreateVisualElement(this, ActionsClass);
             skip = new PillButton { Variant = PillButtonVariant.Ghost, Compact = true };
             skip.AddToClassList(SkipClass);
@@ -315,8 +284,7 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetImage(Background image)
         {
-            var has = image.texture != null || image.sprite != null || image.vectorImage != null || image.renderTexture != null;
-            picture.style.backgroundImage = has ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
+            var has = picture.SetImageOrNone(image);
             EnableInClassList(HasImageClass, has);
         }
 
@@ -363,10 +331,10 @@ namespace UnityUIToolkit.Extensions
             EnableInClassList(RootClass + "--found", state == HintState.Found);
             EnableInClassList(RootClass + "--failed", state == HintState.Failed);
 
-            loading.style.display = state == HintState.Loading ? DisplayStyle.Flex : DisplayStyle.None;
+            loading.SetDisplayed(state == HintState.Loading);
             var failed = state == HintState.Failed;
-            tips.style.display = failed && tips.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
-            actions.style.display = failed ? DisplayStyle.Flex : DisplayStyle.None;
+            tips.SetDisplayed(failed && tips.childCount > 0);
+            actions.SetDisplayed(failed);
 
             switch (state)
             {
@@ -388,15 +356,17 @@ namespace UnityUIToolkit.Extensions
 
         private void UpdateHeading()
         {
-            locationLabel.style.display = string.IsNullOrEmpty(locationLabel.text) ? DisplayStyle.None : DisplayStyle.Flex;
-            distanceLabel.style.display = string.IsNullOrEmpty(distanceLabel.text) ? DisplayStyle.None : DisplayStyle.Flex;
-            heading.style.display = string.IsNullOrEmpty(locationLabel.text) && string.IsNullOrEmpty(distanceLabel.text) ? DisplayStyle.None : DisplayStyle.Flex;
+            var hasLocation = !string.IsNullOrEmpty(locationLabel.text);
+            var hasDistance = !string.IsNullOrEmpty(distanceLabel.text);
+            locationLabel.SetDisplayed(hasLocation);
+            distanceLabel.SetDisplayed(hasDistance);
+            heading.SetDisplayed(hasLocation || hasDistance);
         }
 
         private static void SetButton(PillButton button, string text)
         {
             button.Text = text ?? string.Empty;
-            button.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+            button.SetDisplayed(!string.IsNullOrEmpty(text));
         }
 
         /// <summary>
@@ -404,18 +374,15 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetProximityLabels(params string[] labels)
         {
-            proximityLabels = labels ?? new string[0];
+            proximityLabels = labels ?? Array.Empty<string>();
             proximityStrip.Clear();
             segments.Clear();
             foreach (var label in proximityLabels)
             {
-                var segment = UIToolkitExtensions.CreateVisualElement(proximityStrip, SegmentClass);
-                segment.pickingMode = PickingMode.Ignore;
-                var fill = UIToolkitExtensions.CreateVisualElement(segment, SegmentFillClass);
-                fill.pickingMode = PickingMode.Ignore;
+                var segment = UIToolkitExtensions.CreateVisualElement(proximityStrip, SegmentClass).IgnorePicking();
+                var fill = UIToolkitExtensions.CreateVisualElement(segment, SegmentFillClass).IgnorePicking();
                 fill.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
-                var text = UIToolkitExtensions.CreateVisualElement<Label>(segment, SegmentLabelClass);
-                text.pickingMode = PickingMode.Ignore;
+                var text = UIToolkitExtensions.CreateVisualElement<Label>(segment, SegmentLabelClass).IgnorePicking();
                 text.text = (label ?? string.Empty).Trim().ToUpperInvariant();
                 segments.Add(segment);
             }

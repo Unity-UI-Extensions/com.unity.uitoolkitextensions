@@ -10,15 +10,10 @@ namespace UnityUIToolkit.Extensions
     /// download. The arc is drawn with <see cref="Painter2D"/> in the token colours.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>value</c> (0 to 1), <c>value-text</c> (empty shows the percentage), <c>label</c>,
-    /// <c>size</c>, <c>thickness</c>, <c>show-complete</c> (default on; off keeps the fill colour at 1, for a
-    /// countdown that starts full).</para>
-    /// <para>USS classes: <c>progressRing</c> (root), <c>progressRing__centre</c>, <c>progressRing__value</c>,
-    /// <c>progressRing__label</c>. Modifier: <c>progressRing--complete</c> (value 1, while <c>show-complete</c>).</para>
-    /// <para>Variables: <c>--progressRing-track</c> (default <c>--surface-border</c>), <c>--progressRing-fill</c>
-    /// (default <c>--surface-accent</c>; <c>--c-success</c> when complete).</para>
-    /// <para>Tokens read: <c>--surface-border</c>, <c>--surface-accent</c>, <c>--c-success</c>, <c>--surface-fg</c>,
-    /// <c>--surface-muted</c>, <c>--text-title</c>, <c>--text-caption</c>, <c>--font-display</c>, <c>--font-body</c>.</para>
+    /// <para>The <c>value</c> runs from 0 to 1. The class <c>progressRing--complete</c> applies at value 1 while <c>show-complete</c> is on.
+    /// With <c>show-complete</c> off, the fill colour stays at 1, for a countdown that starts full.</para>
+    /// <para>Variables: <c>--progressRing-track</c> (default <c>--surface-border</c>) and <c>--progressRing-fill</c>
+    /// (default <c>--surface-accent</c>, or <c>--c-success</c> when complete).</para>
     /// </remarks>
     [UxmlElement]
     public partial class ProgressRing : VisualElement
@@ -92,8 +87,7 @@ namespace UnityUIToolkit.Extensions
             get => captionLabel.text;
             set
             {
-                captionLabel.text = value ?? string.Empty;
-                captionLabel.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                captionLabel.SetTextOrHide(value);
             }
         }
 
@@ -120,9 +114,7 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// Colours last read from USS; exposed for tests.
-        /// </summary>
+        // The colours last read from USS.
         public Color TrackColor => trackColor;
         public Color FillColor => fillColor;
 
@@ -133,8 +125,7 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
             pickingMode = PickingMode.Ignore;
 
-            var centre = UIToolkitExtensions.CreateVisualElement(this, CentreClass);
-            centre.pickingMode = PickingMode.Ignore;
+            var centre = UIToolkitExtensions.CreateVisualElement(this, CentreClass).IgnorePicking();
             valueLabel = UIToolkitExtensions.CreateVisualElement<Label>(centre, ValueClass);
             captionLabel = UIToolkitExtensions.CreateVisualElement<Label>(centre, LabelClass);
 

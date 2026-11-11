@@ -41,17 +41,9 @@ namespace UnityUIToolkit.Extensions
     /// <para>Put labels in a full-screen layer. Drive a label either by passing panel coordinates each frame
     /// (<see cref="SetPanelPosition"/>), or by giving it a camera and a transform to follow (<see cref="Track"/>),
     /// in which case it updates itself every frame and can write the distance into the detail.</para>
-    /// <para>Props: <c>text</c>, <c>detail</c>, <c>tone</c>, <c>clamp-to-safe-area</c>, <c>fade-start-distance</c>,
-    /// <c>max-distance</c>, <c>show-distance</c>, <c>pivot</c>, <c>offset</c>. Methods: <see cref="SetPanelPosition"/>,
-    /// <see cref="Track"/>, <see cref="StopTracking"/>, <see cref="SetSafeArea"/>. Event: <see cref="Tapped"/>.</para>
-    /// <para>USS classes: <c>worldAnchoredLabel</c> (root), <c>worldAnchoredLabel__dot</c>, <c>worldAnchoredLabel__text</c>,
-    /// <c>worldAnchoredLabel__separator</c>, <c>worldAnchoredLabel__detail</c>.</para>
-    /// <para>Modifier classes: <c>worldAnchoredLabel--offscreen</c> (clamped to the edge), <c>worldAnchoredLabel--hidden</c>
-    /// (off screen without clamping, behind the camera or beyond <c>max-distance</c>), <c>worldAnchoredLabel--action</c>,
-    /// <c>--success</c>, <c>--warn</c>.</para>
-    /// <para>Tokens read: <c>--c-panel</c>, <c>--c-divider</c>, <c>--c-fg</c>, <c>--c-primary</c>, <c>--c-accent</c>,
-    /// <c>--c-success</c>, <c>--c-warn</c>, <c>--radius-pill</c>, <c>--space-2</c>, <c>--space-3</c>, <c>--text-caption</c>,
-    /// <c>--font-body-medium</c>, <c>--motion-fast</c>. The label always uses the deep palette: it sits over the camera.</para>
+    /// <para>The class <c>worldAnchoredLabel--offscreen</c> marks a label clamped to the edge. The class <c>worldAnchoredLabel--hidden</c>
+    /// marks a label that is off screen without clamping, behind the camera or beyond <c>max-distance</c>.</para>
+    /// <para>The label always uses the deep palette because it sits over the camera.</para>
     /// </remarks>
     [UxmlElement]
     public partial class WorldAnchoredLabel : VisualElement
@@ -87,14 +79,8 @@ namespace UnityUIToolkit.Extensions
         private Vector3 trackWorldOffset;
         private DisplayedTimer trackItem;
 
-        /// <summary>
-        /// Raised when the label is tapped.
-        /// </summary>
         public event Action Tapped;
 
-        /// <summary>
-        /// The panel position of the anchor point last applied.
-        /// </summary>
         public Vector2 AnchorPosition { get; private set; }
 
         public bool IsOffscreen => ClassListContains(OffscreenClass);
@@ -118,8 +104,8 @@ namespace UnityUIToolkit.Extensions
             {
                 detailLabel.text = value ?? string.Empty;
                 var has = !string.IsNullOrEmpty(value);
-                detailLabel.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
-                separator.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+                detailLabel.SetDisplayed(has);
+                separator.SetDisplayed(has);
             }
         }
 
@@ -137,7 +123,7 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Keep the label inside the safe area when its point leaves the screen; false hides it instead.
+        /// Keeps the label inside the safe area when its point leaves the screen. False hides it instead.
         /// </summary>
         [UxmlAttribute("clamp-to-safe-area")]
         public bool ClampToSafeArea
@@ -203,15 +189,12 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
             this.MakePill();
 
-            var dot = UIToolkitExtensions.CreateVisualElement(this, DotClass);
-            dot.pickingMode = PickingMode.Ignore;
-            textLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, TextClass);
-            textLabel.pickingMode = PickingMode.Ignore;
+            var dot = UIToolkitExtensions.CreateVisualElement(this, DotClass).IgnorePicking();
+            textLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, TextClass).IgnorePicking();
             separator = UIToolkitExtensions.CreateVisualElement<Label>(this, SeparatorClass);
             separator.text = "·";
             separator.pickingMode = PickingMode.Ignore;
-            detailLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, DetailClass);
-            detailLabel.pickingMode = PickingMode.Ignore;
+            detailLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, DetailClass).IgnorePicking();
 
             RegisterCallback<ClickEvent>(evt =>
             {
@@ -341,9 +324,6 @@ namespace UnityUIToolkit.Extensions
             trackItem = DisplayedTimer.Start(this, UpdateTracking, 0);
         }
 
-        /// <summary>
-        /// Projects the tracked point now; called every frame while tracking.
-        /// </summary>
         internal void UpdateTracking()
         {
             if (trackCamera == null || trackTarget == null || panel == null)

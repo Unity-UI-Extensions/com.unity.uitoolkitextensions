@@ -30,17 +30,6 @@ namespace UnityUIToolkit.Extensions
     /// from state. <see cref="ToggleOnPointerDown"/> (default true, the original behaviour) toggles as soon as the
     /// pointer goes down; set it false inside scrolling lists so a scroll that starts on a header does not toggle it.
     /// The header is focusable and toggles on submit (Enter, Space, gamepad A).</para>
-    /// <para>USS classes: <c>collapsibleSection</c> (root), <c>collapsibleSection__header</c>,
-    /// <c>collapsibleSection__leading</c>, <c>collapsibleSection__titles</c>, <c>collapsibleSection__title</c>,
-    /// <c>collapsibleSection__subtitle</c>, <c>collapsibleSection__trailing</c>, <c>collapsibleSection__chevron</c>,
-    /// <c>collapsibleSection__body</c>, <c>collapsibleSection__bodyContent</c>, <c>collapsibleSection__bodyText</c>.</para>
-    /// <para>Modifier classes: <c>collapsibleSection--expanded</c>, <c>collapsibleSection--card</c>,
-    /// <c>collapsibleSection--hasLeading</c>, <c>collapsibleSection--hasTrailing</c>,
-    /// <c>collapsibleSection--hasSubtitle</c>, <c>collapsibleSection--static</c> (not interactive).</para>
-    /// <para>Tokens read by the card variant: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-fg</c>,
-    /// <c>--surface-muted</c>, <c>--surface-accent</c>, <c>--radius-card</c>, <c>--space-3</c>, <c>--space-4</c>,
-    /// <c>--text-body</c>, <c>--text-caption</c>, <c>--font-body-medium</c>, <c>--font-body-semibold</c>,
-    /// <c>--motion-base</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class CollapsibleSection : VisualElement
@@ -115,7 +104,7 @@ namespace UnityUIToolkit.Extensions
             {
                 subtitleLabel.text = value ?? string.Empty;
                 var has = !string.IsNullOrEmpty(value);
-                subtitleLabel.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+                subtitleLabel.SetDisplayed(has);
                 EnableInClassList(HasSubtitleClass, has);
             }
         }
@@ -196,25 +185,19 @@ namespace UnityUIToolkit.Extensions
             header.tabIndex = 0;
             hierarchy.Add(header);
 
-            leading = UIToolkitExtensions.CreateVisualElement(header, LeadingClass);
-            leading.pickingMode = PickingMode.Ignore;
+            leading = UIToolkitExtensions.CreateVisualElement(header, LeadingClass).IgnorePicking();
             leading.style.display = DisplayStyle.None;
 
-            var titles = UIToolkitExtensions.CreateVisualElement(header, TitlesClass);
-            titles.pickingMode = PickingMode.Ignore;
+            var titles = UIToolkitExtensions.CreateVisualElement(header, TitlesClass).IgnorePicking();
 
-            titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(titles, TitleClass);
-            titleLabel.pickingMode = PickingMode.Ignore;
+            titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(titles, TitleClass).IgnorePicking();
 
-            subtitleLabel = UIToolkitExtensions.CreateVisualElement<Label>(titles, SubtitleClass);
-            subtitleLabel.pickingMode = PickingMode.Ignore;
+            subtitleLabel = UIToolkitExtensions.CreateVisualElement<Label>(titles, SubtitleClass).IgnorePicking();
 
-            trailing = UIToolkitExtensions.CreateVisualElement(header, TrailingClass);
-            trailing.pickingMode = PickingMode.Ignore;
+            trailing = UIToolkitExtensions.CreateVisualElement(header, TrailingClass).IgnorePicking();
             trailing.style.display = DisplayStyle.None;
 
-            chevron = UIToolkitExtensions.CreateVisualElement(header, ChevronClass);
-            chevron.pickingMode = PickingMode.Ignore;
+            chevron = UIToolkitExtensions.CreateVisualElement(header, ChevronClass).IgnorePicking();
 
             var body = UIToolkitExtensions.CreateVisualElement(BodyClass);
             hierarchy.Add(body);
@@ -250,15 +233,20 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetLeading(VisualElement element)
         {
-            leading.Clear();
+            EnableInClassList(HasLeadingClass, FillSlot(leading, element));
+        }
+
+        private static bool FillSlot(VisualElement slot, VisualElement element)
+        {
+            slot.Clear();
             if (element != null)
             {
-                leading.Add(element);
+                slot.Add(element);
             }
 
             var has = element != null;
-            leading.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
-            EnableInClassList(HasLeadingClass, has);
+            slot.SetDisplayed(has);
+            return has;
         }
 
         /// <summary>
@@ -266,15 +254,7 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetTrailing(VisualElement element)
         {
-            trailing.Clear();
-            if (element != null)
-            {
-                trailing.Add(element);
-            }
-
-            var has = element != null;
-            trailing.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
-            EnableInClassList(HasTrailingClass, has);
+            EnableInClassList(HasTrailingClass, FillSlot(trailing, element));
             UpdateChevron();
         }
 
@@ -282,7 +262,7 @@ namespace UnityUIToolkit.Extensions
 
         private void UpdateChevron()
         {
-            chevron.style.display = showChevron && !ClassListContains(HasTrailingClass) ? DisplayStyle.Flex : DisplayStyle.None;
+            chevron.SetDisplayed(showChevron && !ClassListContains(HasTrailingClass));
         }
 
         private void OnHeaderPointerDown(PointerDownEvent evt)

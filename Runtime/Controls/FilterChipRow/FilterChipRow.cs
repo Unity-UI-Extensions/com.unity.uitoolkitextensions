@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityUIToolkit.Extensions
@@ -45,18 +44,9 @@ namespace UnityUIToolkit.Extensions
     /// ("Type: Video"); an active chip is filled. A Clear chip at the end resets them all.
     /// </summary>
     /// <remarks>
-    /// <para>Methods: <see cref="SetFilters"/>, <see cref="SetValue"/>, <see cref="GetValue"/>, <see cref="ClearAll"/>,
-    /// <see cref="ChipElement"/>. Props: <c>clear-text</c> (default "Clear"; empty hides the chip),
-    /// <c>use-menu</c> (default true: a <see cref="DropDownMenuControl"/> lists the values; off, the app shows its
-    /// own picker from <see cref="FilterTapped"/>). Events: <see cref="FilterTapped"/> (id),
-    /// <see cref="FilterChanged"/> (id, option index or -1, text), <see cref="Cleared"/>.</para>
-    /// <para>USS classes: <c>filterChipRow</c> (root, a horizontal <see cref="ScrollView"/>), <c>filterChipRow__chip</c>,
-    /// <c>filterChipRow__label</c>, <c>filterChipRow__chevron</c>, <c>filterChipRow__clear</c>. Modifier:
-    /// <c>filterChipRow__chip--active</c>.</para>
-    /// <para>Tokens read: <c>--surface-raised</c>, <c>--surface-border-strong</c>, <c>--surface-fg</c>,
-    /// <c>--surface-accent</c>, <c>--surface-pressed</c>, <c>--c-on-primary</c>, <c>--grad-brand-start/end</c>
-    /// (through <see cref="GradientFill"/>), <c>--radius-pill</c>, <c>--space-2..4</c>, <c>--text-label-sm</c>,
-    /// <c>--font-body-medium</c>.</para>
+    /// <para>The root is a horizontal <see cref="ScrollView"/>. <c>clear-text</c> defaults to "Clear"; empty hides the chip.
+    /// <c>use-menu</c> defaults to true: a <see cref="DropDownMenuControl"/> lists the values. When it is off, the app shows its
+    /// own picker from <see cref="FilterTapped"/>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class FilterChipRow : ScrollView
@@ -140,12 +130,7 @@ namespace UnityUIToolkit.Extensions
             clear = UIToolkitExtensions.CreateVisualElement<Label>(this, ChipClass, ClearClass).MakePill();
             clear.focusable = true;
             clear.tabIndex = 0;
-            clear.RegisterCallback<ClickEvent>(_ => ClearAll());
-            clear.RegisterCallback<NavigationSubmitEvent>(evt =>
-            {
-                ClearAll();
-                evt.StopPropagation();
-            });
+            clear.RegisterActivate(ClearAll);
             RegisterCallback<DetachFromPanelEvent>(_ => menu.Close());
             UpdateClear();
         }
@@ -172,15 +157,9 @@ namespace UnityUIToolkit.Extensions
                     chip.focusable = true;
                     chip.tabIndex = 0;
                     var id = filter.Id;
-                    chip.RegisterCallback<ClickEvent>(_ => OnChipTapped(id));
-                    chip.RegisterCallback<NavigationSubmitEvent>(evt =>
-                    {
-                        OnChipTapped(id);
-                        evt.StopPropagation();
-                    });
+                    chip.RegisterActivate(() => OnChipTapped(id));
 
-                    var label = UIToolkitExtensions.CreateVisualElement<Label>(chip, LabelClass);
-                    label.pickingMode = PickingMode.Ignore;
+                    var label = UIToolkitExtensions.CreateVisualElement<Label>(chip, LabelClass).IgnorePicking();
                     UIToolkitExtensions.CreateVisualElement(chip, ChevronClass).pickingMode = PickingMode.Ignore;
                     contentContainer.Insert(contentContainer.IndexOf(clear), chip);
                     chips[id] = chip;
@@ -283,7 +262,7 @@ namespace UnityUIToolkit.Extensions
         private void UpdateClear()
         {
             clear.text = clearText;
-            clear.style.display = !string.IsNullOrEmpty(clearText) && HasActive ? DisplayStyle.Flex : DisplayStyle.None;
+            clear.SetDisplayed(!string.IsNullOrEmpty(clearText) && HasActive);
         }
     }
 }

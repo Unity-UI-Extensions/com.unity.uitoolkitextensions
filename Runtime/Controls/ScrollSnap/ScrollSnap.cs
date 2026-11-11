@@ -10,20 +10,9 @@ namespace UnityUIToolkit.Extensions
 {
 	/// <summary>
 	/// A paging (snap) scroller that hosts page-sized children and snaps to a page on release.
-	///
-	/// Requirements:
-	/// - Orientation can be Horizontal (default) or Vertical.
-	/// - PageSize defaults to the control's resolved width/height (based on orientation).
-	/// - Child count determines scroll content length.
-	/// - Supports paging with swipe gesture and always rests on a page.
-	/// - Allows nested ScrollViews to handle the perpendicular axis.
-	/// - Provides programmatic navigation (Next/Previous/GoToPage).
-	/// - Manual movement can be enabled/disabled (children still receive events).
-	/// - Exposes CurrentPageIndex.
-	/// - Smooth movement with easing configurable via USS custom property:
-	///   --scrollsnap-easing (default: Linear)
-	///   Example:
-	///     .scrollSnap { --scrollsnap-easing: OutCubic; }
+	/// The control always rests on a page. Nested ScrollViews can handle the perpendicular axis.
+	/// Children still receive events when manual movement is off.
+	/// The USS custom property <c>--scrollsnap-easing</c> sets the easing (default: Linear), for example <c>.scrollSnap { --scrollsnap-easing: OutCubic; }</c>.
 	/// </summary>
 	[UxmlElement]
 	public sealed partial class ScrollSnap : VisualElement
@@ -58,7 +47,6 @@ namespace UnityUIToolkit.Extensions
 		private float pagePaddingTop;
 		private float pagePaddingBottom;
 
-		// Validation state fields
 		private bool validatePageChange = false;
 		private bool onlySinglePageSwipeAllowed = true;
 		private bool canMoveNextPage = true;
@@ -80,6 +68,7 @@ namespace UnityUIToolkit.Extensions
 		private Func<float, float> easingCurve = Easing.Linear;
 		private IVisualElementScheduledItem pendingSnap;
 		private const long ScrollEndSnapDelayMs = 100;
+		private const int SnapDurationMs = 320;
 
 		public event Action<int> PageChanged;
 
@@ -100,27 +89,6 @@ namespace UnityUIToolkit.Extensions
 		/// Only invoked when ValidatePageChange is true and the CanMove flags permit movement.
 		/// </summary>
 		public Func<int, Task<bool>> OnValidatePageTransition;
-
-		/// <summary>
-		/// Basic debugging functionality, locked behind the `DEBUG` conditional so that it is not included in production builds.  Tagged so it is easily identifiable in logs.
-		/// </summary>
-		/// <param name="message"></param>
-		[System.Diagnostics.Conditional("DEBUG")]
-		private static void DebugLog(string message)
-		{
-			Debug.Log($"[ScrollSnap] {message}");
-		}
-
-		private static string DescribeEventTarget(EventBase evt)
-		{
-			if (evt?.target is not VisualElement element)
-			{
-				return evt?.target?.GetType().Name ?? "null";
-			}
-
-			var elementName = string.IsNullOrEmpty(element.name) ? "<unnamed>" : element.name;
-			return $"{element.GetType().Name}(name={elementName}, classes={string.Join(",", element.GetClasses())})";
-		}
 
 		private static bool IsInteractiveElement(VisualElement element)
 		{
@@ -174,7 +142,6 @@ namespace UnityUIToolkit.Extensions
 			viewport.style.minHeight = 0;
 			viewport.style.overflow = Overflow.Hidden;
 
-			// Content container inside viewport
 			content = new VisualElement();
 			content.AddToClassList(ContentClass);
 			content.RegisterCallback<GeometryChangedEvent>(_ => RefreshPageSizing());
@@ -297,7 +264,7 @@ namespace UnityUIToolkit.Extensions
 		}
 
 		/// <summary>
-		/// The maximum fraction of the page size (0–1) that a blocked drag can travel before the offset is clamped. Provides tactile preview feedback. Default: 0.2 (20%).
+		/// The maximum fraction of the page size (0 to 1) that a blocked drag can travel before the offset is clamped. Default: 0.2 (20%).
 		/// Can be overridden per-element via USS: <c>--scrollsnap-validation-drag-limit: 30px;</c> (interpreted as a fraction of page size when value &lt;= 1, or as raw pixels when &gt; 1).
 		/// </summary>
 		[UxmlAttribute("validation-drag-limit")]
@@ -317,11 +284,7 @@ namespace UnityUIToolkit.Extensions
 		 Padding/gap around each page (in pixels). This is applied as margins on the page,
 		 while the page's size is reduced so the overall snap stride stays equal to PageSize.
 		
-		 USS custom properties (numbers, pixels):
-		 - --scrollsnap-page-padding-left
-		 - --scrollsnap-page-padding-right
-		 - --scrollsnap-page-padding-top
-		 - --scrollsnap-page-padding-bottom
+		 The USS custom properties --scrollsnap-page-padding-left, -right, -top and -bottom set these values in pixels.
 		*/
 
 		[UxmlAttribute("page-padding-left")]
@@ -368,7 +331,7 @@ namespace UnityUIToolkit.Extensions
 			}
 		}
 
-		public int PageCount => content?.childCount ?? 0;
+		public int PageCount => content.childCount;
 
 		public int CurrentPageIndex { get; private set; }
 
@@ -405,38 +368,17 @@ namespace UnityUIToolkit.Extensions
 
 			var clamped = Mathf.Clamp(index, 0, PageCount - 1);
 			var isStateChange = clamped != CurrentPageIndex;
-			DebugLog($"GoToPageInternal requested={index} clamped={clamped} current={CurrentPageIndex} animate={animate} force={force} stateChange={isStateChange}");
 
 			if (isStateChange)
 			{
-				var moveAllowed = true;
-
-				if (validatePageChange && !force)
-				{
-					var isForward = clamped > CurrentPageIndex;
-					moveAllowed = isForward ? canMoveNextPage : (allowMoveBack && canMoveBackPage);
-				}
-
-				OnPageStartChange?.Invoke(clamped, moveAllowed);
-			}
-
-			if (!force && validatePageChange && isStateChange)
-			{
+				var isRestricted = validatePageChange && !force;
 				var isForward = clamped > CurrentPageIndex;
-				if (isForward && !canMoveNextPage)
-				{
-					DebugLog($"ProgrammaticTransitionRestricted current={CurrentPageIndex} target={clamped} direction=forward");
-					GoToPageInternal(CurrentPageIndex, animate: true, force: true, () =>
-					{
-						OnPageChangeRestricted?.Invoke(clamped);
-						onCompleted?.Invoke();
-					});
-					return;
-				}
 
-				if (!isForward && (!allowMoveBack || !canMoveBackPage))
+				OnPageStartChange?.Invoke(clamped, !isRestricted || IsMoveAllowed(isForward));
+
+				// Read the flags again. An OnPageStartChange handler can change them.
+				if (isRestricted && !IsMoveAllowed(isForward))
 				{
-					DebugLog($"ProgrammaticTransitionRestricted current={CurrentPageIndex} target={clamped} direction=backward allowMoveBack={allowMoveBack} canMoveBack={canMoveBackPage}");
 					GoToPageInternal(CurrentPageIndex, animate: true, force: true, () =>
 					{
 						OnPageChangeRestricted?.Invoke(clamped);
@@ -449,7 +391,6 @@ namespace UnityUIToolkit.Extensions
 			var pageSize = GetResolvedPageSize();
 			if (pageSize <= 0f)
 			{
-				DebugLog($"GoToPageInternal applying without pageSize current={CurrentPageIndex} target={clamped}");
 				SetCurrentPage(clamped);
 				onCompleted?.Invoke();
 				return;
@@ -461,17 +402,13 @@ namespace UnityUIToolkit.Extensions
 			var targetOffset = clamped * pageSize;
 			if (!animate)
 			{
-				DebugLog($"GoToPageInternal immediate current={CurrentPageIndex} target={clamped} offset={targetOffset:0.##}");
 				SetScrollOffset(targetOffset);
 				SetCurrentPage(clamped);
 				onCompleted?.Invoke();
 				return;
 			}
 
-			var start = GetScrollOffset();
-
-			// Duration can be driven by USS later if needed; keeping minimal/default smooth behavior.
-			snapAnimation = this.experimental.animation.Start(start, targetOffset, 320, (_, v) => SetScrollOffset(v));
+			snapAnimation = experimental.animation.Start(GetScrollOffset(), targetOffset, SnapDurationMs, (_, v) => SetScrollOffset(v));
 			snapAnimation.easingCurve = easingCurve ?? Easing.Linear;
 			snapAnimation.KeepAlive();
 
@@ -480,45 +417,32 @@ namespace UnityUIToolkit.Extensions
 				StopSnapAnimation();
 				SetScrollOffset(targetOffset);
 				SetCurrentPage(clamped);
-				DebugLog($"GoToPageInternal animation completed target={clamped} offset={targetOffset:0.##}");
 				onCompleted?.Invoke();
 			};
 		}
 
-		private void SnapToNearestPage(bool animate)
-		{
-			var pageSize = GetResolvedPageSize();
-			if (PageCount <= 0 || pageSize <= 0f)
-			{
-				return;
-			}
+		private bool IsMoveAllowed(bool forward) => forward ? canMoveNextPage : allowMoveBack && canMoveBackPage;
 
-			var raw = GetScrollOffset() / pageSize;
-			var target = Mathf.RoundToInt(raw);
-			GoToPage(target, animate);
+		private void SnapToNearestPage()
+		{
+			pendingSnap = null;
+			var pageSize = GetResolvedPageSize();
+			if (PageCount > 0 && pageSize > 0f)
+			{
+				GoToPage(Mathf.RoundToInt(GetScrollOffset() / pageSize));
+			}
 		}
 
-		private void ScheduleSnapToNearestPage(bool animate)
+		private void ScheduleSnapToNearestPage()
 		{
 			CancelPendingSnap();
-			pendingSnap = schedule.Execute(() =>
-			{
-				pendingSnap = null;
-				SnapToNearestPage(animate);
-			}).StartingIn(ScrollEndSnapDelayMs);
+			pendingSnap = schedule.Execute(SnapToNearestPage).StartingIn(ScrollEndSnapDelayMs);
 		}
 
 		private void CancelPendingSnap()
 		{
-			try
-			{
-				pendingSnap?.Pause();
-			}
-			catch { }
-			finally
-			{
-				pendingSnap = null;
-			}
+			pendingSnap?.Pause();
+			pendingSnap = null;
 		}
 
 		private void SetCurrentPage(int index)
@@ -545,7 +469,10 @@ namespace UnityUIToolkit.Extensions
 			{
 				snapAnimation?.Stop();
 			}
-			catch { }
+			catch (InvalidOperationException)
+			{
+				// UI Toolkit can recycle an animation while a reference to it still exists.
+			}
 			finally
 			{
 				snapAnimation = null;
@@ -554,15 +481,7 @@ namespace UnityUIToolkit.Extensions
 
 		private void UpdateOrientation(ScrollSnapOrientation newOrientation)
 		{
-			if (newOrientation == ScrollSnapOrientation.Horizontal)
-			{
-				content.style.flexDirection = FlexDirection.Row;
-			}
-			else
-			{
-				content.style.flexDirection = FlexDirection.Column;
-			}
-
+			content.style.flexDirection = newOrientation == ScrollSnapOrientation.Horizontal ? FlexDirection.Row : FlexDirection.Column;
 			content.style.flexWrap = Wrap.NoWrap;
 		}
 
@@ -696,20 +615,12 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			DebugLog($"RealignCurrentPage current={CurrentPageIndex} offset={GetScrollOffset():0.##} targetOffset={targetOffset:0.##}");
 			SetScrollOffset(targetOffset);
 		}
 
 		private void OnCustomStyleResolved(CustomStyleResolvedEvent evt)
 		{
-			if (evt.customStyle.TryGetValue(EasingStyleProperty, out var easingName))
-			{
-				easingCurve = Ease.ResolveEasing(easingName);
-			}
-			else
-			{
-				easingCurve = Ease.Linear;
-			}
+			easingCurve = evt.customStyle.TryGetValue(EasingStyleProperty, out var easingName) ? Ease.ResolveEasing(easingName) : Ease.Linear;
 
 			if (evt.customStyle.TryGetValue(PagePaddingLeftStyleProperty, out var left))
 			{
@@ -728,14 +639,13 @@ namespace UnityUIToolkit.Extensions
 				pagePaddingBottom = Mathf.Max(0f, ParsePixels(bottom));
 			}
 
-			// Validation drag limit via USS custom property.
-			// Value is treated as a fraction (0-1) of page size when <= 1, or as raw pixels that are converted to a fraction at drag time.
+			// The value is a fraction of the page size.
 			if (evt.customStyle.TryGetValue(ValidationDragLimitStyleProperty, out var dragLimitStr))
 			{
 				var parsed = ParsePixels(dragLimitStr);
 				if (parsed > 0f)
 				{
-					validationDragLimit = parsed <= 1f ? parsed : parsed;
+					validationDragLimit = parsed;
 				}
 			}
 
@@ -784,10 +694,8 @@ namespace UnityUIToolkit.Extensions
 			pointerStart = evt.position;
 			scrollOffsetStart = GetScrollOffset();
 			startPageIndex = CurrentPageIndex;
-			DebugLog($"PointerDown pointer={evt.pointerId} pos={evt.position} target={DescribeEventTarget(evt)} childStart={pointerStartedOnChild} interactiveChildStart={pointerStartedOnInteractiveChild} page={CurrentPageIndex} offset={scrollOffsetStart:0.##}");
 
-			// Do not capture pointer yet - let children receive click events.
-			// Pointer will be captured in OnPointerMove if drag is detected.
+			// Do not capture the pointer here, so children still receive clicks. OnPointerMove captures it when a drag starts.
 		}
 
 		private void OnPointerMove(PointerMoveEvent evt)
@@ -806,7 +714,6 @@ namespace UnityUIToolkit.Extensions
 			// Block gestures while async validation is running.
 			if (isValidatingPageChange)
 			{
-				DebugLog($"PointerMove blocked during validation pointer={evt.pointerId} pos={evt.position}");
 				evt.StopPropagation();
 				return;
 			}
@@ -817,10 +724,6 @@ namespace UnityUIToolkit.Extensions
 
 			if (pointerStartedOnInteractiveChild)
 			{
-				if (Mathf.Abs(primary) > 0f || Mathf.Abs(secondary) > 0f)
-				{
-					DebugLog($"PointerMove ignored interactive child pointer={evt.pointerId} delta={delta} primary={primary:0.##} secondary={secondary:0.##}");
-				}
 				return;
 			}
 
@@ -832,97 +735,57 @@ namespace UnityUIToolkit.Extensions
 
 			if (!isDragging)
 			{
-				// Only claim the gesture if it is primarily along our paging axis.
-				if (absPrimary >= intentThresholdPx && absPrimary >= absSecondary + axisDominancePx)
+				// Claim the gesture only when it moves mainly along the paging axis.
+				if (absPrimary < intentThresholdPx || absPrimary < absSecondary + axisDominancePx)
 				{
-					isDragging = true;
-					DebugLog($"DragStarted pointer={evt.pointerId} pos={evt.position} delta={delta} primary={primary:0.##} secondary={secondary:0.##} threshold={intentThresholdPx:0.##} childStart={pointerStartedOnChild}");
-					// Now capture the pointer since we've confirmed it's a drag gesture
-					viewport.CapturePointer(evt.pointerId);
-				}
-				else
-				{
-					if (absPrimary > 0f || absSecondary > 0f)
-					{
-						DebugLog($"PointerMove ignored pointer={evt.pointerId} delta={delta} primary={primary:0.##} secondary={secondary:0.##} threshold={intentThresholdPx:0.##} childStart={pointerStartedOnChild}");
-					}
 					return;
 				}
+
+				isDragging = true;
+				viewport.CapturePointer(evt.pointerId);
 			}
 
 			var next = scrollOffsetStart - primary;
+			var pageSize = GetResolvedPageSize();
+			var dragLimitOffset = pageSize > 0f ? pageSize * validationDragLimit : 0f;
 
-			if (validatePageChange)
+			if (validatePageChange && next > scrollOffsetStart && !canMoveNextPage)
 			{
-				var pageSize = GetResolvedPageSize();
-				var movingForward = next > scrollOffsetStart;
-				var movingBack = next < scrollOffsetStart;
-
-				var dragLimitOffset = pageSize > 0f ? pageSize * validationDragLimit : 0f;
-
-				if (movingForward && !canMoveNextPage)
-				{
-					next = Mathf.Min(next, scrollOffsetStart + dragLimitOffset);
-				}
-				else if (movingBack && (!allowMoveBack || !canMoveBackPage))
-				{
-					next = Mathf.Max(next, scrollOffsetStart - dragLimitOffset);
-				}
-				else if (onlySinglePageSwipeAllowed && pageSize > 0f)
-				{
-					var minAllowed = startPageIndex * pageSize;
-					var maxAllowed = (startPageIndex + 1) * pageSize;
-					next = Mathf.Clamp(next, minAllowed, maxAllowed);
-				}
+				next = Mathf.Min(next, scrollOffsetStart + dragLimitOffset);
 			}
-			else if (onlySinglePageSwipeAllowed)
+			else if (validatePageChange && next < scrollOffsetStart && !IsMoveAllowed(false))
 			{
-				var pageSize = GetResolvedPageSize();
-				if (pageSize > 0f)
-				{
-					var minAllowed = startPageIndex * pageSize;
-					var maxAllowed = (startPageIndex + 1) * pageSize;
-					next = Mathf.Clamp(next, minAllowed, maxAllowed);
-				}
+				next = Mathf.Max(next, scrollOffsetStart - dragLimitOffset);
+			}
+			else if (onlySinglePageSwipeAllowed && pageSize > 0f)
+			{
+				next = Mathf.Clamp(next, startPageIndex * pageSize, (startPageIndex + 1) * pageSize);
 			}
 
 			next = Mathf.Clamp(next, 0f, GetMaxScrollOffset());
 			SetScrollOffset(next);
-			DebugLog($"Dragging pointer={evt.pointerId} nextOffset={next:0.##} startOffset={scrollOffsetStart:0.##}");
 
 			evt.StopPropagation();
 		}
 
-		private void OnPointerUp(PointerUpEvent evt)
+		private void OnPointerUp(PointerUpEvent evt) => OnPointerEnd(evt.pointerId, evt.position);
+
+		private void OnPointerCancel(PointerCancelEvent evt) => OnPointerEnd(evt.pointerId, evt.position);
+
+		private void OnPointerEnd(int pointerId, Vector3 position)
 		{
-			if (!isPointerDown || evt.pointerId != activePointerId)
+			if (!isPointerDown || pointerId != activePointerId)
 			{
 				return;
 			}
 
+			// The pointer is captured only during a drag.
 			if (isDragging)
 			{
-				// Only release if we captured it (during drag)
-				viewport.ReleasePointer(evt.pointerId);
-			}
-			DebugLog($"PointerUp pointer={evt.pointerId} pos={evt.position} wasDragging={isDragging}");
-			FinishPointerGesture(evt.position);
-		}
-
-		private void OnPointerCancel(PointerCancelEvent evt)
-		{
-			if (!isPointerDown || evt.pointerId != activePointerId)
-			{
-				return;
+				viewport.ReleasePointer(pointerId);
 			}
 
-			if (isDragging)
-			{
-				// Only release if we captured it (during drag)
-				viewport.ReleasePointer(evt.pointerId);
-			}
-			DebugLog($"PointerCancel pointer={evt.pointerId} pos={evt.position} wasDragging={isDragging}");
-			FinishPointerGesture(evt.position);
+			FinishPointerGesture(position);
 		}
 
 		private void OnScrollWheel(WheelEvent evt)
@@ -944,7 +807,7 @@ namespace UnityUIToolkit.Extensions
 				return;
 			}
 
-			ScheduleSnapToNearestPage(animate: true);
+			ScheduleSnapToNearestPage();
 		}
 
 		private void FinishPointerGesture(Vector3 endPosition)
@@ -956,7 +819,6 @@ namespace UnityUIToolkit.Extensions
 
 			if (!isDragging)
 			{
-				DebugLog($"PointerReleasedWithoutDrag pos={endPosition} delta={delta} childStart={pointerStartedOnChild}");
 				return;
 			}
 
@@ -969,7 +831,7 @@ namespace UnityUIToolkit.Extensions
 			}
 
 			var threshold = pageSize * 0.15f;
-			var target = startPageIndex;
+			int target;
 
 			if (primary <= -threshold)
 			{
@@ -985,46 +847,38 @@ namespace UnityUIToolkit.Extensions
 			}
 			else
 			{
-				var raw = GetScrollOffset() / pageSize;
-				target = Mathf.RoundToInt(raw);
+				target = Mathf.RoundToInt(GetScrollOffset() / pageSize);
 			}
 
 			target = Mathf.Clamp(target, 0, PageCount - 1);
-			DebugLog($"FinishPointerGesture primary={primary:0.##} threshold={threshold:0.##} startPage={startPageIndex} currentPage={CurrentPageIndex} target={target} offset={GetScrollOffset():0.##}");
 
 			if (target == CurrentPageIndex)
 			{
-				DebugLog($"SnapBackToCurrentPage target={target}");
 				GoToPage(target, animate: true, force: true);
 				return;
 			}
 
 			if (!validatePageChange)
 			{
-				// Validation disabled – always allow movement and navigate directly.
-				// Fire OnPageStartChange with moveAllowed=true since there are no restrictions.
-				DebugLog($"PageTransitionWithoutValidation current={CurrentPageIndex} target={target}");
 				OnPageStartChange?.Invoke(target, true);
 				GoToPage(target, animate: true, force: true);
 				return;
 			}
 
-			var movingForward = target > CurrentPageIndex;
-			var moveAllowed = movingForward ? canMoveNextPage : (allowMoveBack && canMoveBackPage);
+			var moveAllowed = IsMoveAllowed(target > CurrentPageIndex);
 
-			DebugLog($"PageTransitionAttempt current={CurrentPageIndex} target={target} movingForward={movingForward} moveAllowed={moveAllowed} allowMoveBack={allowMoveBack} canMoveNext={canMoveNextPage} canMoveBack={canMoveBackPage}");
 			OnPageStartChange?.Invoke(target, moveAllowed);
 
 			if (!moveAllowed)
 			{
-				DebugLog($"PageTransitionRestricted current={CurrentPageIndex} target={target}");
 				GoToPageInternal(CurrentPageIndex, animate: true, force: true, () => OnPageChangeRestricted?.Invoke(target));
 				return;
 			}
 
 			if (OnValidatePageTransition != null)
 			{
-				ExecutePageTransitionWithValidation(target).Forget();
+				// Fire and forget. The method catches its own exceptions.
+				_ = ExecutePageTransitionWithValidation(target);
 			}
 			else
 			{
@@ -1032,11 +886,7 @@ namespace UnityUIToolkit.Extensions
 			}
 		}
 
-		/// <summary>
-		/// Awaits the <see cref="OnValidatePageTransition"/> callback and either navigates to
-		/// <paramref name="target"/> or snaps back to the current page. Runs as a fire-and-forget
-		/// async operation so the UI thread is never blocked.
-		/// </summary>
+		// Awaits OnValidatePageTransition, then goes to the target page or snaps back to the current page.
 		private async Task ExecutePageTransitionWithValidation(int target)
 		{
 			isValidatingPageChange = true;
@@ -1063,19 +913,6 @@ namespace UnityUIToolkit.Extensions
 			{
 				GoToPageInternal(CurrentPageIndex, animate: true, force: true, () => OnPageChangeRestricted?.Invoke(target));
 			}
-		}
-	}
-
-	/// <summary>
-	/// Minimal fire-and-forget extension to suppress CS4014 warnings on unawaited Tasks
-	/// without pulling in UniTask or other async utilities.
-	/// </summary>
-	internal static class TaskExtensions
-	{
-		internal static void Forget(this Task task)
-		{
-			// Intentionally fire-and-forget. Exceptions are swallowed inside ExecutePageTransitionWithValidation via the try/catch block.
-			_ = task;
 		}
 	}
 }

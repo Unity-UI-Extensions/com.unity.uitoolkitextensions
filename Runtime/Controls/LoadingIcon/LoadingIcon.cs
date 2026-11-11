@@ -28,8 +28,7 @@ namespace UnityUIToolkit.Extensions
             pickingMode = PickingMode.Ignore;
             AddToClassList(RootClass);
 
-            loadingImage = UIToolkitExtensions.CreateVisualElement<Image>(this, LoadingImageClass);
-            loadingImage.pickingMode = PickingMode.Ignore;
+            loadingImage = UIToolkitExtensions.CreateVisualElement<Image>(this, LoadingImageClass).IgnorePicking();
         }
 
         [UxmlAttribute("icon")]

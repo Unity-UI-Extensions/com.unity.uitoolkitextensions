@@ -209,6 +209,41 @@ namespace UnityUIToolkit.Extensions.Tests
                 Assert.That(clamped, Is.LessThan(natural));
             }
         }
+
+        [UnityTest]
+        public IEnumerator SyncTo_FollowsAnyClock_StopsOnNullOrThrow()
+        {
+            // The bar needs no audio: any clock in seconds drives the timed cues.
+            Root.SetReduceMotion(true);
+            var bar = new CaptionBar();
+            bar.style.width = 358;
+            yield return Mount(bar);
+            bar.SetCues(new[]
+            {
+                new CaptionCue(0f, 2f, "Mara", "First line."),
+                new CaptionCue(2f, 4f, "Mara", "Second line."),
+            });
+
+            var clock = 0.5f;
+            bar.SyncTo(() => clock);
+            yield return WaitMs(CaptionBar.SyncIntervalMs * 3);
+            Assert.That(bar.Text, Is.EqualTo("First line."));
+
+            clock = 2.5f;
+            yield return WaitMs(CaptionBar.SyncIntervalMs * 3);
+            Assert.That(bar.Text, Is.EqualTo("Second line."), "follows the clock");
+
+            bar.SyncTo(null);
+            clock = 0.5f;
+            yield return WaitMs(CaptionBar.SyncIntervalMs * 3);
+            Assert.That(bar.Text, Is.EqualTo("Second line."), "null stops following");
+
+            // A clock whose source has gone throws; the bar logs it once and stops instead of throwing every tick.
+            LogAssert.Expect(LogType.Exception, new System.Text.RegularExpressions.Regex("source gone"));
+            bar.SyncTo(() => throw new System.InvalidOperationException("source gone"));
+            yield return WaitMs(CaptionBar.SyncIntervalMs * 4);
+            Assert.That(bar.Text, Is.EqualTo("Second line."));
+        }
     }
 
     public class PromptAndSpeechTests : UIDocumentTestBase

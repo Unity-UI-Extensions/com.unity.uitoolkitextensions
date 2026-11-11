@@ -56,13 +56,9 @@ namespace UnityUIToolkit.Extensions
     /// <see cref="ToastHost"/>, can take <see cref="Insets"/> for their own inset properties instead.
     /// </summary>
     /// <remarks>
-    /// <para>The insets come from <c>Screen.safeArea</c>, converted to panel pixels, so the panel's scale mode is taken
-    /// into account. They are read on attach, on resize, and every <c>poll-ms</c> (rotation does not always resize the
-    /// panel at once).</para>
-    /// <para>Props: <c>edges</c> (a <see cref="SafeAreaEdges"/>, default All), <c>poll-ms</c> (default 500, 0 to
-    /// stop polling). Property: <see cref="Insets"/>. Method: <see cref="OverrideInsets"/> (fixed insets for tests and
-    /// previews; null returns to the screen). Event: <see cref="InsetsChanged"/>.</para>
-    /// <para>USS class: <c>safeAreaRoot</c> (fills its parent).</para>
+    /// <para>The insets come from <c>Screen.safeArea</c>, converted to panel pixels, so the panel's scale mode counts.
+    /// The control reads them on attach, on resize, and every <c>poll-ms</c>, because rotation does not always resize the
+    /// panel at once. The default <c>poll-ms</c> is 500. Use 0 to stop polling. The default <c>edges</c> is All.</para>
     /// </remarks>
     [UxmlElement]
     public partial class SafeAreaRoot : VisualElement
@@ -78,7 +74,7 @@ namespace UnityUIToolkit.Extensions
         public event Action<SafeInsets> InsetsChanged;
 
         /// <summary>
-        /// The insets in panel pixels, whatever <see cref="Edges"/> pads.
+        /// The insets in panel pixels, whichever edges <see cref="Edges"/> pads.
         /// </summary>
         public SafeInsets Insets => insets;
 

@@ -52,18 +52,12 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Gets a value indicating whether the timer is still running, regardless of whether its element is displayed.
+        /// True until <see cref="Stop"/> is called, even while the element is hidden.
         /// </summary>
         public bool IsRunning => !stopped;
 
-        /// <summary>
-        /// Gets a value indicating whether the scheduled action is active.
-        /// </summary>
         public bool IsTicking => !stopped && item.isActive;
 
-        /// <summary>
-        /// Stops the timer and prevents it from resuming.
-        /// </summary>
         public void Stop()
         {
             if (stopped)
@@ -77,10 +71,6 @@ namespace UnityUIToolkit.Extensions
             owner.UnregisterCallback<AttachToPanelEvent>(OnAttachToPanel);
         }
 
-        /// <summary>
-        /// Gets a value indicating whether the element is attached to a panel and is not hidden by a
-        /// <c>display: none</c> value on itself or any ancestor.
-        /// </summary>
         public static bool IsDisplayed(VisualElement element)
         {
             if (element?.panel == null)

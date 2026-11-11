@@ -21,26 +21,13 @@ namespace UnityUIToolkit.Extensions
     /// (partial muted, final full colour), a matched or no-match row, primary and secondary actions and a footnote.
     /// </summary>
     /// <remarks>
-    /// <para>Recognition happens elsewhere; the owner reports the state, transcript and match. The meter animates by
-    /// itself while listening, scaled by <see cref="SetLevel"/> when a level is available; with reduce motion the dot
+    /// <para>Recognition happens elsewhere. The owner reports the state, transcript and match. The meter animates by
+    /// itself while listening, scaled by <see cref="SetLevel"/> when a level is available. With reduce motion the dot
     /// and meter hold still.</para>
     /// <para>Pass localised strings. The English status defaults are a fallback: "Listening", "Working it out",
     /// "Listening", "Not sure I caught that", "Speech is not available".</para>
-    /// <para>Props: <c>state</c>, <c>status-text</c>, <c>primary-text</c>, <c>secondary-text</c>, <c>footnote</c>,
-    /// <c>match-eyebrow</c>, <c>no-match-eyebrow</c>. Methods: <see cref="SetState"/>, <see cref="SetTranscript"/>,
-    /// <see cref="SetMatch"/>, <see cref="SetLevel"/>. Events: <see cref="PrimaryClicked"/>, <see cref="SecondaryClicked"/>.</para>
-    /// <para>USS classes: <c>speechInputPanel</c> (root), <c>speechInputPanel__header</c>, <c>speechInputPanel__dot</c>,
-    /// <c>speechInputPanel__status</c>, <c>speechInputPanel__meter</c>, <c>speechInputPanel__bar</c>,
-    /// <c>speechInputPanel__transcript</c>, <c>speechInputPanel__match</c>, <c>speechInputPanel__matchEyebrow</c>,
-    /// <c>speechInputPanel__matchText</c>, <c>speechInputPanel__actions</c>, <c>speechInputPanel__primary</c>,
-    /// <c>speechInputPanel__secondary</c>, <c>speechInputPanel__footnote</c>.</para>
-    /// <para>Modifier classes: <c>speechInputPanel--listening</c>, <c>--processing</c>, <c>--matched</c>,
-    /// <c>--noMatch</c>, <c>--unavailable</c>, <c>speechInputPanel--partial</c> (transcript not final),
-    /// <c>speechInputPanel--pulse</c> (the bright moment of the dot).</para>
-    /// <para>Tokens read: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-accent</c>, <c>--surface-highlight</c>,
-    /// <c>--surface-highlight-border</c>, <c>--c-warn</c>, <c>--radius-pill</c>, <c>--space-2..4</c>, <c>--text-micro</c>,
-    /// <c>--text-caption</c>, <c>--text-label</c>, <c>--text-title</c>, <c>--font-display</c>, <c>--font-body</c>,
-    /// <c>--font-body-medium</c>, <c>--motion-fast</c>, plus the PillButton tokens.</para>
+    /// <para>The class <c>speechInputPanel--partial</c> marks a transcript that is not final.
+    /// The class <c>speechInputPanel--pulse</c> marks the bright moment of the dot.</para>
     /// </remarks>
     [UxmlElement]
     public partial class SpeechInputPanel : VisualElement
@@ -62,13 +49,10 @@ namespace UnityUIToolkit.Extensions
         public const string PartialClass = "speechInputPanel--partial";
         public const string PulseClass = "speechInputPanel--pulse";
 
-        /// <summary>
-        /// Bars in the level meter.
-        /// </summary>
         public const int BarCount = 6;
 
         /// <summary>
-        /// Time between meter frames.
+        /// Time between meter frames in milliseconds.
         /// </summary>
         public const int MeterIntervalMs = 120;
 
@@ -144,8 +128,7 @@ namespace UnityUIToolkit.Extensions
             get => footnote.text;
             set
             {
-                footnote.text = value ?? string.Empty;
-                footnote.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                footnote.SetTextOrHide(value);
             }
         }
 
@@ -178,15 +161,12 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
 
             var header = UIToolkitExtensions.CreateVisualElement(this, HeaderClass);
-            var dot = UIToolkitExtensions.CreateVisualElement(header, DotClass);
-            dot.pickingMode = PickingMode.Ignore;
+            var dot = UIToolkitExtensions.CreateVisualElement(header, DotClass).IgnorePicking();
             status = UIToolkitExtensions.CreateVisualElement<Label>(header, StatusClass);
-            var meter = UIToolkitExtensions.CreateVisualElement(header, MeterClass);
-            meter.pickingMode = PickingMode.Ignore;
+            var meter = UIToolkitExtensions.CreateVisualElement(header, MeterClass).IgnorePicking();
             for (var i = 0; i < BarCount; i++)
             {
-                var bar = UIToolkitExtensions.CreateVisualElement(meter, BarClass);
-                bar.pickingMode = PickingMode.Ignore;
+                var bar = UIToolkitExtensions.CreateVisualElement(meter, BarClass).IgnorePicking();
                 bars.Add(bar);
             }
 
@@ -221,7 +201,7 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Changes the state; <paramref name="statusText"/> replaces the header text when given.
+        /// Sets the state. <paramref name="statusText"/> replaces the header text when given.
         /// </summary>
         public void SetState(SpeechState newState, string statusText = null)
         {
@@ -241,7 +221,7 @@ namespace UnityUIToolkit.Extensions
         {
             var has = !string.IsNullOrEmpty(text);
             transcript.text = has ? $"“{text}”" : string.Empty;
-            transcript.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            transcript.SetDisplayed(has);
             EnableInClassList(PartialClass, has && !isFinal);
         }
 
@@ -256,16 +236,13 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// The input level, 0 to 1, scaling the meter; negative lets the meter animate on its own.
+        /// Sets the input level, 0 to 1, that scales the meter. A negative value lets the meter animate on its own.
         /// </summary>
         public void SetLevel(float value)
         {
             level = value < 0f ? -1f : Mathf.Clamp01(value);
         }
 
-        /// <summary>
-        /// The English fallback for a state's header.
-        /// </summary>
         public static string DefaultStatus(SpeechState speechState) => speechState switch
         {
             SpeechState.Listening => "Listening",
@@ -279,21 +256,29 @@ namespace UnityUIToolkit.Extensions
         private static void SetButton(PillButton button, string text)
         {
             button.Text = text ?? string.Empty;
-            button.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+            button.SetDisplayed(!string.IsNullOrEmpty(text));
         }
+
+        private static readonly string[] StateClasses =
+        {
+            RootClass + "--listening",
+            RootClass + "--processing",
+            RootClass + "--matched",
+            RootClass + "--noMatch",
+            RootClass + "--unavailable",
+        };
 
         private void ApplyState()
         {
-            foreach (SpeechState value in Enum.GetValues(typeof(SpeechState)))
+            for (var i = 0; i < StateClasses.Length; i++)
             {
-                var name = value.ToString();
-                EnableInClassList($"{RootClass}--{char.ToLowerInvariant(name[0])}{name.Substring(1)}", value == state);
+                EnableInClassList(StateClasses[i], i == (int)state);
             }
 
             status.text = string.IsNullOrEmpty(statusOverride) ? DefaultStatus(state) : statusOverride;
 
             var showMatch = !string.IsNullOrEmpty(matchText.text) && (state == SpeechState.Matched || state == SpeechState.NoMatch);
-            match.style.display = showMatch ? DisplayStyle.Flex : DisplayStyle.None;
+            match.SetDisplayed(showMatch);
             matchEyebrow.text = state == SpeechState.NoMatch ? noMatchEyebrowText : matchEyebrowText;
 
             if (state != SpeechState.Listening)
@@ -305,9 +290,7 @@ namespace UnityUIToolkit.Extensions
             UpdateAnimation();
         }
 
-        /// <summary>
-        /// The meter runs only while listening, so an idle panel schedules nothing.
-        /// </summary>
+        // The meter runs only while listening, so an idle panel schedules nothing.
         private void UpdateAnimation()
         {
             if (state == SpeechState.Listening && panel != null)
@@ -350,18 +333,15 @@ namespace UnityUIToolkit.Extensions
                 ToggleInClassList(PulseClass);
             }
 
+            var scale = level < 0f ? 1f : Mathf.Lerp(0.2f, 1f, level);
             for (var i = 0; i < bars.Count; i++)
             {
                 // A loose wave per bar, scaled by the level when one is reported.
                 var wave = 0.35f + (0.65f * Mathf.Abs(Mathf.Sin((frame * 0.55f) + (i * 1.3f))));
-                var scale = level < 0f ? 1f : Mathf.Lerp(0.2f, 1f, level);
                 bars[i].style.height = Length.Percent(Mathf.Clamp(wave * scale, 0.2f, 1f) * 100f);
             }
         }
 
-        /// <summary>
-        /// The resting meter: the design's still shape.
-        /// </summary>
         private void ApplyBars()
         {
             for (var i = 0; i < bars.Count; i++)

@@ -6,8 +6,8 @@ using UnityEngine.UIElements;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// A style selector styled as a pill: optional label above, clickable display label with chevron icon.
-    /// Intended for scenarios where you want to open a secondary window or pane for selection options.
+    /// A selector styled as a pill, with an optional label above and a clickable display label with a chevron icon.
+    /// Use it to open a secondary window or pane of selection options.
     /// </summary>
     [UxmlElement]
     public partial class PillSelector : VisualElement
@@ -35,14 +35,9 @@ namespace UnityUIToolkit.Extensions
 
             selectedValueLabel = UIToolkitExtensions.CreateVisualElement<Label>(container, DisplayLabel);
             selectedValueLabel.text = "Select an option";
-            selectedValueLabel.RegisterCallback<ClickEvent>(_ => OnClicked());
+            selectedValueLabel.RegisterCallback<ClickEvent>(_ => Clicked?.Invoke());
 
             UIToolkitExtensions.CreateVisualElement(container, DisplayIcon);
-        }
-
-        private void OnClicked()
-        {
-            Clicked?.Invoke();
         }
 
         [UxmlAttribute("label")]
@@ -52,7 +47,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 labelField.text = value;
-                labelField.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                labelField.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 

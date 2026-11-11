@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// A pill-shaped input field with a label, placeholder text. Supports optional password masking and multiline input.
+    /// A pill-shaped input field with a label and placeholder text. It can mask passwords and accept multiline input.
     /// </summary>
     [UxmlElement]
     public partial class PillInputField : VisualElement
@@ -61,7 +61,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 labelField.text = value;
-                labelField.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                labelField.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 

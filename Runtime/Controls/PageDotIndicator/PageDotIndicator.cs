@@ -88,15 +88,9 @@ namespace UnityUIToolkit.Extensions
             UpdateDots();
         }
 
-        public void SetCompletedColor(string colorHex)
-        {
-            CompletedColor = ParseColor(colorHex);
-        }
+        public void SetCompletedColor(string colorHex) => CompletedColor = ParseColor(colorHex);
 
-        public void SetPendingColor(string colorHex)
-        {
-            PendingColor = ParseColor(colorHex);
-        }
+        public void SetPendingColor(string colorHex) => PendingColor = ParseColor(colorHex);
 
         public void SetColors(string completedColorHex, string pendingColorHex)
         {
@@ -115,8 +109,7 @@ namespace UnityUIToolkit.Extensions
 
                 for (int i = 0; i < totalPages; i++)
                 {
-                    var dot = UIToolkitExtensions.CreateVisualElement(dotsContainer, DotClass);
-                    dots.Add(dot);
+                    dots.Add(UIToolkitExtensions.CreateVisualElement(dotsContainer, DotClass));
                 }
             }
 
@@ -132,9 +125,6 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        private static Color ParseColor(string colorHex)
-        {
-            return ColorUtility.TryParseHtmlString(colorHex, out Color color) ? color : Color.white;
-        }
+        private static Color ParseColor(string colorHex) => UIToolkitExtensions.ParseColorOr(colorHex, Color.white);
     }
 }

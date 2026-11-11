@@ -52,17 +52,8 @@ namespace UnityUIToolkit.Extensions
     /// "4 of 8" with a progress bar when the stops do not fit.
     /// </summary>
     /// <remarks>
-    /// <para>Stops before <see cref="CurrentIndex"/> are done; the one at it is current. Props: <c>current-index</c>,
-    /// <c>compact</c> (a <see cref="TrailCompactMode"/>), <c>compact-format</c> (default "{0} of {1}"; localise it).
-    /// Method: <see cref="SetStops"/>. Event: <see cref="StopTapped"/> (id).</para>
-    /// <para>USS classes: <c>trailStrip</c> (root), <c>trailStrip__track</c>, <c>trailStrip__stop</c>,
-    /// <c>trailStrip__stopLabel</c>, <c>trailStrip__line</c>, <c>trailStrip__compact</c>,
-    /// <c>trailStrip__compactLabel</c>, <c>trailStrip__compactBar</c> (a <see cref="LinearProgress"/>). Modifiers:
-    /// <c>trailStrip--compact</c>; on stops <c>trailStrip__stop--done</c>, <c>--current</c>, <c>--pending</c>; on
-    /// lines <c>trailStrip__line--done</c>.</para>
-    /// <para>Tokens read: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-border-strong</c>,
-    /// <c>--surface-accent</c>, <c>--c-primary</c>, <c>--c-on-primary</c>, <c>--radius-pill</c>, <c>--space-1..2</c>,
-    /// <c>--text-micro</c>, <c>--text-caption</c>, <c>--font-display</c>, <c>--font-body-medium</c>.</para>
+    /// <para>Stops before <see cref="CurrentIndex"/> are done. The one at it is current.
+    /// The default <c>compact-format</c> is "{0} of {1}". Localise it.</para>
     /// </remarks>
     [UxmlElement]
     public partial class TrailStrip : VisualElement
@@ -146,8 +137,7 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
 
             track = UIToolkitExtensions.CreateVisualElement(this, TrackClass);
-            compact = UIToolkitExtensions.CreateVisualElement(this, CompactClass);
-            compact.pickingMode = PickingMode.Ignore;
+            compact = UIToolkitExtensions.CreateVisualElement(this, CompactClass).IgnorePicking();
             compactLabel = UIToolkitExtensions.CreateVisualElement<Label>(compact, CompactLabelClass);
             compactBar = new LinearProgress();
             compactBar.AddToClassList(CompactBarClass);
@@ -172,8 +162,7 @@ namespace UnityUIToolkit.Extensions
                     stops.Add(stop);
                     if (i > 0)
                     {
-                        var line = UIToolkitExtensions.CreateVisualElement(track, LineClass);
-                        line.pickingMode = PickingMode.Ignore;
+                        var line = UIToolkitExtensions.CreateVisualElement(track, LineClass).IgnorePicking();
                         lines.Add(line);
                     }
 
@@ -182,15 +171,9 @@ namespace UnityUIToolkit.Extensions
                     element.tabIndex = 0;
                     element.tooltip = stop.Title;
                     var id = stop.Id;
-                    element.RegisterCallback<ClickEvent>(_ => StopTapped?.Invoke(id));
-                    element.RegisterCallback<NavigationSubmitEvent>(evt =>
-                    {
-                        StopTapped?.Invoke(id);
-                        evt.StopPropagation();
-                    });
+                    element.RegisterActivate(() => StopTapped?.Invoke(id));
 
-                    var label = UIToolkitExtensions.CreateVisualElement<Label>(element, StopLabelClass);
-                    label.pickingMode = PickingMode.Ignore;
+                    var label = UIToolkitExtensions.CreateVisualElement<Label>(element, StopLabelClass).IgnorePicking();
                     label.text = string.IsNullOrEmpty(stop.Label) ? (i + 1).ToString() : stop.Label;
                     stopElements.Add(element);
                 }
@@ -205,9 +188,6 @@ namespace UnityUIToolkit.Extensions
             UpdateCompact();
         }
 
-        /// <summary>
-        /// The disc for a stop, for focus or tests.
-        /// </summary>
         public VisualElement StopElement(int index) => stopElements[index];
 
         private void UpdateStates()
@@ -222,7 +202,7 @@ namespace UnityUIToolkit.Extensions
             for (var i = 0; i < lines.Count; i++)
             {
                 // The line before stop i + 1 is done once that stop is reached.
-                lines[i].EnableInClassList(DoneLineClass, i + 1 <= currentIndex);
+                lines[i].EnableInClassList(DoneLineClass, i < currentIndex);
             }
 
             var count = stops.Count;

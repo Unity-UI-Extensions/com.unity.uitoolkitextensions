@@ -47,30 +47,12 @@ namespace UnityUIToolkit.Extensions
     /// <remarks>
     /// <para>The ornament fills its parent as an overlay layer; only the bar takes input. The primary item is a
     /// pill showing its icon and label side by side, whether or not <see cref="ShowLabels"/> is on. Active items
-    /// (<see cref="SetItemActive(string, bool)"/>) take the same filled pill, for example "Map" while wayfinding
-    /// (FS09_2).</para>
-    /// <para>A centre slot (<see cref="SetCentreElement"/>) holds one custom element among the items, such as the
-    /// shutter in FS08_1. The slot never leaves the bar, so its element stays attached across <see cref="SetItems"/>
+    /// (<see cref="SetItemActive(string, bool)"/>) take the same filled pill, for example "Map" while wayfinding.</para>
+    /// <para>A centre slot (<see cref="SetCentreElement"/>) holds one custom element among the items, such as a
+    /// shutter button. The slot never leaves the bar, so its element stays attached across <see cref="SetItems"/>
     /// and a press held on it survives a rebuild. Message mode (<see cref="Message"/>) hides the items and shows one
-    /// line of text before the slot, such as "Release to stop · 30 s max" in FS08_4.</para>
-    /// <para>Props: <c>labels</c> (UXML shorthand: one item per label), <c>primary-index</c>, <c>anchor</c>,
-    /// <c>max-length</c>, <c>show-labels</c>, <c>edge-inset</c>, <c>stretch</c> (the bar fills the edge up to
-    /// <c>max-length</c> and spreads its items, as the HUD bar in FS08), <c>centre-index</c>, <c>message</c>,
-    /// <c>primary-icon-only</c> (the primary item as a round gradient disc with a large icon and no visible label, in
-    /// line with the other icons; its label stays as the tooltip). Every item's label is also its tooltip.
-    /// Methods: <see cref="SetItems"/>, <see cref="SetItemEnabled(int, bool)"/>, <see cref="SetItemActive(int, bool)"/>,
-    /// <see cref="SetCentreElement"/>, <see cref="IndexOf"/>. Event: <see cref="ItemSelected"/> (index, id).</para>
-    /// <para>USS classes: <c>ornamentBar</c> (root), <c>ornamentBar__bar</c>, <c>ornamentBar__item</c>,
-    /// <c>ornamentBar__icon</c>, <c>ornamentBar__label</c>, <c>ornamentBar__slot</c>, <c>ornamentBar__message</c>,
-    /// <c>ornamentBar__spacer</c>.</para>
-    /// <para>Modifier classes: <c>ornamentBar--bottom</c>, <c>ornamentBar--right</c>, <c>ornamentBar--labels</c>,
-    /// <c>ornamentBar--stretch</c>, <c>ornamentBar--message</c>, <c>ornamentBar--primaryIconOnly</c>; on items
-    /// <c>ornamentBar__item--primary</c> (the primary and active pills), <c>ornamentBar__item--primaryAction</c> (the
-    /// primary item only), <c>ornamentBar__item--active</c>, <c>ornamentBar__item--disabled</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-fg</c>, <c>--surface-border</c>,
-    /// <c>--surface-pressed</c>, <c>--surface-accent</c>, <c>--c-on-primary</c>, <c>--grad-brand-start/end</c>
-    /// (primary and active items, through <see cref="GradientFill"/>), <c>--surface-muted</c>, <c>--radius-pill</c>,
-    /// <c>--space-1..6</c>, <c>--text-micro</c>, <c>--text-caption</c>, <c>--font-body-medium</c>.</para>
+    /// line of text before the slot, such as "Release to stop · 30 s max".</para>
+    /// <para>Every item's label is also its tooltip. The primary and active pills use <see cref="GradientFill"/>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class OrnamentBar : VisualElement
@@ -139,16 +121,7 @@ namespace UnityUIToolkit.Extensions
             get => items.ConvertAll(i => i.Label);
             set
             {
-                var list = new List<OrnamentItem>();
-                if (value != null)
-                {
-                    foreach (var label in value)
-                    {
-                        list.Add(new OrnamentItem(label, label));
-                    }
-                }
-
-                SetItems(list);
+                SetItems(value?.ConvertAll(l => new OrnamentItem(l, l)) ?? new List<OrnamentItem>());
             }
         }
 
@@ -295,13 +268,10 @@ namespace UnityUIToolkit.Extensions
             hierarchy.Add(bar);
 
             // The message, the slot and the spacer never leave the bar; items are inserted around the slot.
-            messageLabel = UIToolkitExtensions.CreateVisualElement<Label>(bar, MessageClass);
-            messageLabel.pickingMode = PickingMode.Ignore;
-            slot = UIToolkitExtensions.CreateVisualElement(bar, SlotClass);
-            slot.pickingMode = PickingMode.Ignore;
+            messageLabel = UIToolkitExtensions.CreateVisualElement<Label>(bar, MessageClass).IgnorePicking();
+            slot = UIToolkitExtensions.CreateVisualElement(bar, SlotClass).IgnorePicking();
             slot.style.display = DisplayStyle.None;
-            spacer = UIToolkitExtensions.CreateVisualElement(bar, SpacerClass);
-            spacer.pickingMode = PickingMode.Ignore;
+            spacer = UIToolkitExtensions.CreateVisualElement(bar, SpacerClass).IgnorePicking();
 
             RegisterCallback<GeometryChangedEvent>(_ => UpdateAnchor());
 
@@ -343,11 +313,9 @@ namespace UnityUIToolkit.Extensions
                         evt.StopPropagation();
                     });
 
-                    var icon = UIToolkitExtensions.CreateVisualElement(element, IconClass);
-                    icon.pickingMode = PickingMode.Ignore;
-                    var hasIcon = item.Icon.texture != null || item.Icon.sprite != null || item.Icon.vectorImage != null || item.Icon.renderTexture != null;
-                    icon.style.backgroundImage = hasIcon ? new StyleBackground(item.Icon) : new StyleBackground(StyleKeyword.None);
-                    icon.style.display = hasIcon ? DisplayStyle.Flex : DisplayStyle.None;
+                    var icon = UIToolkitExtensions.CreateVisualElement(element, IconClass).IgnorePicking();
+                    var hasIcon = icon.SetImageOrNone(item.Icon);
+                    icon.SetDisplayed(hasIcon);
 
                     var label = UIToolkitExtensions.CreateVisualElement<Label>(element, LabelClass);
                     label.text = item.Label ?? string.Empty;
@@ -388,7 +356,7 @@ namespace UnityUIToolkit.Extensions
                 slot.Add(element);
             }
 
-            slot.style.display = element != null ? DisplayStyle.Flex : DisplayStyle.None;
+            slot.SetDisplayed(element != null);
             ArrangeItems();
         }
 

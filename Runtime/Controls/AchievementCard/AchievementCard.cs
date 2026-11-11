@@ -8,25 +8,15 @@ using UnityEngine.UIElements;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// The unlock moment (FS10_7): a large badge disc with a halo, an "Achievement unlocked" eyebrow, the title, the
+    /// The unlock moment: a large badge disc with a halo, an "Achievement unlocked" eyebrow, the title, the
     /// reason, optional reward chips, and See all (ghost) and Continue (primary).
     /// </summary>
     /// <remarks>
     /// <para>With <c>card</c> on (the default) the element draws its own dark card; turn it off to host the content in a
     /// <see cref="ModalDialog"/> or a sheet. The card does not dim the screen or trap focus; the host does.</para>
-    /// <para>Props: <c>eyebrow</c> (default "Achievement unlocked", shown in capitals), <c>title-text</c>,
-    /// <c>body-text</c>, <c>primary-text</c> (default "Continue"), <c>secondary-text</c> (default "See all"; empty
-    /// hides it), <c>card</c>. Methods: <see cref="SetIcon"/>, <see cref="SetRewards"/>. Events:
-    /// <see cref="ContinueClicked"/>, <see cref="SeeAllClicked"/>. Strings are display text.</para>
-    /// <para>USS classes: <c>achievementCard</c> (root), <c>achievementCard__halo</c>, <c>achievementCard__badge</c>
-    /// (a <see cref="BadgeTile"/> at 96 px), <c>achievementCard__eyebrow</c>, <c>achievementCard__title</c>,
-    /// <c>achievementCard__body</c>, <c>achievementCard__rewards</c>, <c>achievementCard__reward</c>,
-    /// <c>achievementCard__actions</c>, <c>achievementCard__secondary</c>, <c>achievementCard__primary</c>.
-    /// Modifier: <c>achievementCard--card</c>.</para>
-    /// <para>Tokens read: <c>--surface-overlay</c>, <c>--surface-border</c>, <c>--surface-fg</c>,
-    /// <c>--surface-fg-soft</c>, <c>--surface-accent</c>, <c>--surface-highlight</c>, <c>--surface-tile</c>,
-    /// <c>--radius-pill</c>, <c>--space-1..6</c>, <c>--text-micro</c>, <c>--text-caption</c>, <c>--text-label-sm</c>,
-    /// <c>--font-display</c>, <c>--font-body</c>, <c>--font-body-medium</c>.</para>
+    /// <para>The eyebrow defaults to "Achievement unlocked", shown in capitals. <c>primary-text</c> defaults to "Continue".
+    /// <c>secondary-text</c> defaults to "See all"; empty hides it. The badge is a <see cref="BadgeTile"/> at 96 px.
+    /// Strings are display text.</para>
     /// </remarks>
     [UxmlElement]
     public partial class AchievementCard : VisualElement
@@ -45,7 +35,7 @@ namespace UnityUIToolkit.Extensions
         public const string PrimaryClass = "achievementCard__primary";
 
         /// <summary>
-        /// Badge disc diameter in FS10_7.
+        /// Badge disc diameter in pixels.
         /// </summary>
         public const float BadgeSize = 96f;
 
@@ -57,7 +47,6 @@ namespace UnityUIToolkit.Extensions
         private readonly PillButton secondary;
         private readonly PillButton primary;
         private string eyebrowText;
-        private bool card = true;
 
         public event Action ContinueClicked;
 
@@ -77,7 +66,7 @@ namespace UnityUIToolkit.Extensions
             {
                 eyebrowText = value ?? string.Empty;
                 eyebrow.text = eyebrowText.ToUpperInvariant();
-                eyebrow.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                eyebrow.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -94,8 +83,7 @@ namespace UnityUIToolkit.Extensions
             get => body.text;
             set
             {
-                body.text = value ?? string.Empty;
-                body.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                body.SetTextOrHide(value);
             }
         }
 
@@ -106,7 +94,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 primary.Text = value ?? string.Empty;
-                primary.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                primary.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -117,7 +105,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 secondary.Text = value ?? string.Empty;
-                secondary.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                secondary.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -127,12 +115,8 @@ namespace UnityUIToolkit.Extensions
         [UxmlAttribute("card")]
         public bool Card
         {
-            get => card;
-            set
-            {
-                card = value;
-                EnableInClassList(CardClass, card);
-            }
+            get => ClassListContains(CardClass);
+            set => EnableInClassList(CardClass, value);
         }
 
         public AchievementCard()
@@ -141,8 +125,7 @@ namespace UnityUIToolkit.Extensions
             this.UseThemeTokens();
             AddToClassList(RootClass);
 
-            var halo = UIToolkitExtensions.CreateVisualElement(this, HaloClass);
-            halo.pickingMode = PickingMode.Ignore;
+            var halo = UIToolkitExtensions.CreateVisualElement(this, HaloClass).IgnorePicking();
             badge = new BadgeTile { Size = BadgeSize, Unlocked = true, focusable = false };
             badge.AddToClassList(BadgeClass);
             badge.pickingMode = PickingMode.Ignore;
@@ -191,7 +174,7 @@ namespace UnityUIToolkit.Extensions
                 }
             }
 
-            rewards.style.display = rewards.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            rewards.SetDisplayed(rewards.childCount > 0);
         }
     }
 }

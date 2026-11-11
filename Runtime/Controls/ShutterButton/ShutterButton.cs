@@ -11,19 +11,12 @@ namespace UnityUIToolkit.Extensions
     /// <see cref="HoldEnabled"/>, press and hold to record a video.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>size</c> (outer diameter, default 84; 58 in the HUD bar), <c>hold-enabled</c>,
-    /// <c>hold-threshold-ms</c> (default 300), <c>recording</c>, <c>progress</c> (0 to 1 drawn round the ring while
-    /// recording, negative hides it). Events: <see cref="Tapped"/> (also raised as <see cref="Pressed"/>),
-    /// <see cref="HoldStarted"/>, <see cref="HoldEnded"/> (true when released over the button).</para>
+    /// <para>The default <c>size</c> (outer diameter) is 84, or 58 in the HUD bar. The default <c>hold-threshold-ms</c> is 300.</para>
     /// <para>While holding, the button keeps the pointer, so sliding off still ends the hold. The app sets
-    /// <see cref="Recording"/> once recording has really started, and clears it when it stops (FS08_4: a red ring
-    /// round a red rounded square). Disable with <c>SetEnabled(false)</c>, for example during a countdown.
-    /// Focusable; submit taps it.</para>
-    /// <para>USS classes: <c>shutterButton</c> (root, the ring), <c>shutterButton__disc</c>. Modifiers:
-    /// <c>shutterButton--holding</c>, <c>shutterButton--recording</c>, <c>shutterButton--small</c> (under 72 px).</para>
-    /// <para>Tokens read: <c>--c-fg</c>, <c>--grad-brand-start/end</c> (through <see cref="GradientFill"/>),
-    /// <c>--c-record</c>, <c>--c-on-record</c>, <c>--surface-accent</c>, <c>--radius-pill</c>,
-    /// <c>--radius-sm</c>, <c>--motion-fast</c>.</para>
+    /// <see cref="Recording"/> once recording has really started, and clears it when it stops.
+    /// Disable with <c>SetEnabled(false)</c>, for example during a countdown.
+    /// The button is focusable and submit taps it.</para>
+    /// <para>The class <c>shutterButton--small</c> applies under 72 px.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ShutterButton : VisualElement
@@ -35,7 +28,7 @@ namespace UnityUIToolkit.Extensions
         public const string SmallClass = "shutterButton--small";
 
         /// <summary>
-        /// Below this diameter the ring is 3 px with a 4 px gap (FS08_1), above it 4 px with a 5 px gap.
+        /// Below this diameter the ring is 3 px with a 4 px gap. Above it, the ring is 4 px with a 5 px gap.
         /// </summary>
         public const float SmallSize = 72f;
 
@@ -50,30 +43,27 @@ namespace UnityUIToolkit.Extensions
         private float progress = -1f;
         private Color progressColor = Color.white;
 
-        /// <summary>
-        /// Raised for a tap: take a photo.
-        /// </summary>
         public event Action Tapped;
 
         /// <summary>
-        /// Raised with <see cref="Tapped"/>; kept for code written before hold-for-video.
+        /// Raised together with <see cref="Tapped"/>.
         /// </summary>
         public event Action Pressed;
 
         /// <summary>
-        /// Raised when a press has lasted the hold threshold: start recording.
+        /// Raised when a press has lasted the hold threshold. Start recording here.
         /// </summary>
         public event Action HoldStarted;
 
         /// <summary>
-        /// Raised when a hold ends: true when released over the button, false when cancelled or released off it.
+        /// Raised when a hold ends. The value is true when released over the button, false when cancelled or released off it.
         /// </summary>
         public event Action<bool> HoldEnded;
 
         public bool IsHolding => longPress.IsHolding;
 
         /// <summary>
-        /// The press-and-hold manipulator, attached while <see cref="HoldEnabled"/> is on; exposed for tests.
+        /// The press-and-hold manipulator. It is attached while <see cref="HoldEnabled"/> is on.
         /// </summary>
         public LongPressManipulator LongPress => longPress;
 
@@ -85,12 +75,9 @@ namespace UnityUIToolkit.Extensions
             {
                 size = Mathf.Max(44f, value);
                 var small = size < SmallSize;
-                var inset = small ? 7f : 9f;
                 EnableInClassList(SmallClass, small);
                 style.width = size;
                 style.height = size;
-                disc.style.width = size - (2f * inset);
-                disc.style.height = size - (2f * inset);
                 UpdateRecordingDisc();
             }
         }
@@ -128,9 +115,6 @@ namespace UnityUIToolkit.Extensions
             set => longPress.ThresholdMs = value;
         }
 
-        /// <summary>
-        /// Shows the recording look: a red ring round a red rounded square.
-        /// </summary>
         [UxmlAttribute("recording")]
         public bool Recording
         {
@@ -175,8 +159,7 @@ namespace UnityUIToolkit.Extensions
             focusable = true;
             tabIndex = 0;
 
-            disc = UIToolkitExtensions.CreateVisualElement(this, DiscClass);
-            disc.pickingMode = PickingMode.Ignore;
+            disc = UIToolkitExtensions.CreateVisualElement(this, DiscClass).IgnorePicking();
             disc.AddManipulator(discFill);
 
             longPress = new LongPressManipulator();
@@ -231,11 +214,6 @@ namespace UnityUIToolkit.Extensions
 
         private void UpdateRecordingDisc()
         {
-            if (disc == null)
-            {
-                return;
-            }
-
             // The recording square is 45% of the diameter: 26 px in the 58 px HUD shutter.
             var inset = size < SmallSize ? 7f : 9f;
             var side = recording ? Mathf.Round(size * 0.45f) : size - (2f * inset);

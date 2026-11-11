@@ -53,21 +53,7 @@ namespace UnityUIToolkit.Extensions
     /// <remarks>
     /// <para>Rows are focusable and submit like taps; the number keys 1 to 9 pick the matching row while the list
     /// has focus.</para>
-    /// <para>Methods: <see cref="SetItems"/>, <see cref="SetItemEnabled"/>, <see cref="SetSpeaker"/>,
-    /// <see cref="SetFeedback"/>, <see cref="ClearFeedback"/>. Props: <c>prompt</c> (the question; empty hides it),
-    /// <c>allow-speech</c> (adds a <see cref="HoldToTalk"/> row: <c>speech-title</c>, <c>speech-subtitle</c>),
-    /// <c>dismiss-text</c> (a link in the header; empty hides it). Events: <see cref="ChoiceSelected"/> (id),
-    /// <see cref="SpeechStarted"/>, <see cref="SpeechEnded"/>, <see cref="SpeechTapped"/>, <see cref="Dismissed"/>.</para>
-    /// <para>USS classes: <c>promptChoices</c> (root), <c>promptChoices__header</c>, <c>promptChoices__avatar</c>
-    /// (an <see cref="AvatarPortrait"/>), <c>promptChoices__headings</c>, <c>promptChoices__speaker</c>,
-    /// <c>promptChoices__prompt</c>, <c>promptChoices__dismiss</c>, <c>promptChoices__list</c>,
-    /// <c>promptChoices__item</c>, <c>promptChoices__number</c>, <c>promptChoices__label</c>,
-    /// <c>promptChoices__speech</c>. Modifiers: <c>promptChoices__item--disabled</c>, <c>--selected</c>,
-    /// <c>--correct</c>, <c>--incorrect</c>.</para>
-    /// <para>Tokens read: <c>--surface-input</c>, <c>--surface-border-strong</c>, <c>--surface-fg</c>,
-    /// <c>--surface-accent</c>, <c>--surface-pressed</c>, <c>--radius-pill</c>, <c>--space-2</c>, <c>--space-4</c>,
-    /// <c>--text-micro</c>, <c>--text-label</c>, <c>--text-subtitle</c>, <c>--font-display</c>, <c>--font-body-medium</c>,
-    /// <c>--font-body-semibold</c>, <c>--c-success</c>, <c>--c-warn</c>, <c>--surface-highlight</c>.</para>
+    /// <para>The <c>allow-speech</c> property adds a <see cref="HoldToTalk"/> row. Empty <c>prompt</c> or <c>dismiss-text</c> hides that part of the header.</para>
     /// </remarks>
     [UxmlElement]
     public partial class PromptChoices : VisualElement
@@ -104,13 +90,10 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public event Action<string> ChoiceSelected;
 
-        /// <summary>
-        /// Raised when the hold-to-talk row is held: start listening.
-        /// </summary>
         public event Action SpeechStarted;
 
         /// <summary>
-        /// Raised when the hold ends: true when released over the row.
+        /// Raised when the hold ends. The value is true when the pointer is released over the row.
         /// </summary>
         public event Action<bool> SpeechEnded;
 
@@ -125,17 +108,13 @@ namespace UnityUIToolkit.Extensions
 
         public AvatarPortrait Avatar => avatar;
 
-        /// <summary>
-        /// The question above the choices; empty hides it.
-        /// </summary>
         [UxmlAttribute("prompt")]
         public string Prompt
         {
             get => prompt.text;
             set
             {
-                prompt.text = value ?? string.Empty;
-                prompt.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                prompt.SetTextOrHide(value);
                 UpdateHeader();
             }
         }
@@ -144,7 +123,7 @@ namespace UnityUIToolkit.Extensions
         public bool AllowSpeech
         {
             get => speech.style.display != DisplayStyle.None;
-            set => speech.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => speech.SetDisplayed(value);
         }
 
         [UxmlAttribute("speech-title")]
@@ -167,8 +146,7 @@ namespace UnityUIToolkit.Extensions
             get => dismiss.text;
             set
             {
-                dismiss.text = value ?? string.Empty;
-                dismiss.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                dismiss.SetTextOrHide(value);
                 UpdateHeader();
             }
         }
@@ -211,12 +189,7 @@ namespace UnityUIToolkit.Extensions
             dismiss = UIToolkitExtensions.CreateVisualElement<Label>(header, DismissClass);
             dismiss.focusable = true;
             dismiss.tabIndex = 0;
-            dismiss.RegisterCallback<ClickEvent>(_ => Dismissed?.Invoke());
-            dismiss.RegisterCallback<NavigationSubmitEvent>(evt =>
-            {
-                Dismissed?.Invoke();
-                evt.StopPropagation();
-            });
+            dismiss.RegisterActivate(() => Dismissed?.Invoke());
 
             list = UIToolkitExtensions.CreateVisualElement(this, ListClass);
 
@@ -241,10 +214,10 @@ namespace UnityUIToolkit.Extensions
         {
             var has = !string.IsNullOrEmpty(name);
             speaker.text = has ? name.ToUpperInvariant() : string.Empty;
-            speaker.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            speaker.SetDisplayed(has);
             avatar.DisplayName = name ?? string.Empty;
             avatar.SetImage(image);
-            avatar.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            avatar.SetDisplayed(has);
             UpdateHeader();
         }
 
@@ -274,13 +247,8 @@ namespace UnityUIToolkit.Extensions
 
         private void UpdateHeader()
         {
-            if (header == null)
-            {
-                return;
-            }
-
             var any = !string.IsNullOrEmpty(speaker.text) || !string.IsNullOrEmpty(prompt.text) || !string.IsNullOrEmpty(dismiss.text);
-            header.style.display = any ? DisplayStyle.Flex : DisplayStyle.None;
+            header.SetDisplayed(any);
         }
 
         public void SetItems(IReadOnlyList<PromptItem> newItems)
@@ -302,12 +270,7 @@ namespace UnityUIToolkit.Extensions
                 row.focusable = true;
                 row.tabIndex = 0;
                 var id = item.Id;
-                row.RegisterCallback<ClickEvent>(_ => Select(id));
-                row.RegisterCallback<NavigationSubmitEvent>(evt =>
-                {
-                    Select(id);
-                    evt.StopPropagation();
-                });
+                row.RegisterActivate(() => Select(id));
 
                 var number = UIToolkitExtensions.CreateVisualElement<Label>(row, NumberClass);
                 number.text = (i + 1).ToString();
@@ -333,9 +296,6 @@ namespace UnityUIToolkit.Extensions
             ApplyEnabled(index);
         }
 
-        /// <summary>
-        /// The row for a prompt, for focus and tests.
-        /// </summary>
         public VisualElement ItemElement(string id)
         {
             var index = items.FindIndex(i => i.Id == id);

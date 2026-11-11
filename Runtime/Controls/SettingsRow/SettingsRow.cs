@@ -40,18 +40,6 @@ namespace UnityUIToolkit.Extensions
     /// </summary>
     /// <remarks>
     /// <para>Children added to the row go into the trailing slot, for <see cref="SettingsRowTrailing.Custom"/>.</para>
-    /// <para>Props: <c>title-text</c>, <c>subtitle-text</c>, <c>icon</c>, <c>trailing</c>, <c>value-text</c>,
-    /// <c>switch-value</c>, <c>show-divider</c>. Events: <see cref="Clicked"/>, <see cref="SwitchChanged"/>.</para>
-    /// <para>USS classes: <c>settingsRow</c> (root), <c>settingsRow__iconTile</c>, <c>settingsRow__icon</c>, <c>settingsRow__texts</c>,
-    /// <c>settingsRow__title</c>, <c>settingsRow__subtitle</c>, <c>settingsRow__trailing</c>, <c>settingsRow__custom</c>
-    /// (the custom slot, a row),
-    /// <c>settingsRow__value</c>, <c>settingsRow__chevron</c>, <c>settingsRow__switch</c>.</para>
-    /// <para>Modifier classes: <c>settingsRow--hasIcon</c>, <c>settingsRow--hasSubtitle</c>,
-    /// <c>settingsRow--divider</c>, <c>settingsRow--chevron</c>, <c>settingsRow--value</c>,
-    /// <c>settingsRow--switch</c>, <c>settingsRow--custom</c>.</para>
-    /// <para>Tokens read: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-border</c>,
-    /// <c>--surface-pressed</c>, <c>--surface-accent</c>, <c>--surface-tile</c>, <c>--radius-sm</c>, <c>--space-2..4</c>, <c>--text-body</c>,
-    /// <c>--text-caption</c>, <c>--text-label</c>, <c>--font-body</c>, <c>--font-body-medium</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class SettingsRow : VisualElement
@@ -87,19 +75,13 @@ namespace UnityUIToolkit.Extensions
         private SettingsRowTrailing trailingMode = SettingsRowTrailing.Chevron;
         private Texture2D iconTexture;
 
-        /// <summary>
-        /// Raised when the row is tapped or submitted.
-        /// </summary>
         public event Action Clicked;
 
         /// <summary>
-        /// Raised when the embedded switch changes, in <see cref="SettingsRowTrailing.Switch"/> mode.
+        /// Raised in <see cref="SettingsRowTrailing.Switch"/> mode when the embedded switch changes.
         /// </summary>
         public event Action<bool> SwitchChanged;
 
-        /// <summary>
-        /// The embedded switch, used in <see cref="SettingsRowTrailing.Switch"/> mode.
-        /// </summary>
         public Switch Switch => toggle;
 
         public override VisualElement contentContainer => custom;
@@ -119,7 +101,7 @@ namespace UnityUIToolkit.Extensions
             {
                 subtitle.text = value ?? string.Empty;
                 var has = !string.IsNullOrEmpty(value);
-                subtitle.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+                subtitle.SetDisplayed(has);
                 EnableInClassList(HasSubtitleClass, has);
             }
         }
@@ -175,26 +157,19 @@ namespace UnityUIToolkit.Extensions
             focusable = true;
             tabIndex = 0;
 
-            iconTile = UIToolkitExtensions.CreateVisualElement(IconTileClass);
-            iconTile.pickingMode = PickingMode.Ignore;
+            iconTile = UIToolkitExtensions.CreateVisualElement(IconTileClass).IgnorePicking();
             hierarchy.Add(iconTile);
-            icon = UIToolkitExtensions.CreateVisualElement(iconTile, IconClass);
-            icon.pickingMode = PickingMode.Ignore;
+            icon = UIToolkitExtensions.CreateVisualElement(iconTile, IconClass).IgnorePicking();
 
-            var texts = UIToolkitExtensions.CreateVisualElement(TextsClass);
-            texts.pickingMode = PickingMode.Ignore;
+            var texts = UIToolkitExtensions.CreateVisualElement(TextsClass).IgnorePicking();
             hierarchy.Add(texts);
-            title = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass);
-            title.pickingMode = PickingMode.Ignore;
-            subtitle = UIToolkitExtensions.CreateVisualElement<Label>(texts, SubtitleClass);
-            subtitle.pickingMode = PickingMode.Ignore;
+            title = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass).IgnorePicking();
+            subtitle = UIToolkitExtensions.CreateVisualElement<Label>(texts, SubtitleClass).IgnorePicking();
 
-            trailing = UIToolkitExtensions.CreateVisualElement(TrailingClass);
-            trailing.pickingMode = PickingMode.Ignore;
+            trailing = UIToolkitExtensions.CreateVisualElement(TrailingClass).IgnorePicking();
             hierarchy.Add(trailing);
 
-            valueLabel = UIToolkitExtensions.CreateVisualElement<Label>(trailing, ValueClass);
-            valueLabel.pickingMode = PickingMode.Ignore;
+            valueLabel = UIToolkitExtensions.CreateVisualElement<Label>(trailing, ValueClass).IgnorePicking();
 
             toggle = new Switch { focusable = false };
             toggle.AddToClassList(SwitchClass);
@@ -202,18 +177,11 @@ namespace UnityUIToolkit.Extensions
             toggle.ValueChanged += on => SwitchChanged?.Invoke(on);
             trailing.Add(toggle);
 
-            custom = UIToolkitExtensions.CreateVisualElement(trailing, CustomClass);
-            custom.pickingMode = PickingMode.Ignore;
+            custom = UIToolkitExtensions.CreateVisualElement(trailing, CustomClass).IgnorePicking();
 
-            chevron = UIToolkitExtensions.CreateVisualElement(trailing, ChevronClass);
-            chevron.pickingMode = PickingMode.Ignore;
+            chevron = UIToolkitExtensions.CreateVisualElement(trailing, ChevronClass).IgnorePicking();
 
-            RegisterCallback<ClickEvent>(_ => OnClicked());
-            RegisterCallback<NavigationSubmitEvent>(evt =>
-            {
-                OnClicked();
-                evt.StopPropagation();
-            });
+            this.RegisterActivate(OnClicked);
 
             SetIcon(default);
             SubtitleText = null;
@@ -230,13 +198,12 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Sets the leading icon from a texture, sprite or vector image; a default value hides it.
+        /// Sets the leading icon from a texture, sprite or vector image. A default value hides it.
         /// </summary>
         public void SetIcon(Background background)
         {
-            var has = background.texture != null || background.sprite != null || background.vectorImage != null || background.renderTexture != null;
-            icon.style.backgroundImage = has ? new StyleBackground(background) : new StyleBackground(StyleKeyword.None);
-            iconTile.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            var has = icon.SetImageOrNone(background);
+            iconTile.SetDisplayed(has);
             EnableInClassList(HasIconClass, has);
         }
 
@@ -247,10 +214,10 @@ namespace UnityUIToolkit.Extensions
             EnableInClassList(SwitchModeClass, trailingMode == SettingsRowTrailing.Switch);
             EnableInClassList(CustomModeClass, trailingMode == SettingsRowTrailing.Custom);
 
-            valueLabel.style.display = trailingMode == SettingsRowTrailing.Value ? DisplayStyle.Flex : DisplayStyle.None;
-            chevron.style.display = trailingMode == SettingsRowTrailing.Chevron ? DisplayStyle.Flex : DisplayStyle.None;
-            toggle.style.display = trailingMode == SettingsRowTrailing.Switch ? DisplayStyle.Flex : DisplayStyle.None;
-            custom.style.display = trailingMode == SettingsRowTrailing.Custom ? DisplayStyle.Flex : DisplayStyle.None;
+            valueLabel.SetDisplayed(trailingMode == SettingsRowTrailing.Value);
+            chevron.SetDisplayed(trailingMode == SettingsRowTrailing.Chevron);
+            toggle.SetDisplayed(trailingMode == SettingsRowTrailing.Switch);
+            custom.SetDisplayed(trailingMode == SettingsRowTrailing.Custom);
         }
 
         private void OnClicked()

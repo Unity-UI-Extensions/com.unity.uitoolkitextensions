@@ -7,20 +7,13 @@ using UnityEngine.UIElements;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// The card for one stop under a map (FS09_1): a number disc, the stop name, a meta line such as
+    /// The card for one stop under a map: a number disc, the stop name, a meta line such as
     /// "24 m · 3 min · not visited", and one action pill such as "Go".
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>number</c>, <c>title-text</c>, <c>meta</c>, <c>action-text</c> (empty hides the pill),
-    /// <c>state</c> (a <see cref="MapStopState"/>: the disc is filled once visited, ringed otherwise).
-    /// Events: <see cref="ActionClicked"/>, <see cref="Tapped"/> (the card outside the pill). Strings are display text.</para>
-    /// <para>USS classes: <c>mapStopCard</c> (root), <c>mapStopCard__number</c>, <c>mapStopCard__numberLabel</c>,
-    /// <c>mapStopCard__texts</c>, <c>mapStopCard__title</c>, <c>mapStopCard__meta</c>, <c>mapStopCard__action</c>
-    /// (a primary compact <see cref="PillButton"/>). Modifiers: <c>mapStopCard--pending</c>, <c>--next</c>,
-    /// <c>--visited</c>.</para>
-    /// <para>Tokens read: <c>--surface-raised</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--c-navy-2</c>, <c>--c-on-primary</c>, <c>--c-page-card</c>, <c>--radius-pill</c>, <c>--space-1..4</c>,
-    /// <c>--text-caption</c>, <c>--text-label</c>, <c>--font-display</c>, <c>--font-body</c>.</para>
+    /// <para>An empty <c>action-text</c> hides the pill. The pill is a primary compact <see cref="PillButton"/>. The
+    /// <c>state</c> is a <see cref="MapStopState"/>: the disc is filled once visited, ringed otherwise.
+    /// <see cref="Tapped"/> is a tap on the card outside the pill. Strings are display text.</para>
     /// </remarks>
     [UxmlElement]
     public partial class MapStopCard : VisualElement
@@ -71,8 +64,7 @@ namespace UnityUIToolkit.Extensions
             get => meta.text;
             set
             {
-                meta.text = value ?? string.Empty;
-                meta.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                meta.SetTextOrHide(value);
             }
         }
 
@@ -83,7 +75,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 action.Text = value ?? string.Empty;
-                action.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                action.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -106,13 +98,10 @@ namespace UnityUIToolkit.Extensions
             this.UseThemeTokens();
             AddToClassList(RootClass);
 
-            var number = UIToolkitExtensions.CreateVisualElement(this, NumberClass);
-            number.pickingMode = PickingMode.Ignore;
-            numberLabel = UIToolkitExtensions.CreateVisualElement<Label>(number, NumberLabelClass);
-            numberLabel.pickingMode = PickingMode.Ignore;
+            var number = UIToolkitExtensions.CreateVisualElement(this, NumberClass).IgnorePicking();
+            numberLabel = UIToolkitExtensions.CreateVisualElement<Label>(number, NumberLabelClass).IgnorePicking();
 
-            var texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass);
-            texts.pickingMode = PickingMode.Ignore;
+            var texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass).IgnorePicking();
             title = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass);
             meta = UIToolkitExtensions.CreateVisualElement<Label>(texts, MetaClass);
 

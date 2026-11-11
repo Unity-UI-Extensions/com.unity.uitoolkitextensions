@@ -15,7 +15,7 @@ namespace UnityUIToolkit.Extensions
     /// callback. The menu injects a full-screen transparent backdrop and a floating panel into the
     /// panel's root visual tree, so it is unaffected by the clipping or layout of its anchor.
     ///
-    /// It is purely programmatic — construct it once and drive it with <see cref="Open"/>:
+    /// It is purely programmatic - construct it once and drive it with <see cref="Open"/>:
     /// <code>
     /// var menu = new DropDownMenuControl();
     /// menu.Open(anchorElement, new List&lt;DropDownMenuControl.DropDownOption&gt;
@@ -36,7 +36,7 @@ namespace UnityUIToolkit.Extensions
             AnchorRight,
 
             /// <summary>
-            /// Centered on the anchor on both axes, clamped to the screen edges — so near the
+            /// Centered on the anchor on both axes, clamped to the screen edges, so near the
             /// bottom it extends upward, near the top it extends downward, and anywhere else it
             /// straddles the anchor with equal space above and below.
             /// </summary>
@@ -61,7 +61,7 @@ namespace UnityUIToolkit.Extensions
         public const string RowFirstModifier = "dropDownMenuControl__row--first";
         public const string RowLabelClass = "dropDownMenuControl__rowLabel";
 
-        // Row height in px — must stay in sync with the .dropDownMenuControl__row USS height, because it is used for the vertical-overflow maths when positioning the panel.
+        // Row height in px. It must stay in sync with the .dropDownMenuControl__row USS height, because it is used for the vertical-overflow maths when positioning the panel.
         private const float RowHeightPx = 96f;
         private const float MenuWidthPx = 320f;
         private const float EdgeMarginPx = 8f;

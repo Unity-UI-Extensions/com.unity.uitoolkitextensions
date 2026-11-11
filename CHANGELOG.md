@@ -10,6 +10,7 @@ A theming contract and a set of app-shell, browsing and AR guidance components, 
 
 ### Changed
 
+- The minimum Unity version is now 6000.3, and the package depends on the built-in Vector Graphics module (`com.unity.modules.vectorgraphics`). The `svg` icons are set up for that module's importer, which first shipped in 6000.3. On 6000.0 to 6000.2 the icons imported as plain files and showed Unity's missing-image warning instead. The separate `com.unity.vectorgraphics` 2.x package did not help, because its importer resets the icons to sprites. The CI test matrix starts at 6000.3 to match.
 - ContentGrid places rows at one measured height (`FixedHeight` virtualisation) instead of `DynamicHeight`, so scrolling back towards the start no longer jumps as rows scroll in; tiles size their thumbnails when bound, and a change of items refreshes the list rather than rebuilding it.
 - ContentGrid tiles keep the meta line while any item has a `Meta`, blank where an item has none, so all tiles are one height. When no item has one, every tile leaves the line out, as before.
 - ModalDialog gains an optional third, link-style action under the main buttons: `DialogOptions.TertiaryText`, the `tertiary-text` UXML attribute, `TertiaryButton`, and `DialogAction.Tertiary` in the result. Null keeps the two-action layout.
@@ -52,7 +53,7 @@ A theming contract and a set of app-shell, browsing and AR guidance components, 
 - **GestureHint** - the first-use chip that teaches move, rotate, scale and raise, in touch or mouse wording, dismissed by a tap or the first gesture.
 - **EntryGate** - the full-screen gate before an experience or the camera: a deep gradient backdrop, optional logos, a message or hero layout, the requirements Start unlocks, a content slot, primary and secondary actions, a cancel link and consent links.
 - **AudioGuidePlayer** - controls for a guide or a video: play, pause and replay, a scrubber, 15 second skips, loop, rate and the transcript line. It holds no media; the owner reports the state and answers the requests. An optional mute button (`ShowMute`, `IsMuted`, `MuteToggled`; hidden by default) shows a speaker or a crossed-out speaker.
-- **CaptionBar** - captions with a speaker column, clamped to a number of lines that follows the text scale, cross-fading between cues.
+- **CaptionBar** - captions with a speaker column, clamped to a number of lines that follows the text scale, cross-fading between cues. It only shows text. `SyncTo(Func<float>)` follows any clock the owner passes in, such as an audio or video player's time, so the package needs no Audio module.
 - **PromptChoices** - numbered prompt rows for talking to a character, with used prompts dimmed and number keys.
 - **SpeechInputPanel** and **HoldToTalk** - the listening panel (status, level meter, partial and final transcript, match or no match, actions) and the hold-to-talk row that tells a hold from a tap.
 - **AvatarPortrait** - a round portrait with an initials fallback at 40, 48 and 56 px.

@@ -34,7 +34,7 @@ namespace UnityUIToolkit.Extensions
         Ring,
 
         /// <summary>
-        /// A wheel of segments behind the items, for picking a category (Night Market).
+        /// A wheel of segments behind the items, for picking a category.
         /// </summary>
         Wheel,
     }
@@ -67,18 +67,7 @@ namespace UnityUIToolkit.Extensions
     /// <see cref="LongPressManipulator"/> (or a tap) to a target; the ring opens at the press, clamped inside the layer.
     /// While holding, the item in the direction of the pointer lights up and releasing picks it; releasing near the
     /// centre cancels.</para>
-    /// <para>Props: <c>radius</c> (default 88), <c>trigger</c>, <c>menu-style</c>, <c>hold-threshold-ms</c>.
-    /// Methods: <see cref="SetItems"/>, <see cref="Attach"/>, <see cref="Detach"/>, <see cref="Open"/>,
-    /// <see cref="Close"/>, <see cref="ItemElement"/>. Events: <see cref="ItemSelected"/> (id), <see cref="Opened"/>,
-    /// <see cref="Closed"/>.</para>
-    /// <para>USS classes: <c>radialMenu</c> (root), <c>radialMenu__scrim</c>, <c>radialMenu__wheel</c>,
-    /// <c>radialMenu__centre</c>, <c>radialMenu__item</c>, <c>radialMenu__disc</c>, <c>radialMenu__icon</c>,
-    /// <c>radialMenu__label</c>. Modifiers: <c>radialMenu--open</c>, <c>radialMenu--wheel</c>,
-    /// <c>radialMenu__item--highlighted</c>.</para>
-    /// <para>Tokens read: <c>--c-scrim</c>, <c>--surface-overlay</c>, <c>--surface-border</c>, <c>--surface-fg</c>,
-    /// <c>--surface-accent</c>, <c>--surface-highlight</c>, <c>--c-on-primary</c>, <c>--grad-brand-start/end</c>,
-    /// <c>--radius-pill</c>, <c>--space-1</c>, <c>--text-caption</c>, <c>--font-body-medium</c>,
-    /// <c>--motion-fast</c>.</para>
+    /// <para><see cref="ItemSelected"/> passes the item id. The default <c>radius</c> is 88.</para>
     /// </remarks>
     [UxmlElement]
     public partial class RadialMenu : VisualElement
@@ -96,7 +85,7 @@ namespace UnityUIToolkit.Extensions
         public const string HighlightedClass = "radialMenu__item--highlighted";
 
         /// <summary>
-        /// Item disc diameter.
+        /// Item disc diameter in pixels.
         /// </summary>
         public const float ItemSize = 56f;
 
@@ -127,9 +116,6 @@ namespace UnityUIToolkit.Extensions
 
         public bool IsOpen => isOpen;
 
-        /// <summary>
-        /// The ring's centre in the menu's local space.
-        /// </summary>
         public Vector2 Origin => origin;
 
         /// <summary>
@@ -185,11 +171,9 @@ namespace UnityUIToolkit.Extensions
 
             scrim = UIToolkitExtensions.CreateVisualElement(this, ScrimClass);
             scrim.RegisterCallback<ClickEvent>(_ => Close());
-            wheel = UIToolkitExtensions.CreateVisualElement(this, WheelClass);
-            wheel.pickingMode = PickingMode.Ignore;
+            wheel = UIToolkitExtensions.CreateVisualElement(this, WheelClass).IgnorePicking();
             wheel.generateVisualContent += DrawWheel;
-            centre = UIToolkitExtensions.CreateVisualElement(this, CentreClass);
-            centre.pickingMode = PickingMode.Ignore;
+            centre = UIToolkitExtensions.CreateVisualElement(this, CentreClass).IgnorePicking();
 
             RegisterCallback<CustomStyleResolvedEvent>(evt =>
             {
@@ -247,14 +231,11 @@ namespace UnityUIToolkit.Extensions
                         evt.StopPropagation();
                     });
 
-                    var disc = UIToolkitExtensions.CreateVisualElement(element, DiscClass);
-                    disc.pickingMode = PickingMode.Ignore;
+                    var disc = UIToolkitExtensions.CreateVisualElement(element, DiscClass).IgnorePicking();
                     disc.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
-                    var icon = UIToolkitExtensions.CreateVisualElement(disc, IconClass);
-                    icon.pickingMode = PickingMode.Ignore;
+                    var icon = UIToolkitExtensions.CreateVisualElement(disc, IconClass).IgnorePicking();
                     icon.style.backgroundImage = new StyleBackground(item.Icon);
-                    var label = UIToolkitExtensions.CreateVisualElement<Label>(element, LabelClass);
-                    label.pickingMode = PickingMode.Ignore;
+                    var label = UIToolkitExtensions.CreateVisualElement<Label>(element, LabelClass).IgnorePicking();
                     label.text = item.Label ?? string.Empty;
                     itemElements.Add(element);
                 }
@@ -263,9 +244,6 @@ namespace UnityUIToolkit.Extensions
             Layout();
         }
 
-        /// <summary>
-        /// The element for an item, for focus and tests.
-        /// </summary>
         public VisualElement ItemElement(int index) => itemElements[index];
 
         /// <summary>
@@ -352,9 +330,6 @@ namespace UnityUIToolkit.Extensions
             Closed?.Invoke();
         }
 
-        /// <summary>
-        /// Lights the item in the direction of a local point; near the centre lights none.
-        /// </summary>
         public void HighlightToward(Vector2 localPosition)
         {
             if (!isOpen || items.Count == 0)
@@ -419,7 +394,6 @@ namespace UnityUIToolkit.Extensions
         private void ApplyOpen()
         {
             EnableInClassList(OpenClass, isOpen);
-            pickingMode = PickingMode.Ignore;
             scrim.pickingMode = isOpen ? PickingMode.Position : PickingMode.Ignore;
             foreach (var element in itemElements)
             {

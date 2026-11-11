@@ -31,26 +31,11 @@ namespace UnityUIToolkit.Extensions
     /// <see cref="IsPlaying"/>, <see cref="IsLooping"/>, <see cref="IsMuted"/> and <see cref="Rate"/> from its audio or video source (each frame
     /// for the position) and answers the request events. While the user drags the scrubber, position updates are held
     /// back so the thumb stays under the finger.</para>
-    /// <para>Props: <c>title-text</c>, <c>duration</c>, <c>position</c>, <c>is-playing</c>, <c>is-looping</c>, <c>is-muted</c>,
-    /// <c>rate</c>, <c>show-skip</c>, <c>show-rate</c>, <c>show-loop</c>, <c>show-mute</c>. Methods: <see cref="SetCues"/>,
-    /// <see cref="SetRates"/>.
-    /// Events: <see cref="PlayPauseRequested"/> (true to play), <see cref="ReplayRequested"/>,
-    /// <see cref="SeekRequested"/> (seconds), <see cref="SkipRequested"/> (plus or minus seconds),
-    /// <see cref="LoopToggled"/>, <see cref="MuteToggled"/> (true when muted), <see cref="RateChanged"/>,
-    /// <see cref="CueChanged"/> (index, text; -1 before the first).</para>
+    /// <para>Event values: <see cref="PlayPauseRequested"/> passes true to play, <see cref="SeekRequested"/> passes
+    /// seconds, <see cref="SkipRequested"/> passes plus or minus seconds, <see cref="MuteToggled"/> passes true when muted,
+    /// and <see cref="CueChanged"/> passes the index and text (-1 before the first).</para>
     /// <para>Keyboard: submit (Enter, Space) plays or pauses; Left and Right request a seek of 5 seconds.</para>
-    /// <para>USS classes: <c>audioGuidePlayer</c> (root), <c>audioGuidePlayer__row</c>, <c>audioGuidePlayer__play</c>,
-    /// <c>audioGuidePlayer__playIcon</c>, <c>audioGuidePlayer__skip</c>, <c>audioGuidePlayer__texts</c>,
-    /// <c>audioGuidePlayer__title</c>, <c>audioGuidePlayer__time</c>, <c>audioGuidePlayer__loop</c>,
-    /// <c>audioGuidePlayer__mute</c>, <c>audioGuidePlayer__rate</c>, <c>audioGuidePlayer__scrubber</c>, <c>audioGuidePlayer__track</c>,
-    /// <c>audioGuidePlayer__fill</c>, <c>audioGuidePlayer__thumb</c>, <c>audioGuidePlayer__cue</c>.</para>
-    /// <para>Modifier classes: <c>audioGuidePlayer--playing</c>, <c>audioGuidePlayer--ended</c>,
-    /// <c>audioGuidePlayer--looping</c>, <c>audioGuidePlayer--muted</c>, <c>audioGuidePlayer--scrubbing</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-fg-soft</c>,
-    /// <c>--surface-muted</c>, <c>--surface-accent</c>, <c>--surface-pressed</c>, <c>--c-accent</c>, <c>--c-on-primary</c>,
-    /// <c>--grad-brand-start/end</c> (play button, through <see cref="GradientFill"/>), <c>--radius-card</c>,
-    /// <c>--radius-pill</c>, <c>--space-1..4</c>, <c>--text-label</c>, <c>--text-caption</c>, <c>--font-body</c>,
-    /// <c>--font-body-medium</c>, <c>--font-body-semibold</c>.</para>
+    /// <para>The play button uses <see cref="GradientFill"/>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class AudioGuidePlayer : VisualElement
@@ -93,6 +78,8 @@ namespace UnityUIToolkit.Extensions
         private readonly VisualElement forwardSkip;
         private readonly Label titleLabel;
         private readonly Label timeLabel;
+        private int shownLabelSecond = -1;
+        private int durationLabelSecond = -1;
         private readonly VisualElement loopButton;
         private readonly VisualElement muteButton;
         private readonly Label rateButton;
@@ -149,8 +136,7 @@ namespace UnityUIToolkit.Extensions
             get => titleLabel.text;
             set
             {
-                titleLabel.text = value ?? string.Empty;
-                titleLabel.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                titleLabel.SetTextOrHide(value);
             }
         }
 
@@ -242,8 +228,8 @@ namespace UnityUIToolkit.Extensions
             get => backSkip.style.display != DisplayStyle.None;
             set
             {
-                backSkip.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
-                forwardSkip.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+                backSkip.SetDisplayed(value);
+                forwardSkip.SetDisplayed(value);
             }
         }
 
@@ -251,14 +237,14 @@ namespace UnityUIToolkit.Extensions
         public bool ShowRate
         {
             get => rateButton.style.display != DisplayStyle.None;
-            set => rateButton.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => rateButton.SetDisplayed(value);
         }
 
         [UxmlAttribute("show-loop")]
         public bool ShowLoop
         {
             get => loopButton.style.display != DisplayStyle.None;
-            set => loopButton.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => loopButton.SetDisplayed(value);
         }
 
         /// <summary>
@@ -268,7 +254,7 @@ namespace UnityUIToolkit.Extensions
         public bool ShowMute
         {
             get => muteButton.style.display != DisplayStyle.None;
-            set => muteButton.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => muteButton.SetDisplayed(value);
         }
 
         public AudioGuidePlayer()
@@ -285,18 +271,12 @@ namespace UnityUIToolkit.Extensions
 
             playButton = UIToolkitExtensions.CreateVisualElement(row, PlayClass);
             playButton.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
-            playButton.RegisterCallback<ClickEvent>(evt =>
-            {
-                evt.StopPropagation();
-                PlayPressed();
-            });
-            playIcon = UIToolkitExtensions.CreateVisualElement(playButton, PlayIconClass);
-            playIcon.pickingMode = PickingMode.Ignore;
+            OnClick(playButton, PlayPressed);
+            playIcon = UIToolkitExtensions.CreateVisualElement(playButton, PlayIconClass).IgnorePicking();
 
             forwardSkip = CreateSkip(row, "+15", SkipSeconds);
 
-            var texts = UIToolkitExtensions.CreateVisualElement(row, TextsClass);
-            texts.pickingMode = PickingMode.Ignore;
+            var texts = UIToolkitExtensions.CreateVisualElement(row, TextsClass).IgnorePicking();
             titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass);
             timeLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TimeClass);
 
@@ -317,26 +297,18 @@ namespace UnityUIToolkit.Extensions
             });
 
             rateButton = UIToolkitExtensions.CreateVisualElement<Label>(row, RateClass).MakePill();
-            rateButton.RegisterCallback<ClickEvent>(evt =>
-            {
-                evt.StopPropagation();
-                CycleRate();
-            });
+            OnClick(rateButton, CycleRate);
 
             scrubber = UIToolkitExtensions.CreateVisualElement(this, ScrubberClass);
-            var track = UIToolkitExtensions.CreateVisualElement(scrubber, TrackClass);
-            track.pickingMode = PickingMode.Ignore;
-            fill = UIToolkitExtensions.CreateVisualElement(track, FillClass);
-            fill.pickingMode = PickingMode.Ignore;
-            thumb = UIToolkitExtensions.CreateVisualElement(scrubber, ThumbClass);
-            thumb.pickingMode = PickingMode.Ignore;
+            var track = UIToolkitExtensions.CreateVisualElement(scrubber, TrackClass).IgnorePicking();
+            fill = UIToolkitExtensions.CreateVisualElement(track, FillClass).IgnorePicking();
+            thumb = UIToolkitExtensions.CreateVisualElement(scrubber, ThumbClass).IgnorePicking();
             scrubber.RegisterCallback<PointerDownEvent>(OnScrubDown);
             scrubber.RegisterCallback<PointerMoveEvent>(OnScrubMove);
             scrubber.RegisterCallback<PointerUpEvent>(OnScrubUp);
             scrubber.RegisterCallback<PointerCaptureOutEvent>(_ => EndScrub(commit: false));
 
-            cueLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, CueClass);
-            cueLabel.pickingMode = PickingMode.Ignore;
+            cueLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, CueClass).IgnorePicking();
 
             RegisterCallback<NavigationSubmitEvent>(evt =>
             {
@@ -366,7 +338,7 @@ namespace UnityUIToolkit.Extensions
 
             cues.Sort((a, b) => a.Start.CompareTo(b.Start));
             cueIndex = -2;
-            cueLabel.style.display = cues.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            cueLabel.SetDisplayed(cues.Count > 0);
             Refresh();
         }
 
@@ -411,13 +383,16 @@ namespace UnityUIToolkit.Extensions
         {
             var skip = UIToolkitExtensions.CreateVisualElement<Label>(parent, SkipClass).MakePill();
             skip.text = text;
-            skip.RegisterCallback<ClickEvent>(evt =>
-            {
-                evt.StopPropagation();
-                SkipRequested?.Invoke(delta);
-            });
+            OnClick(skip, () => SkipRequested?.Invoke(delta));
             return skip;
         }
+
+        private static void OnClick(VisualElement element, Action action) =>
+            element.RegisterCallback<ClickEvent>(evt =>
+            {
+                evt.StopPropagation();
+                action();
+            });
 
         private void PlayPressed()
         {
@@ -444,12 +419,20 @@ namespace UnityUIToolkit.Extensions
             var fraction = duration > 0f ? Mathf.Clamp01(shown / duration) : 0f;
             fill.style.width = Length.Percent(fraction * 100f);
             thumb.style.left = Length.Percent(fraction * 100f);
-            timeLabel.text = $"{FormatTime(shown)} / {FormatTime(duration)}";
+            var shownSecond = Mathf.Max(0, Mathf.FloorToInt(shown));
+            var durationSecond = Mathf.Max(0, Mathf.FloorToInt(duration));
+            if (shownSecond != shownLabelSecond || durationSecond != durationLabelSecond)
+            {
+                shownLabelSecond = shownSecond;
+                durationLabelSecond = durationSecond;
+                timeLabel.text = $"{FormatTime(shown)} / {FormatTime(duration)}";
+            }
 
+            var ended = IsEnded;
             EnableInClassList(PlayingClass, isPlaying);
-            EnableInClassList(EndedClass, IsEnded);
+            EnableInClassList(EndedClass, ended);
             playIcon.EnableInClassList("audioGuidePlayer__playIcon--pause", isPlaying);
-            playIcon.EnableInClassList("audioGuidePlayer__playIcon--replay", IsEnded);
+            playIcon.EnableInClassList("audioGuidePlayer__playIcon--replay", ended);
 
             UpdateCue(shown);
         }

@@ -52,14 +52,11 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(ColorRootClass);
             image.AddToClassList(IconClass);
 
-            rippleOverlay = UIToolkitExtensions.CreateVisualElement(this, RippleOverlayClass);
-            rippleOverlay.pickingMode = PickingMode.Ignore;
+            rippleOverlay = UIToolkitExtensions.CreateVisualElement(this, RippleOverlayClass).IgnorePicking();
 
-            rippleOverlaySecondary = UIToolkitExtensions.CreateVisualElement(this, RippleOverlaySecondaryClass);
-            rippleOverlaySecondary.pickingMode = PickingMode.Ignore;
+            rippleOverlaySecondary = UIToolkitExtensions.CreateVisualElement(this, RippleOverlaySecondaryClass).IgnorePicking();
 
-            selectedOverlay = UIToolkitExtensions.CreateVisualElement(this, SelectedOverlayClass);
-            selectedOverlay.pickingMode = PickingMode.Ignore;
+            selectedOverlay = UIToolkitExtensions.CreateVisualElement(this, SelectedOverlayClass).IgnorePicking();
 
             SetTintColor(tintColor);
             SetSelectedTintColor(selectedTintColor);
@@ -68,35 +65,36 @@ namespace UnityUIToolkit.Extensions
         public void SetTintColor(Color color)
         {
             tintColor = color;
-            image.style.unityBackgroundImageTintColor = color;
-            // background-color fallback so the control renders without a texture assigned
-            image.style.backgroundColor = color;
+            Tint(image, color);
         }
 
         public void SetSelectedTintColor(Color color)
         {
             selectedTintColor = color;
-            selectedOverlay.style.unityBackgroundImageTintColor = color;
-            selectedOverlay.style.backgroundColor = color;
-            rippleOverlay.style.unityBackgroundImageTintColor = color;
-            rippleOverlay.style.backgroundColor = color;
-            rippleOverlaySecondary.style.unityBackgroundImageTintColor = color;
-            rippleOverlaySecondary.style.backgroundColor = color;
+            Tint(selectedOverlay, color);
+            Tint(rippleOverlay, color);
+            Tint(rippleOverlaySecondary, color);
         }
 
         protected override void ApplySelectionState(bool selected)
         {
             base.ApplySelectionState(selected);
+            selectedOverlay.EnableInClassList(SelectedOverlayVisibleClass, selected);
             if (selected)
             {
-                selectedOverlay.AddToClassList(SelectedOverlayVisibleClass);
                 PlayRipple();
             }
             else
             {
-                selectedOverlay.RemoveFromClassList(SelectedOverlayVisibleClass);
                 ResetRipple();
             }
+        }
+
+        // The background colour makes the element visible when no texture is assigned.
+        private static void Tint(VisualElement element, Color color)
+        {
+            element.style.unityBackgroundImageTintColor = color;
+            element.style.backgroundColor = color;
         }
 
         private void PlayRipple()

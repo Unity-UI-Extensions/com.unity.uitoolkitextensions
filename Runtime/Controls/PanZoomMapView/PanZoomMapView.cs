@@ -60,28 +60,15 @@ namespace UnityUIToolkit.Extensions
 
     /// <summary>
     /// A map image that pans and zooms (drag, pinch, mouse wheel), with numbered stop pins, a dashed route and a
-    /// you-are-here dot with an optional heading (FS09_1).
+    /// you-are-here dot with an optional heading.
     /// </summary>
     /// <remarks>
     /// <para>The image is any <see cref="Background"/>: a floor plan, a venue photo or a rendered map. Positions are
     /// normalised to the image, 0 to 1 from its top-left corner, so they survive a change of image size. At zoom 1 the
     /// whole image fits the view. Pins and the route keep their size while the image scales.</para>
-    /// <para>Methods: <see cref="SetImage"/>, <see cref="SetStops"/>, <see cref="SetStopState"/>, <see cref="SetRoute"/>
-    /// (stop ids in order), <see cref="SetRoutePath"/> (free points), <see cref="SetYouAreHere"/>,
-    /// <see cref="ClearYouAreHere"/>, <see cref="FocusOn"/>, <see cref="Select"/>, <see cref="Recentre"/>,
-    /// <see cref="ZoomBy"/>, <see cref="NormalisedToLocal"/>, <see cref="LocalToNormalised"/>.
-    /// Events: <see cref="StopTapped"/> (id), <see cref="MapTapped"/> (normalised point), <see cref="ViewChanged"/>.
-    /// Props: <c>min-zoom</c> (1), <c>max-zoom</c> (4), <c>focus-zoom</c> (2), <c>show-controls</c>.</para>
-    /// <para>A tap selects nothing by itself; the app calls <see cref="Select"/> or <see cref="FocusOn"/> from
-    /// <see cref="StopTapped"/>, for example to show a stop card. Arrow keys pan and plus and minus zoom when focused.</para>
-    /// <para>USS classes: <c>panZoomMapView</c> (root), <c>panZoomMapView__image</c>, <c>panZoomMapView__overlay</c>,
-    /// <c>panZoomMapView__pins</c>, <c>panZoomMapView__pin</c>, <c>panZoomMapView__pinLabel</c>,
-    /// <c>panZoomMapView__controls</c>, <c>panZoomMapView__control</c>, <c>panZoomMapView__recentre</c>. Pin modifiers:
-    /// <c>panZoomMapView__pin--pending</c>, <c>--next</c>, <c>--visited</c>, <c>--selected</c>.</para>
-    /// <para>Tokens read: <c>--surface-tile</c>, <c>--surface-raised</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--surface-border</c>, <c>--surface-accent</c>, <c>--c-navy-2</c>, <c>--c-primary</c>, <c>--c-warn</c>,
-    /// <c>--c-on-primary</c>, <c>--c-page-card</c>, <c>--radius-card</c>, <c>--radius-pill</c>, <c>--space-2..3</c>,
-    /// <c>--text-micro</c>, <c>--text-subtitle</c>, <c>--font-display</c>, <c>--motion-fast</c>.</para>
+    /// <para>A tap selects nothing by itself. The app calls <see cref="Select"/> or <see cref="FocusOn"/> from
+    /// <see cref="StopTapped"/>, for example to show a stop card. Arrow keys pan and plus and minus zoom when focused.
+    /// The defaults are <c>min-zoom</c> 1, <c>max-zoom</c> 4 and <c>focus-zoom</c> 2.</para>
     /// </remarks>
     [UxmlElement]
     public partial class PanZoomMapView : VisualElement
@@ -101,7 +88,7 @@ namespace UnityUIToolkit.Extensions
         public const string RecentreClass = "panZoomMapView__recentre";
 
         /// <summary>
-        /// Pin diameter (FS09_1: r 13).
+        /// Pin diameter in pixels.
         /// </summary>
         public const float PinSize = 26f;
 
@@ -109,6 +96,9 @@ namespace UnityUIToolkit.Extensions
         /// Travel in pixels below which a press counts as a tap.
         /// </summary>
         public const float TapSlop = 8f;
+
+        private const float ZoomStep = 1.5f;
+        private const float TapRadius = 22f;
 
         private static readonly CustomStyleProperty<Color> RouteColorProperty = new("--map-route");
         private static readonly CustomStyleProperty<Color> YouColorProperty = new("--map-you");
@@ -122,6 +112,8 @@ namespace UnityUIToolkit.Extensions
         private readonly Dictionary<string, VisualElement> pinElements = new();
         private readonly List<string> routeIds = new();
         private readonly List<Vector2> routePath = new();
+        private readonly List<Vector2> routePoints = new();
+        private readonly Dictionary<string, MapStop> stopsById = new();
         private readonly Dictionary<int, Vector2> pointers = new();
 
         private Vector2 imageSize = new(1000f, 1000f);
@@ -154,9 +146,6 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public event Action<Vector2> MapTapped;
 
-        /// <summary>
-        /// Raised after a pan or a zoom.
-        /// </summary>
         public event Action ViewChanged;
 
         public IReadOnlyList<MapStop> Stops => stops;
@@ -217,7 +206,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 showControls = value;
-                controls.style.display = showControls ? DisplayStyle.Flex : DisplayStyle.None;
+                controls.SetDisplayed(showControls);
             }
         }
 
@@ -229,20 +218,17 @@ namespace UnityUIToolkit.Extensions
             focusable = true;
             tabIndex = 0;
 
-            image = UIToolkitExtensions.CreateVisualElement(this, ImageClass);
-            image.pickingMode = PickingMode.Ignore;
+            image = UIToolkitExtensions.CreateVisualElement(this, ImageClass).IgnorePicking();
             image.style.transformOrigin = new TransformOrigin(0, 0);
 
-            overlay = UIToolkitExtensions.CreateVisualElement(this, OverlayClass);
-            overlay.pickingMode = PickingMode.Ignore;
+            overlay = UIToolkitExtensions.CreateVisualElement(this, OverlayClass).IgnorePicking();
             overlay.generateVisualContent += DrawOverlay;
 
-            pins = UIToolkitExtensions.CreateVisualElement(this, PinsClass);
-            pins.pickingMode = PickingMode.Ignore;
+            pins = UIToolkitExtensions.CreateVisualElement(this, PinsClass).IgnorePicking();
 
             controls = UIToolkitExtensions.CreateVisualElement(this, ControlsClass);
-            CreateControl("+", "Zoom in", () => ZoomBy(1.5f));
-            CreateControl("−", "Zoom out", () => ZoomBy(1f / 1.5f));
+            CreateControl("+", "Zoom in", () => ZoomBy(ZoomStep));
+            CreateControl("−", "Zoom out", () => ZoomBy(1f / ZoomStep));
             var recentre = CreateControl(string.Empty, "Recentre", Recentre);
             recentre.AddToClassList(RecentreClass);
             recentre.generateVisualContent += DrawRecentreGlyph;
@@ -297,6 +283,7 @@ namespace UnityUIToolkit.Extensions
         public void SetStops(IReadOnlyList<MapStop> newStops)
         {
             stops.Clear();
+            stopsById.Clear();
             pinElements.Clear();
             pins.Clear();
 
@@ -305,8 +292,12 @@ namespace UnityUIToolkit.Extensions
                 foreach (var stop in newStops)
                 {
                     stops.Add(stop);
-                    var pin = UIToolkitExtensions.CreateVisualElement(pins, PinClass);
-                    pin.pickingMode = PickingMode.Ignore;
+                    if (stop.Id != null)
+                    {
+                        stopsById.TryAdd(stop.Id, stop);
+                    }
+
+                    var pin = UIToolkitExtensions.CreateVisualElement(pins, PinClass).IgnorePicking();
                     var label = UIToolkitExtensions.CreateVisualElement<Label>(pin, PinLabelClass);
                     label.text = stop.Label ?? string.Empty;
                     label.pickingMode = PickingMode.Ignore;
@@ -428,9 +419,6 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// Multiplies the zoom about the centre of the view.
-        /// </summary>
         public void ZoomBy(float factor) => SetZoom(zoom * factor, ViewSize * 0.5f);
 
         /// <summary>
@@ -448,14 +436,8 @@ namespace UnityUIToolkit.Extensions
             ApplyView();
         }
 
-        /// <summary>
-        /// Where a normalised image point is in the view's local space.
-        /// </summary>
         public Vector2 NormalisedToLocal(Vector2 normalised) => offset + Vector2.Scale(normalised, DisplaySize);
 
-        /// <summary>
-        /// The normalised image point under a local position.
-        /// </summary>
         public Vector2 LocalToNormalised(Vector2 local)
         {
             var display = DisplaySize;
@@ -656,11 +638,11 @@ namespace UnityUIToolkit.Extensions
         {
             // The nearest pin within a 44 px touch target wins; the selected pin is checked first.
             string hit = null;
-            var best = 22f * 22f;
+            var best = TapRadius * TapRadius;
             foreach (var stop in stops)
             {
                 var distance = (NormalisedToLocal(stop.Position) - local).sqrMagnitude;
-                if (distance < best || (distance <= 22f * 22f && stop.Id == selectedId))
+                if (distance < best || (distance <= TapRadius * TapRadius && stop.Id == selectedId))
                 {
                     best = distance;
                     hit = stop.Id;
@@ -712,12 +694,12 @@ namespace UnityUIToolkit.Extensions
         {
             if (evt.keyCode is KeyCode.Plus or KeyCode.Equals or KeyCode.KeypadPlus)
             {
-                ZoomBy(1.5f);
+                ZoomBy(ZoomStep);
                 evt.StopPropagation();
             }
             else if (evt.keyCode is KeyCode.Minus or KeyCode.KeypadMinus)
             {
-                ZoomBy(1f / 1.5f);
+                ZoomBy(1f / ZoomStep);
                 evt.StopPropagation();
             }
         }
@@ -754,13 +736,13 @@ namespace UnityUIToolkit.Extensions
 
         private void DrawRoute(Painter2D painter)
         {
-            var points = new List<Vector2>();
+            var points = routePoints;
+            points.Clear();
             if (routeIds.Count > 0)
             {
                 foreach (var id in routeIds)
                 {
-                    var stop = stops.Find(s => s.Id == id);
-                    if (stop != null)
+                    if (id != null && stopsById.TryGetValue(id, out var stop))
                     {
                         points.Add(NormalisedToLocal(stop.Position));
                     }
@@ -779,7 +761,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            // FS09_1: 3 px, dashes of 8 with gaps of 6, carried across corners.
+            // 3 px, dashes of 8 with gaps of 6, carried across corners.
             const float dash = 8f;
             const float gap = 6f;
             painter.lineWidth = 3f;
@@ -835,7 +817,7 @@ namespace UnityUIToolkit.Extensions
                 painter.Fill();
             }
 
-            // FS09_1: a halo of r 18 at half strength, then an amber dot of r 9 with a 3 px white ring.
+            // A halo of r 18 at half strength, then an amber dot of r 9 with a 3 px white ring.
             var halo = youColor;
             halo.a = 0.5f;
             painter.lineWidth = 2f;

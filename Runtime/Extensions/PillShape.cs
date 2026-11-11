@@ -12,18 +12,18 @@ namespace UnityUIToolkit.Extensions
     /// <para>UI Toolkit clamps a corner radius on each axis separately, to half the width and half the height. CSS
     /// scales the radii together instead. So a large radius such as <c>--radius-pill</c> (50 px) on a 44 px high,
     /// wide element draws 50 by 22 px elliptical ends, not semicircles, and a border looks thicker at the tips.
-    /// <see cref="MakePill{T}"/> sets the radius to exactly half the shorter side whenever the element's size changes,
+    /// <see cref="MakePill{T}"/> sets the radius to half the shorter side whenever the element's size changes,
     /// so the ends are semicircles at any height and text scale.</para>
     /// <para>The radius is set inline, so it wins over USS. <see cref="ClearPill"/> stops it and returns the radius to
-    /// the stylesheet, for an element that stops being a pill (a PillButton switched to its Custom variant).</para>
-    /// <para>USS class: <c>uitk-pill</c>, added to every element made a pill.</para>
+    /// the stylesheet, for an element that stops being a pill.</para>
+    /// <para>The class <c>uitk-pill</c> is added to every element made a pill.</para>
     /// </remarks>
     public static class PillShape
     {
         public const string PillClass = "uitk-pill";
 
         /// <summary>
-        /// Makes the element a pill (or a circle when square). Safe to call more than once.
+        /// Makes the element a pill, or a circle when square. You can call it more than once.
         /// </summary>
         public static T MakePill<T>(this T element) where T : VisualElement
         {
@@ -38,9 +38,6 @@ namespace UnityUIToolkit.Extensions
             return element;
         }
 
-        /// <summary>
-        /// Stops <see cref="MakePill{T}"/> and hands the corner radii back to the stylesheet.
-        /// </summary>
         public static void ClearPill(this VisualElement element)
         {
             if (element == null || !element.ClassListContains(PillClass))

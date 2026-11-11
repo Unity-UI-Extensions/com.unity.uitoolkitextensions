@@ -86,7 +86,7 @@ namespace UnityUIToolkit.Extensions.Tests
             var camera = new GameObject("DisplayedTimerTests camera").AddComponent<Camera>();
             var target = new GameObject("DisplayedTimerTests target").transform;
             target.position = camera.transform.position + camera.transform.forward * 3f;
-            var audio = new GameObject("DisplayedTimerTests audio").AddComponent<AudioSource>();
+            var clock = 0f;
             try
             {
                 var screen = new VisualElement();
@@ -120,7 +120,7 @@ namespace UnityUIToolkit.Extensions.Tests
                 yield return Mount(screen, 2);
                 spinner.PlayLoading();
                 coaching.Show(CoachingMode.LookAround);
-                captions.SyncTo(audio);
+                captions.SyncTo(() => clock);
                 label.Track(camera, target);
                 tabs.SelectedId = "t7";
                 yield return WaitMs(1100);
@@ -160,7 +160,6 @@ namespace UnityUIToolkit.Extensions.Tests
             {
                 Object.Destroy(camera.gameObject);
                 Object.Destroy(target.gameObject);
-                Object.Destroy(audio.gameObject);
             }
         }
 

@@ -75,29 +75,7 @@ namespace UnityUIToolkit.Extensions
     /// <para>One component covers the brand, safety notice, permission failure, entry and could-not-load screens:
     /// <see cref="Layout"/> picks the message or hero arrangement, <see cref="Backdrop"/> the navy or deep ground,
     /// <see cref="PanelCard"/> whether the message sits on a card. Children added to the gate go into its content slot.</para>
-    /// <para>Props: <c>layout</c>, <c>backdrop</c>, <c>panel-card</c>, <c>eyebrow</c>, <c>title-text</c>, <c>subtitle</c>,
-    /// <c>body-text</c>, <c>icon-tone</c>, <c>start-text</c>, <c>start-enabled</c>, <c>secondary-text</c>, <c>link-text</c>,
-    /// <c>cancel-text</c>, <c>footer-note</c>, <c>footer-end-text</c>, <c>top-inset</c>, <c>bottom-inset</c>.
-    /// Methods: <see cref="SetLogo"/>, <see cref="SetOrgLogo"/>, <see cref="SetIcon"/>, <see cref="SetRequirements"/>,
-    /// <see cref="SetConsentLinks"/>. Events: <see cref="Started"/>, <see cref="SecondaryClicked"/>,
-    /// <see cref="LinkClicked"/>, <see cref="Skipped"/> (the cancel link), <see cref="ConsentLinkClicked"/>.</para>
-    /// <para>USS classes: <c>entryGate</c> (root), <c>entryGate__logo</c>, <c>entryGate__hero</c>,
-    /// <c>entryGate__heroLogos</c>, <c>entryGate__brandTile</c>, <c>entryGate__brandLogo</c>, <c>entryGate__orgLogo</c>,
-    /// <c>entryGate__eyebrow</c>, <c>entryGate__title</c>, <c>entryGate__subtitle</c>, <c>entryGate__main</c>,
-    /// <c>entryGate__panel</c>, <c>entryGate__icon</c>, <c>entryGate__iconImage</c>, <c>entryGate__body</c>,
-    /// <c>entryGate__requirements</c>, <c>entryGate__requirement</c>, <c>entryGate__requirementIcon</c>,
-    /// <c>entryGate__requirementLabel</c>, <c>entryGate__content</c>, <c>entryGate__actions</c>, <c>entryGate__start</c>,
-    /// <c>entryGate__secondary</c>, <c>entryGate__link</c>, <c>entryGate__consent</c>, <c>entryGate__consentLink</c>,
-    /// <c>entryGate__footer</c>, <c>entryGate__cancel</c>, <c>entryGate__note</c>, <c>entryGate__footerEnd</c>.</para>
-    /// <para>Modifier classes: <c>entryGate--hero</c>, <c>entryGate--message</c>, <c>entryGate--navy</c>,
-    /// <c>entryGate--deep</c>, <c>entryGate--card</c>, <c>entryGate__icon--brand</c>, <c>entryGate__icon--warn</c>,
-    /// <c>entryGate__icon--warnOutline</c>.</para>
-    /// <para>Tokens read: <c>--c-navy</c>, <c>--c-navy-2</c>, <c>--c-bg</c>, <c>--c-bg-2</c>, <c>--grad-brand-start/end</c>,
-    /// <c>--c-panel</c>, <c>--c-divider</c>, <c>--c-fg</c>, <c>--c-fg-soft</c>, <c>--c-fg-muted</c>, <c>--c-accent</c>,
-    /// <c>--c-warn</c>, <c>--c-page-card</c>, <c>--radius-pill</c>, <c>--radius-sm</c>, <c>--radius-dialog</c>,
-    /// <c>--radius-sheet</c>, <c>--space-1..6</c>, <c>--text-micro</c>, <c>--text-caption</c>, <c>--text-label</c>,
-    /// <c>--text-body</c>, <c>--text-title</c>, <c>--text-display</c>, <c>--font-display</c>, <c>--font-body</c>,
-    /// <c>--font-body-medium</c>. The gate is always on the deep palette.</para>
+    /// <para>The gate is always on the deep palette. <see cref="Skipped"/> is the cancel link.</para>
     /// </remarks>
     [UxmlElement]
     public partial class EntryGate : VisualElement
@@ -137,6 +115,10 @@ namespace UnityUIToolkit.Extensions
         public const string NavyClass = "entryGate--navy";
         public const string DeepClass = "entryGate--deep";
         public const string CardClass = "entryGate--card";
+        private const string LogoEmptyClass = LogoClass + "--empty";
+        private const string IconBrandClass = IconClass + "--brand";
+        private const string IconWarnClass = IconClass + "--warn";
+        private const string IconWarnOutlineClass = IconClass + "--warnOutline";
 
         private readonly GradientFill backdropFill = new(GradientPreset.Navy, GradientDirection.Vertical);
         private readonly VisualElement logo;
@@ -231,7 +213,7 @@ namespace UnityUIToolkit.Extensions
         public string Eyebrow
         {
             get => eyebrow.text;
-            set => SetText(eyebrow, value);
+            set => eyebrow.SetTextOrHide(value);
         }
 
         [UxmlAttribute("title-text")]
@@ -252,7 +234,7 @@ namespace UnityUIToolkit.Extensions
         public string Subtitle
         {
             get => subtitle.text;
-            set => SetText(subtitle, value);
+            set => subtitle.SetTextOrHide(value);
         }
 
         /// <summary>
@@ -262,7 +244,7 @@ namespace UnityUIToolkit.Extensions
         public string BodyText
         {
             get => body.text;
-            set => SetText(body, value);
+            set => body.SetTextOrHide(value);
         }
 
         [UxmlAttribute("icon-tone")]
@@ -272,9 +254,9 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 iconTone = value;
-                icon.EnableInClassList($"{IconClass}--brand", iconTone == EntryGateIconTone.Brand);
-                icon.EnableInClassList($"{IconClass}--warn", iconTone == EntryGateIconTone.Warn);
-                icon.EnableInClassList($"{IconClass}--warnOutline", iconTone == EntryGateIconTone.WarnOutline);
+                icon.EnableInClassList(IconBrandClass, iconTone == EntryGateIconTone.Brand);
+                icon.EnableInClassList(IconWarnClass, iconTone == EntryGateIconTone.Warn);
+                icon.EnableInClassList(IconWarnOutlineClass, iconTone == EntryGateIconTone.WarnOutline);
             }
         }
 
@@ -312,7 +294,7 @@ namespace UnityUIToolkit.Extensions
         public string LinkText
         {
             get => link.text;
-            set => SetText(link, value);
+            set => link.SetTextOrHide(value);
         }
 
         /// <summary>
@@ -324,7 +306,7 @@ namespace UnityUIToolkit.Extensions
             get => cancel.text;
             set
             {
-                SetText(cancel, value);
+                cancel.SetTextOrHide(value);
                 UpdateFooter();
             }
         }
@@ -338,7 +320,7 @@ namespace UnityUIToolkit.Extensions
             get => note.text;
             set
             {
-                SetText(note, value);
+                note.SetTextOrHide(value);
                 UpdateFooter();
             }
         }
@@ -352,7 +334,7 @@ namespace UnityUIToolkit.Extensions
             get => footerEnd.text;
             set
             {
-                SetText(footerEnd, value);
+                footerEnd.SetTextOrHide(value);
                 UpdateFooter();
             }
         }
@@ -378,8 +360,7 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
             this.AddManipulator(backdropFill);
 
-            logo = UIToolkitExtensions.CreateVisualElement(LogoClass);
-            logo.pickingMode = PickingMode.Ignore;
+            logo = UIToolkitExtensions.CreateVisualElement(LogoClass).IgnorePicking();
             hierarchy.Add(logo);
 
             hero = UIToolkitExtensions.CreateVisualElement(HeroClass);
@@ -396,10 +377,8 @@ namespace UnityUIToolkit.Extensions
             main = UIToolkitExtensions.CreateVisualElement(MainClass);
             hierarchy.Add(main);
             messagePanel = UIToolkitExtensions.CreateVisualElement(main, PanelClass);
-            icon = UIToolkitExtensions.CreateVisualElement(messagePanel, IconClass);
-            icon.pickingMode = PickingMode.Ignore;
-            iconImage = UIToolkitExtensions.CreateVisualElement(icon, IconImageClass);
-            iconImage.pickingMode = PickingMode.Ignore;
+            icon = UIToolkitExtensions.CreateVisualElement(messagePanel, IconClass).IgnorePicking();
+            iconImage = UIToolkitExtensions.CreateVisualElement(icon, IconImageClass).IgnorePicking();
             messageTitle = UIToolkitExtensions.CreateVisualElement<Label>(messagePanel, TitleClass);
             body = UIToolkitExtensions.CreateVisualElement<Label>(messagePanel, BodyClass);
             requirements = UIToolkitExtensions.CreateVisualElement(messagePanel, RequirementsClass);
@@ -451,11 +430,10 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetLogo(Background image)
         {
-            var has = HasImage(image);
-            logo.style.backgroundImage = has ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
-            brandLogo.style.backgroundImage = has ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
-            logo.EnableInClassList($"{LogoClass}--empty", !has);
-            brandLogo.parent.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            var has = logo.SetImageOrNone(image);
+            brandLogo.SetImageOrNone(image);
+            logo.EnableInClassList(LogoEmptyClass, !has);
+            brandLogo.parent.SetDisplayed(has);
             ApplyLayout();
         }
 
@@ -464,9 +442,8 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetOrgLogo(Background image)
         {
-            var has = HasImage(image);
-            orgLogo.style.backgroundImage = has ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
-            orgLogo.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            var has = orgLogo.SetImageOrNone(image);
+            orgLogo.SetDisplayed(has);
         }
 
         /// <summary>
@@ -474,9 +451,8 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetIcon(Background image)
         {
-            var has = HasImage(image);
-            iconImage.style.backgroundImage = has ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
-            icon.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            var has = iconImage.SetImageOrNone(image);
+            icon.SetDisplayed(has);
         }
 
         /// <summary>
@@ -491,14 +467,13 @@ namespace UnityUIToolkit.Extensions
                 {
                     var row = UIToolkitExtensions.CreateVisualElement(requirements, RequirementClass);
                     var rowIcon = UIToolkitExtensions.CreateVisualElement(row, RequirementIconClass);
-                    rowIcon.style.backgroundImage = HasImage(item.Icon) ? new StyleBackground(item.Icon) : new StyleBackground(StyleKeyword.None);
-                    rowIcon.style.display = HasImage(item.Icon) ? DisplayStyle.Flex : DisplayStyle.None;
+                    rowIcon.SetDisplayed(rowIcon.SetImageOrNone(item.Icon));
                     var label = UIToolkitExtensions.CreateVisualElement<Label>(row, RequirementLabelClass);
                     label.text = item.Label ?? string.Empty;
                 }
             }
 
-            requirements.style.display = requirements.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            requirements.SetDisplayed(requirements.childCount > 0);
         }
 
         /// <summary>
@@ -518,22 +493,14 @@ namespace UnityUIToolkit.Extensions
                 }
             }
 
-            consent.style.display = consent.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            consent.SetDisplayed(consent.childCount > 0);
         }
 
-        private static bool HasImage(Background image) =>
-            image.texture != null || image.sprite != null || image.vectorImage != null || image.renderTexture != null;
-
-        private static void SetText(Label label, string text)
-        {
-            label.text = text ?? string.Empty;
-            label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
-        }
 
         private static void SetButton(PillButton button, string text)
         {
             button.Text = text ?? string.Empty;
-            button.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+            button.SetDisplayed(!string.IsNullOrEmpty(text));
         }
 
         private void ApplyLayout()
@@ -542,12 +509,12 @@ namespace UnityUIToolkit.Extensions
             EnableInClassList(HeroModifierClass, isHero);
             EnableInClassList(MessageModifierClass, !isHero);
 
-            hero.style.display = isHero ? DisplayStyle.Flex : DisplayStyle.None;
-            logo.style.display = !isHero && !logo.ClassListContains($"{LogoClass}--empty") ? DisplayStyle.Flex : DisplayStyle.None;
+            hero.SetDisplayed(isHero);
+            logo.SetDisplayed(!isHero && !logo.ClassListContains(LogoEmptyClass));
 
             // The title lives in the hero card or at the top of the message panel.
-            SetText(heroTitle, isHero ? titleText : null);
-            SetText(messageTitle, isHero ? null : titleText);
+            heroTitle.SetTextOrHide(isHero ? titleText : null);
+            messageTitle.SetTextOrHide(isHero ? null : titleText);
 
             // The hero puts the actions at the bottom of the screen, above the footer; the message keeps them in its panel.
             if (isHero && actions.hierarchy.parent != this)
@@ -565,7 +532,7 @@ namespace UnityUIToolkit.Extensions
         private void UpdateFooter()
         {
             var hasCancel = !string.IsNullOrEmpty(cancel.text);
-            note.style.display = !hasCancel && !string.IsNullOrEmpty(note.text) ? DisplayStyle.Flex : DisplayStyle.None;
+            note.SetDisplayed(!hasCancel && !string.IsNullOrEmpty(note.text));
             footer.style.display = hasCancel || !string.IsNullOrEmpty(note.text) || !string.IsNullOrEmpty(footerEnd.text)
                 ? DisplayStyle.Flex
                 : DisplayStyle.None;

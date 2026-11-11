@@ -29,19 +29,7 @@ namespace UnityUIToolkit.Extensions
     /// edge at half and full height (it hides at peek), above <see cref="BottomInset"/>.</para>
     /// <para>The content area always ends at the visible bottom edge (or the footer), so a ScrollView in it
     /// scrolls through everything at every detent.</para>
-    /// <para>Props: <c>detents</c>, <c>current</c>, <c>modal</c>, <c>dismissible</c>, <c>docked</c>,
-    /// <c>peek-height</c>, <c>half-ratio</c>, <c>full-top-offset</c>, <c>bottom-inset</c>.
-    /// Events: <see cref="DetentChanged"/>, <see cref="ScrimClicked"/>.</para>
-    /// <para>USS classes: <c>bottomSheet</c> (root), <c>bottomSheet__scrim</c>, <c>bottomSheet__panel</c>,
-    /// <c>bottomSheet__handle</c>, <c>bottomSheet__grabber</c>, <c>bottomSheet__header</c>,
-    /// <c>bottomSheet__content</c>, <c>bottomSheet__footer</c>.</para>
-    /// <para>Modifier classes: <c>bottomSheet--hidden</c>, <c>bottomSheet--peek</c>, <c>bottomSheet--half</c>,
-    /// <c>bottomSheet--full</c> (current detent), <c>bottomSheet--docked</c>, <c>bottomSheet--modal</c>,
-    /// <c>bottomSheet--scrimVisible</c>, <c>bottomSheet--dragging</c>, <c>bottomSheet--hasFooter</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-muted</c>,
-    /// <c>--c-scrim</c>, <c>--radius-sheet</c>, <c>--radius-pill</c>, <c>--space-2</c>, <c>--space-4</c>,
-    /// <c>--motion-base</c>. Panel movement is a USS transition on <c>translate</c>, so
-    /// <c>reduce-motion</c> makes it instant.</para>
+    /// <para>Panel movement is a USS transition on <c>translate</c>, so <c>reduce-motion</c> makes it instant.</para>
     /// </remarks>
     [UxmlElement]
     public partial class BottomSheet : VisualElement
@@ -91,6 +79,7 @@ namespace UnityUIToolkit.Extensions
         private float bottomInset;
 
         private int dragPointerId = PointerId.invalidPointerId;
+        private readonly Action restoreDragging;
         private bool isDragging;
         private float dragStartPointerY;
         private float dragStartOffset;
@@ -275,6 +264,7 @@ namespace UnityUIToolkit.Extensions
             this.UseThemeTokens();
             AddToClassList(RootClass);
             pickingMode = PickingMode.Ignore;
+            restoreDragging = () => EnableInClassList(DraggingClass, isDragging);
 
             scrim = UIToolkitExtensions.CreateVisualElement(ScrimClass);
             scrim.RegisterCallback<ClickEvent>(OnScrimClicked);
@@ -286,8 +276,7 @@ namespace UnityUIToolkit.Extensions
             handle = UIToolkitExtensions.CreateVisualElement(sheetPanel, HandleClass);
             handle.focusable = true;
             handle.tabIndex = 0;
-            var grabber = UIToolkitExtensions.CreateVisualElement(handle, GrabberClass).MakePill();
-            grabber.pickingMode = PickingMode.Ignore;
+            var grabber = UIToolkitExtensions.CreateVisualElement(handle, GrabberClass).MakePill().IgnorePicking();
 
             header = UIToolkitExtensions.CreateVisualElement(sheetPanel, HeaderClass);
             content = UIToolkitExtensions.CreateVisualElement(sheetPanel, ContentClass);
@@ -332,9 +321,6 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void Open(SheetDetent detent = SheetDetent.Half) => SnapTo(detent);
 
-        /// <summary>
-        /// Closes the sheet.
-        /// </summary>
         public void Close() => SnapTo(SheetDetent.Hidden);
 
         /// <summary>
@@ -480,7 +466,7 @@ namespace UnityUIToolkit.Extensions
             ApplyContentPadding();
             if (!animate)
             {
-                schedule.Execute(() => EnableInClassList(DraggingClass, isDragging));
+                schedule.Execute(restoreDragging);
             }
         }
 
@@ -728,16 +714,7 @@ namespace UnityUIToolkit.Extensions
                 }
             }
 
-            var changed = target != current;
-            current = target;
-            SetDetentClasses();
-            UpdateScrim();
-            ApplyLayout(animate: true);
-
-            if (changed)
-            {
-                DetentChanged?.Invoke(current);
-            }
+            SnapTo(target, animate: true, notify: true);
         }
 
         private void CancelDrag()

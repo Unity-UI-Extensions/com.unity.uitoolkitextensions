@@ -113,10 +113,7 @@ namespace UnityUIToolkit.Extensions
 
         private void RebuildButtons()
         {
-            foreach (var button in buttons)
-            {
-                container.Remove(button);
-            }
+            container.Clear();
             buttons.Clear();
 
             foreach (var color in colors)
@@ -191,19 +188,13 @@ namespace UnityUIToolkit.Extensions
             lastDragSelectedButton = hoveredButton;
         }
 
-        private void OnContainerPointerUp(PointerUpEvent evt)
-        {
-            if (evt.pointerId != activePointerId)
-            {
-                return;
-            }
+        private void OnContainerPointerUp(PointerUpEvent evt) => EndPointerTracking(evt.pointerId);
 
-            ResetPointerTrackingState();
-        }
+        private void OnContainerPointerCancel(PointerCancelEvent evt) => EndPointerTracking(evt.pointerId);
 
-        private void OnContainerPointerCancel(PointerCancelEvent evt)
+        private void EndPointerTracking(int pointerId)
         {
-            if (evt.pointerId != activePointerId)
+            if (pointerId != activePointerId)
             {
                 return;
             }
@@ -231,7 +222,7 @@ namespace UnityUIToolkit.Extensions
                 return null;
             }
 
-            VisualElement current = panel.Pick(panelPosition) as VisualElement;
+            VisualElement current = panel.Pick(panelPosition);
             while (current != null)
             {
                 if (current is ColorToggleButton button && buttons.Contains(button))

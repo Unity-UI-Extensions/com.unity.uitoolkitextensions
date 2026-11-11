@@ -9,7 +9,7 @@ namespace UnityUIToolkit.Extensions
     public enum RoundedInputFieldVariant
     {
         /// <summary>
-        /// The original look.
+        /// The look from the stylesheet, without tokens.
         /// </summary>
         Default,
 
@@ -36,8 +36,7 @@ namespace UnityUIToolkit.Extensions
 
         private readonly TextField textField;
         private string placeholderText = string.Empty;
-        private Label placeholderLabel;
-        private bool isPassword;
+        private readonly Label placeholderLabel;
 
         public event Action<string> ValueChanged;
 
@@ -64,11 +63,7 @@ namespace UnityUIToolkit.Extensions
             textField.AddToClassList(TextFieldClass);
             textField.labelElement.style.display = DisplayStyle.None;
 
-            var input = textField.Q(className: TextField.inputUssClassName);
-            if (input != null)
-            {
-                input.AddToClassList(InputClass);
-            }
+            textField.Q(className: TextField.inputUssClassName)?.AddToClassList(InputClass);
 
             textField.RegisterCallback<FocusInEvent>(_ => AddToClassList(FocusedClass));
             textField.RegisterCallback<FocusOutEvent>(_ => RemoveFromClassList(FocusedClass));
@@ -118,12 +113,8 @@ namespace UnityUIToolkit.Extensions
         [UxmlAttribute("is-password")]
         public bool IsPassword
         {
-            get => isPassword;
-            set
-            {
-                isPassword = value;
-                textField.isPasswordField = value;
-            }
+            get => textField.isPasswordField;
+            set => textField.isPasswordField = value;
         }
 
         [UxmlAttribute("variant")]
@@ -193,8 +184,7 @@ namespace UnityUIToolkit.Extensions
 
         private void UpdatePlaceholderVisibility()
         {
-            bool showPlaceholder = string.IsNullOrEmpty(textField.value) && !string.IsNullOrEmpty(placeholderText);
-            placeholderLabel.style.display = showPlaceholder ? DisplayStyle.Flex : DisplayStyle.None;
+            placeholderLabel.SetDisplayed(string.IsNullOrEmpty(textField.value) && !string.IsNullOrEmpty(placeholderText));
         }
     }
 }

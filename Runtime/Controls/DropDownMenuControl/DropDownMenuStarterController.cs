@@ -10,13 +10,13 @@ namespace UnityUIToolkit.Extensions
     /// Demo driver for the Drop Down Menu starter template. <see cref="DropDownMenuControl"/>
     /// is purely programmatic (it has no UXML element), so unlike the other starters this one
     /// pairs its UXML layout with a small component that constructs the menu and wires the
-    /// "···" trigger. Replace it with your own controller in real use — the ActionMenu example
+    /// "···" trigger. Replace it with your own controller in real use. The ActionMenu example
     /// shows the same wiring across multiple rows and placements.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class DropDownMenuStarterController : MonoBehaviour
     {
-        // Constructed in Start — VisualElements must not be created from a MonoBehaviour
+        // Constructed in Start. VisualElements must not be created from a MonoBehaviour
         // constructor or field initializer.
         private DropDownMenuControl menu;
 

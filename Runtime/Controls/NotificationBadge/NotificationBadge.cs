@@ -24,8 +24,7 @@ namespace UnityUIToolkit.Extensions
 
             pickingMode = PickingMode.Position;
 
-            countLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, CountClass);
-            countLabel.pickingMode = PickingMode.Ignore;
+            countLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, CountClass).IgnorePicking();
 
             SetCount(0);
         }

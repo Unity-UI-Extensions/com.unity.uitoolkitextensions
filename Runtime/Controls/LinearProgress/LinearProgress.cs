@@ -9,14 +9,9 @@ namespace UnityUIToolkit.Extensions
     /// A thin progress bar: a track and a fill in the primary-to-accent gradient.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>value</c> (0 to 1), <c>indeterminate</c> (a short segment that sweeps back and forth when the
-    /// amount is unknown; it rests in the middle with reduce motion). The fill animates with <c>--motion-base</c>, the
+    /// <para><c>value</c> is 0 to 1. <c>indeterminate</c> shows a short segment that sweeps back and forth when the
+    /// amount is unknown; it rests in the middle with reduce motion. The fill animates with <c>--motion-base</c>, the
     /// sweep with <c>--motion-slow</c>.</para>
-    /// <para>USS classes: <c>linearProgress</c> (root, the track), <c>linearProgress__fill</c>.
-    /// Modifiers: <c>linearProgress--complete</c> (value 1), <c>linearProgress--indeterminate</c>,
-    /// <c>linearProgress--swept</c> (the far end of the sweep).</para>
-    /// <para>Tokens read: <c>--surface-border</c>, <c>--c-primary</c>, <c>--c-accent</c>, <c>--motion-base</c>,
-    /// <c>--motion-slow</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class LinearProgress : VisualElement
@@ -91,8 +86,7 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
             pickingMode = PickingMode.Ignore;
 
-            fill = UIToolkitExtensions.CreateVisualElement(this, FillClass);
-            fill.pickingMode = PickingMode.Ignore;
+            fill = UIToolkitExtensions.CreateVisualElement(this, FillClass).IgnorePicking();
             fill.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
 
             RegisterCallback<AttachToPanelEvent>(_ => { if (indeterminate) StartSweep(); });

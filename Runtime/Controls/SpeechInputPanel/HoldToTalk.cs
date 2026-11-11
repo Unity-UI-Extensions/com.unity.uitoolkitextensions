@@ -11,14 +11,7 @@ namespace UnityUIToolkit.Extensions
     /// <see cref="PressStarted"/> and, on release, <see cref="PressEnded"/>; a quick tap raises <see cref="Tapped"/>.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>title-text</c>, <c>subtitle</c>, <c>hold-threshold-ms</c>. Events: <see cref="PressStarted"/>,
-    /// <see cref="PressEnded"/> (true when released over the row, false when cancelled), <see cref="Tapped"/>.
-    /// Submit (Enter, Space) counts as a tap.</para>
-    /// <para>USS classes: <c>holdToTalk</c> (root), <c>holdToTalk__mic</c>, <c>holdToTalk__micIcon</c>,
-    /// <c>holdToTalk__texts</c>, <c>holdToTalk__title</c>, <c>holdToTalk__subtitle</c>. Modifier: <c>holdToTalk--holding</c>.</para>
-    /// <para>Tokens read: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-accent</c>, <c>--c-on-primary</c>,
-    /// <c>--grad-brand-start/end</c>, <c>--radius-pill</c>, <c>--space-3</c>, <c>--text-caption</c>, <c>--text-label</c>,
-    /// <c>--font-body</c>, <c>--font-body-medium</c>, <c>--motion-fast</c>.</para>
+    /// <para>Submit (Enter, Space) counts as a tap.</para>
     /// </remarks>
     [UxmlElement]
     public partial class HoldToTalk : VisualElement
@@ -39,7 +32,7 @@ namespace UnityUIToolkit.Extensions
         private IVisualElementScheduledItem holdTimer;
 
         /// <summary>
-        /// Raised when a press has lasted the hold threshold: start listening.
+        /// Raised when a press has lasted the hold threshold. Start listening here.
         /// </summary>
         public event Action PressStarted;
 
@@ -68,8 +61,7 @@ namespace UnityUIToolkit.Extensions
             get => subtitle.text;
             set
             {
-                subtitle.text = value ?? string.Empty;
-                subtitle.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                subtitle.SetTextOrHide(value);
             }
         }
 
@@ -88,14 +80,11 @@ namespace UnityUIToolkit.Extensions
             focusable = true;
             tabIndex = 0;
 
-            var mic = UIToolkitExtensions.CreateVisualElement(this, MicClass);
-            mic.pickingMode = PickingMode.Ignore;
+            var mic = UIToolkitExtensions.CreateVisualElement(this, MicClass).IgnorePicking();
             mic.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
-            var icon = UIToolkitExtensions.CreateVisualElement(mic, MicIconClass);
-            icon.pickingMode = PickingMode.Ignore;
+            var icon = UIToolkitExtensions.CreateVisualElement(mic, MicIconClass).IgnorePicking();
 
-            var texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass);
-            texts.pickingMode = PickingMode.Ignore;
+            var texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass).IgnorePicking();
             title = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass);
             subtitle = UIToolkitExtensions.CreateVisualElement<Label>(texts, SubtitleClass);
 
@@ -142,9 +131,7 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// Starts the hold now; called by the threshold timer.
-        /// </summary>
+        // The threshold timer calls this method.
         internal void BeginHold()
         {
             if (pointerId == PointerId.invalidPointerId || holding)

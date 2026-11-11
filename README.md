@@ -87,11 +87,9 @@ openupm add com.unity.uitoolkitextensions
 Alternatively, you can also add the package manually through the Unity package manager using the scope ```com.unity.uitoolkitextensions```, see the [Unity Package Manager docs](https://learn.unity.com/tutorial/the-package-manager) for more information.
 
 > [!NOTE]
-> The package comes with some default `svg` assets for use in the controls and demonstration scenes which requires the `com.unity.vectorgraphics` installed to make use of them
+> The package needs Unity 6000.3 or later. Its `svg` icons are imported by Unity's built-in Vector Graphics module (`com.unity.modules.vectorgraphics`), which first shipped in 6000.3. The package lists the module as a dependency, so nothing else needs installing.
 >
-> Package Manager -> Install Package By Name -> `com.unity.vectorgraphics`
->
-> However, this is completely optional, but highly recommended when working with images with the UI Toolkit.
+> Do not add the separate `com.unity.vectorgraphics` 2.x package. Its importer resets the icons to sprites, which UI Toolkit styles cannot use.
 
 ## [Contribution guidelines](https://unity-ui-extensions.github.io/ContributionGuidelines)
 

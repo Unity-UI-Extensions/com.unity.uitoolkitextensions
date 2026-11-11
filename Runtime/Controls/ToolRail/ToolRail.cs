@@ -53,16 +53,7 @@ namespace UnityUIToolkit.Extensions
     /// selection tools (duplicate, undo, inspect, delete). Horizontal or vertical, or chosen from the parent's shape.
     /// </summary>
     /// <remarks>
-    /// <para>The rail lays out in the normal flow; the owner places it. Tools are focusable and submit like taps.</para>
-    /// <para>Props: <c>labels</c> (UXML shorthand), <c>selectable</c> (one active tool), <c>active-id</c>,
-    /// <c>orientation</c>, <c>show-labels</c>. Methods: <see cref="SetItems"/>, <see cref="SetItemEnabled"/>.
-    /// Event: <see cref="ToolSelected"/>.</para>
-    /// <para>USS classes: <c>toolRail</c> (root), <c>toolRail__item</c>, <c>toolRail__icon</c>, <c>toolRail__label</c>.</para>
-    /// <para>Modifier classes: <c>toolRail--horizontal</c>, <c>toolRail--vertical</c>, <c>toolRail--labels</c>; on items
-    /// <c>toolRail__item--active</c>, <c>toolRail__item--disabled</c>, <c>toolRail__item--warn</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-accent</c>,
-    /// <c>--surface-pressed</c>, <c>--c-warn</c>, <c>--radius-pill</c>, <c>--space-1..2</c>, <c>--text-caption</c>,
-    /// <c>--font-body-medium</c>.</para>
+    /// <para>The rail lays out in the normal flow. The owner places it. Tools are focusable and submit like taps.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ToolRail : VisualElement
@@ -84,16 +75,10 @@ namespace UnityUIToolkit.Extensions
         private string activeId;
         private ToolRailOrientation orientation = ToolRailOrientation.Auto;
 
-        /// <summary>
-        /// Raised when an enabled tool is tapped or submitted, with its id.
-        /// </summary>
         public event Action<string> ToolSelected;
 
         public IReadOnlyList<ToolItem> Items => items;
 
-        /// <summary>
-        /// The orientation in use, with Auto resolved.
-        /// </summary>
         public ToolRailOrientation ResolvedOrientation => ClassListContains(VerticalClass) ? ToolRailOrientation.Vertical : ToolRailOrientation.Horizontal;
 
         [UxmlAttribute("labels")]
@@ -102,16 +87,7 @@ namespace UnityUIToolkit.Extensions
             get => items.ConvertAll(i => i.Label);
             set
             {
-                var list = new List<ToolItem>();
-                if (value != null)
-                {
-                    foreach (var label in value)
-                    {
-                        list.Add(new ToolItem(label, label));
-                    }
-                }
-
-                SetItems(list);
+                SetItems(value?.ConvertAll(l => new ToolItem(l, l)) ?? new List<ToolItem>());
             }
         }
 
@@ -194,17 +170,10 @@ namespace UnityUIToolkit.Extensions
                 element.tooltip = item.Label;
                 element.EnableInClassList(WarnClass, item.Warn);
                 var id = item.Id;
-                element.RegisterCallback<ClickEvent>(_ => Select(id));
-                element.RegisterCallback<NavigationSubmitEvent>(evt =>
-                {
-                    Select(id);
-                    evt.StopPropagation();
-                });
+                element.RegisterActivate(() => Select(id));
 
-                var icon = UIToolkitExtensions.CreateVisualElement(element, IconClass);
-                icon.pickingMode = PickingMode.Ignore;
-                var hasIcon = item.Icon.texture != null || item.Icon.sprite != null || item.Icon.vectorImage != null || item.Icon.renderTexture != null;
-                icon.style.backgroundImage = hasIcon ? new StyleBackground(item.Icon) : new StyleBackground(StyleKeyword.None);
+                var icon = UIToolkitExtensions.CreateVisualElement(element, IconClass).IgnorePicking();
+                var hasIcon = icon.SetImageOrNone(item.Icon);
 
                 var label = UIToolkitExtensions.CreateVisualElement<Label>(element, LabelClass);
                 label.text = item.Label ?? string.Empty;
@@ -229,9 +198,6 @@ namespace UnityUIToolkit.Extensions
             ApplyEnabled(index);
         }
 
-        /// <summary>
-        /// The element for a tool, for focus and tests.
-        /// </summary>
         public VisualElement ItemElement(string id)
         {
             var index = items.FindIndex(i => i.Id == id);

@@ -105,14 +105,12 @@ The lists above are a snapshot for offline reference. For the most accurate and 
 
 This version of the Unity UI Toolkit Extensions is compatible with the following versions of the Unity Editor:
 
-- 6000 and above - the recommended path is to use the Unity Package Manager to get access to the package.  Full details for installing via UPM can be [found here](https://unity-ui-extensions.github.io/UPMInstallation.html).
+- 6000.3 and above - the recommended path is to use the Unity Package Manager to get access to the package.  Full details for installing via UPM can be [found here](https://unity-ui-extensions.github.io/UPMInstallation.html).
 
 > [!NOTE]
-> The package comes with some default `svg` assets for use in the controls and demonstration scenes which requires the `com.unity.vectorgraphics` installed to make use of them
+> The package's `svg` icons are imported by Unity's built-in Vector Graphics module (`com.unity.modules.vectorgraphics`), which first shipped in 6000.3. The package lists the module as a dependency, so nothing else needs installing.
 >
-> Package Manager -> Install Package By Name -> `com.unity.vectorgraphics`
->
-> However, this is completely optional, but highly recommended when working with images with the UI Toolkit.
+> Do not add the separate `com.unity.vectorgraphics` 2.x package. Its importer resets the icons to sprites, which UI Toolkit styles cannot use.
 
 ## [Release Notes](#release-notes)
 

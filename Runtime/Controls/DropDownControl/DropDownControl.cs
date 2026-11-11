@@ -46,7 +46,6 @@ namespace UnityUIToolkit.Extensions
         private float lastPointerY;
         private float dragVelocity;
         private long lastPointerTime;
-        private bool isCoasting;
         private IVisualElementScheduledItem coastSchedule;
 
         private readonly VisualElement triggerElement;
@@ -101,8 +100,7 @@ namespace UnityUIToolkit.Extensions
 
             triggerLabel = UIToolkitExtensions.CreateVisualElement<Label>(triggerElement, TriggerLabelClass);
 
-            var triggerIcon = UIToolkitExtensions.CreateVisualElement(triggerElement, TriggerIconClass);
-            triggerIcon.pickingMode = PickingMode.Ignore;
+            var triggerIcon = UIToolkitExtensions.CreateVisualElement(triggerElement, TriggerIconClass).IgnorePicking();
 
             triggerElement.RegisterCallback<ClickEvent>(_ => Open());
             triggerElement.RegisterCallback<PointerDownEvent>(OnTriggerPointerDown, TrickleDown.TrickleDown);
@@ -111,7 +109,7 @@ namespace UnityUIToolkit.Extensions
             // control's subtree, so they need the shared stylesheet attached directly.
             backdropElement = UIToolkitExtensions.CreateVisualElement(BackdropClass);
             backdropElement.ApplyControlStyles();
-            backdropElement.RegisterCallback<ClickEvent>(OnBackdropClicked);
+            backdropElement.RegisterCallback<ClickEvent>(_ => Close());
 
             panelElement = UIToolkitExtensions.CreateVisualElement(PanelClass);
             panelElement.ApplyControlStyles();
@@ -121,14 +119,11 @@ namespace UnityUIToolkit.Extensions
 
             listContainer = UIToolkitExtensions.CreateVisualElement(viewportElement, ListClass);
 
-            var fadeTop = UIToolkitExtensions.CreateVisualElement(panelElement, FadeTopClass);
-            fadeTop.pickingMode = PickingMode.Ignore;
+            var fadeTop = UIToolkitExtensions.CreateVisualElement(panelElement, FadeTopClass).IgnorePicking();
 
-            var fadeBottom = UIToolkitExtensions.CreateVisualElement(panelElement, FadeBottomClass);
-            fadeBottom.pickingMode = PickingMode.Ignore;
+            var fadeBottom = UIToolkitExtensions.CreateVisualElement(panelElement, FadeBottomClass).IgnorePicking();
 
-            var selectionLane = UIToolkitExtensions.CreateVisualElement(panelElement, SelectionLaneClass);
-            selectionLane.pickingMode = PickingMode.Ignore;
+            var selectionLane = UIToolkitExtensions.CreateVisualElement(panelElement, SelectionLaneClass).IgnorePicking();
 
             viewportElement.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
             viewportElement.RegisterCallback<PointerMoveEvent>(OnPointerMove, TrickleDown.TrickleDown);
@@ -217,11 +212,6 @@ namespace UnityUIToolkit.Extensions
             OpenStateChanged?.Invoke(false);
         }
 
-        private void OnBackdropClicked(ClickEvent evt)
-        {
-            Close();
-        }
-
         private void OnViewportWheel(WheelEvent evt)
         {
             if (!isOpen || items.Length == 0)
@@ -230,8 +220,7 @@ namespace UnityUIToolkit.Extensions
             }
 
             int direction = evt.delta.y > 0f ? 1 : -1;
-            int centreIndex = Mathf.RoundToInt(-currentOffset / RowHeightPx);
-            AnimateToIndex(centreIndex + direction);
+            AnimateToIndex(CentreIndex(currentOffset) + direction);
             evt.StopPropagation();
         }
 
@@ -271,8 +260,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            int centreIndex = Mathf.RoundToInt(-offset / RowHeightPx);
-            int topLogicalIndex = centreIndex - (VisibleRows / 2) - BufferRows;
+            int topLogicalIndex = TopLogicalIndex(offset);
 
             for (int i = 0; i < rowLabels.Count; i++)
             {
@@ -296,7 +284,7 @@ namespace UnityUIToolkit.Extensions
             isDragging = false;
             dragVelocity = 0f;
             lastPointerTime = DateTime.Now.Ticks;
-            (evt.currentTarget as VisualElement)?.CapturePointer(activePointerId);
+            viewportElement.CapturePointer(activePointerId);
             evt.StopPropagation();
         }
 
@@ -341,7 +329,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            (evt.currentTarget as VisualElement)?.ReleasePointer(activePointerId);
+            viewportElement.ReleasePointer(activePointerId);
             activePointerId = -1;
 
             if (!isDragging)
@@ -371,7 +359,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            (evt.currentTarget as VisualElement)?.ReleasePointer(activePointerId);
+            viewportElement.ReleasePointer(activePointerId);
             activePointerId = -1;
             isDragging = false;
             SnapToNearest();
@@ -389,37 +377,32 @@ namespace UnityUIToolkit.Extensions
                 Rect bounds = rowLabels[i].worldBound;
                 if (bounds.yMin <= worldY && worldY <= bounds.yMax)
                 {
-                    int centreIndex = Mathf.RoundToInt(-currentOffset / RowHeightPx);
-                    int topLogicalIndex = centreIndex - (VisibleRows / 2) - BufferRows;
-                    Confirm(topLogicalIndex + i);
+                    Confirm(TopLogicalIndex(currentOffset) + i);
                     return;
                 }
             }
 
-            Confirm(Mathf.RoundToInt(-currentOffset / RowHeightPx));
+            Confirm(CentreIndex(currentOffset));
         }
 
         private void SnapToNearest()
         {
-            int nearest = Mathf.RoundToInt(-currentOffset / RowHeightPx);
-            AnimateToIndex(nearest);
+            AnimateToIndex(CentreIndex(currentOffset));
         }
 
         private void StartCoasting()
         {
-            isCoasting = true;
             coastSchedule = schedule.Execute(CoastStep).Every(16);
         }
 
         private void StopCoasting()
         {
-            if (!isCoasting)
+            if (coastSchedule == null)
             {
                 return;
             }
 
-            isCoasting = false;
-            coastSchedule?.Pause();
+            coastSchedule.Pause();
             coastSchedule = null;
         }
 
@@ -449,7 +432,7 @@ namespace UnityUIToolkit.Extensions
             {
                 currentStep++;
                 float t = currentStep / (float)steps;
-                float easedT = 1f - Mathf.Pow(1f - t, 3f);
+                float easedT = Ease.OutCubic(t);
                 currentOffset = Mathf.Lerp(startOffset, targetOffset, easedT);
                 ApplyOffset(currentOffset);
                 RefreshRowLabels(currentOffset);
@@ -463,6 +446,10 @@ namespace UnityUIToolkit.Extensions
                 }
             }).Every(16);
         }
+
+        private static int CentreIndex(float offset) => Mathf.RoundToInt(-offset / RowHeightPx);
+
+        private static int TopLogicalIndex(float offset) => CentreIndex(offset) - (VisibleRows / 2) - BufferRows;
 
         private float OffsetForIndex(int index)
         {
@@ -481,8 +468,7 @@ namespace UnityUIToolkit.Extensions
 
         private void ApplyOffset(float offset)
         {
-            int centreIndex = Mathf.RoundToInt(-offset / RowHeightPx);
-            float centredOffset = OffsetForIndex(centreIndex);
+            float centredOffset = OffsetForIndex(CentreIndex(offset));
             float fractionalOffset = offset - centredOffset;
             listContainer.style.translate = new Translate(0f, CenteredPoolTranslateY + fractionalOffset, 0f);
         }

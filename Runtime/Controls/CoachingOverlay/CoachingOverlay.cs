@@ -42,29 +42,9 @@ namespace UnityUIToolkit.Extensions
     /// <remarks>
     /// <para>The overlay fills its parent as a pass-through layer; only the cue takes taps, and only when
     /// <see cref="Dismissible"/>. Pass localised text to <see cref="Show"/>; the English defaults are a fallback.</para>
-    /// <para>Props: <c>mode</c>, <c>text</c>, <c>detail</c>, <c>action-text</c>, <c>secondary-action-text</c>,
-    /// <c>progress</c>, <c>progress-indeterminate</c>, <c>placement</c>, <c>top-inset</c>, <c>bottom-inset</c>,
-    /// <c>dismissible</c>.
-    /// Methods: <see cref="Show"/>, <see cref="Hide"/>, <see cref="SetIcon"/> (a gradient disc with an icon, in place of
-    /// the device glyph). Events: <see cref="Dismissed"/> (tapped while dismissible), <see cref="ActionInvoked"/> (the
-    /// optional action, a compact ghost <see cref="PillButton"/> at the bottom right, such as "Cancel placing"),
-    /// <see cref="SecondaryActionInvoked"/> (a second action, a primary pill to the right of the first, such as
-    /// "Keep trying"; with both shown they share the row equally).</para>
+    /// <para>The action is a compact ghost <see cref="PillButton"/> at the bottom right. With both actions shown, they share the row equally.</para>
     /// <para><see cref="Progress"/> draws a thin <see cref="LinearProgress"/> under the detail: 0 to 1, negative hides
     /// it. <see cref="ProgressIndeterminate"/> shows a sweeping segment instead.</para>
-    /// <para>USS classes: <c>coachingOverlay</c> (root), <c>coachingOverlay__cue</c>, <c>coachingOverlay__header</c>,
-    /// <c>coachingOverlay__visual</c>, <c>coachingOverlay__device</c>, <c>coachingOverlay__ground</c>,
-    /// <c>coachingOverlay__disc</c>, <c>coachingOverlay__discIcon</c>, <c>coachingOverlay__text</c>,
-    /// <c>coachingOverlay__detail</c>, <c>coachingOverlay__progress</c>, <c>coachingOverlay__actions</c>,
-    /// <c>coachingOverlay__action</c>, <c>coachingOverlay__secondaryAction</c>.</para>
-    /// <para>Modifier classes: <c>coachingOverlay--shown</c>, <c>coachingOverlay--warn</c> (move slower, too dark),
-    /// <c>coachingOverlay--lookAround</c>, <c>--findSurface</c>, <c>--moveSlower</c>, <c>--tooDark</c>,
-    /// <c>coachingOverlay--swayed</c> (the far point of the sway), <c>coachingOverlay--card</c> (top or bottom),
-    /// <c>coachingOverlay--top</c>, <c>coachingOverlay--bottom</c>, <c>coachingOverlay--hasIcon</c>,
-    /// <c>coachingOverlay--twoActions</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-fg</c>, <c>--surface-border</c>, <c>--surface-accent</c>,
-    /// <c>--c-warn</c>, <c>--radius-card</c>, <c>--radius-sm</c>, <c>--space-2..5</c>, <c>--text-body</c>,
-    /// <c>--font-body-medium</c>, <c>--motion-base</c>, <c>--motion-slow</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class CoachingOverlay : VisualElement
@@ -238,8 +218,7 @@ namespace UnityUIToolkit.Extensions
             get => detailLabel.text;
             set
             {
-                detailLabel.text = value ?? string.Empty;
-                detailLabel.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                detailLabel.SetTextOrHide(value);
             }
         }
 
@@ -295,33 +274,24 @@ namespace UnityUIToolkit.Extensions
             pickingMode = PickingMode.Ignore;
 
             cue = UIToolkitExtensions.CreateVisualElement(this, CueClass);
-            var header = UIToolkitExtensions.CreateVisualElement(cue, HeaderClass);
-            header.pickingMode = PickingMode.Ignore;
+            var header = UIToolkitExtensions.CreateVisualElement(cue, HeaderClass).IgnorePicking();
 
-            visual = UIToolkitExtensions.CreateVisualElement(header, VisualClass);
-            visual.pickingMode = PickingMode.Ignore;
-            var device = UIToolkitExtensions.CreateVisualElement(visual, DeviceClass);
-            device.pickingMode = PickingMode.Ignore;
-            var ground = UIToolkitExtensions.CreateVisualElement(visual, GroundClass);
-            ground.pickingMode = PickingMode.Ignore;
+            visual = UIToolkitExtensions.CreateVisualElement(header, VisualClass).IgnorePicking();
+            var device = UIToolkitExtensions.CreateVisualElement(visual, DeviceClass).IgnorePicking();
+            var ground = UIToolkitExtensions.CreateVisualElement(visual, GroundClass).IgnorePicking();
 
-            disc = UIToolkitExtensions.CreateVisualElement(header, DiscClass);
-            disc.pickingMode = PickingMode.Ignore;
+            disc = UIToolkitExtensions.CreateVisualElement(header, DiscClass).IgnorePicking();
             disc.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
-            discIcon = UIToolkitExtensions.CreateVisualElement(disc, DiscIconClass);
-            discIcon.pickingMode = PickingMode.Ignore;
+            discIcon = UIToolkitExtensions.CreateVisualElement(disc, DiscIconClass).IgnorePicking();
 
-            textLabel = UIToolkitExtensions.CreateVisualElement<Label>(header, TextClass);
-            textLabel.pickingMode = PickingMode.Ignore;
-            detailLabel = UIToolkitExtensions.CreateVisualElement<Label>(cue, DetailClass);
-            detailLabel.pickingMode = PickingMode.Ignore;
+            textLabel = UIToolkitExtensions.CreateVisualElement<Label>(header, TextClass).IgnorePicking();
+            detailLabel = UIToolkitExtensions.CreateVisualElement<Label>(cue, DetailClass).IgnorePicking();
 
             progressBar = new LinearProgress();
             progressBar.AddToClassList(ProgressClass);
             cue.Add(progressBar);
 
-            actions = UIToolkitExtensions.CreateVisualElement(cue, ActionsClass);
-            actions.pickingMode = PickingMode.Ignore;
+            actions = UIToolkitExtensions.CreateVisualElement(cue, ActionsClass).IgnorePicking();
             actionButton = new PillButton { Variant = PillButtonVariant.Ghost, Compact = true };
             actionButton.AddToClassList(ActionClass);
             actionButton.Clicked += () => ActionInvoked?.Invoke();
@@ -349,10 +319,9 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetIcon(Background icon)
         {
-            var has = icon.texture != null || icon.sprite != null || icon.vectorImage != null || icon.renderTexture != null;
-            discIcon.style.backgroundImage = has ? new StyleBackground(icon) : new StyleBackground(StyleKeyword.None);
-            disc.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
-            visual.style.display = has ? DisplayStyle.None : DisplayStyle.Flex;
+            var has = discIcon.SetImageOrNone(icon);
+            disc.SetDisplayed(has);
+            visual.SetDisplayed(!has);
             EnableInClassList(HasIconClass, has);
         }
 
@@ -394,12 +363,19 @@ namespace UnityUIToolkit.Extensions
             _ => string.Empty,
         };
 
+        private static readonly string[] ModeClasses =
+        {
+            RootClass + "--lookAround",
+            RootClass + "--findSurface",
+            RootClass + "--moveSlower",
+            RootClass + "--tooDark",
+        };
+
         private void ApplyMode()
         {
-            foreach (CoachingMode value in Enum.GetValues(typeof(CoachingMode)))
+            for (var i = 0; i < ModeClasses.Length; i++)
             {
-                var name = value.ToString();
-                EnableInClassList($"{RootClass}--{char.ToLowerInvariant(name[0])}{name.Substring(1)}", value == mode);
+                EnableInClassList(ModeClasses[i], i == (int)mode);
             }
 
             EnableInClassList(WarnClass, mode is CoachingMode.MoveSlower or CoachingMode.TooDark);
@@ -410,15 +386,15 @@ namespace UnityUIToolkit.Extensions
         {
             var primary = !string.IsNullOrEmpty(actionButton.Text);
             var secondary = !string.IsNullOrEmpty(secondaryActionButton.Text);
-            actionButton.style.display = primary ? DisplayStyle.Flex : DisplayStyle.None;
-            secondaryActionButton.style.display = secondary ? DisplayStyle.Flex : DisplayStyle.None;
-            actions.style.display = primary || secondary ? DisplayStyle.Flex : DisplayStyle.None;
+            actionButton.SetDisplayed(primary);
+            secondaryActionButton.SetDisplayed(secondary);
+            actions.SetDisplayed(primary || secondary);
             EnableInClassList(TwoActionsClass, primary && secondary);
         }
 
         private void UpdateProgress()
         {
-            progressBar.style.display = progress >= 0f || progressBar.Indeterminate ? DisplayStyle.Flex : DisplayStyle.None;
+            progressBar.SetDisplayed(progress >= 0f || progressBar.Indeterminate);
         }
 
         private void OnCueClicked(ClickEvent evt)

@@ -8,11 +8,11 @@ namespace UnityUIToolkit.Extensions
 {
     /// <summary>
     /// A toggle button that displays a single image which changes via USS classes when toggled.
-    /// Fires <see cref="OnClicked"/> on every pointer-down; use <see cref="IsSelected"/> to read state.
+    /// It fires <see cref="OnClicked"/> on every pointer-down. Read the state from <see cref="IsSelected"/>.
     /// </summary>
     /// <remarks>
-    /// This control is designed to be used in a <see cref="ToggleButtonGroup"/>
-    /// Also, does NOT use the builtin Unity button class to avoid complex style overrides.
+    /// Use this control in a <see cref="ToggleButtonGroup"/>.
+    /// It does not use the Unity button class, to avoid complex style overrides.
     /// </remarks>
     [UxmlElement]
     public partial class ToggleButton : VisualElement
@@ -76,7 +76,7 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetIcon(Background icon)
         {
-            var hasIcon = icon.texture != null || icon.sprite != null || icon.vectorImage != null || icon.renderTexture != null;
+            var hasIcon = icon.HasContent();
             image.style.backgroundImage = hasIcon ? new StyleBackground(icon) : (StyleBackground)StyleKeyword.Null;
             image.style.unityBackgroundImageTintColor = StyleKeyword.Null;
         }

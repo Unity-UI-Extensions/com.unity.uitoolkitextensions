@@ -10,7 +10,7 @@ using UnityEngine.UIElements.Experimental;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// Provides a reusable shake animation for any target VisualElement.
+    /// A reusable shake animation for any VisualElement.
     /// </summary>
     public static class VisualElementShakeUtility
     {
@@ -28,12 +28,9 @@ namespace UnityUIToolkit.Extensions
         /// <summary>
         /// Shakes the target element horizontally for the specified wobble count and wobble speed.
         /// </summary>
-        /// <param name="target">Target visual element to animate.</param>
-        /// <param name="wobbleCount">Number of left/right wobble cycles.</param>
-        /// <param name="wobbleDurationMs">Duration in milliseconds for each wobble segment.</param>
+        /// <param name="wobbleDurationMs">Duration in milliseconds of each wobble segment.</param>
         /// <param name="amplitudePixels">Horizontal wobble amplitude in pixels.</param>
         /// <param name="easingCurve">Optional easing curve. Defaults to <see cref="Easing.OutCubic"/>.</param>
-        /// <param name="onCompleted">Optional callback invoked when wobble completes.</param>
         public static void Shake(
             VisualElement target,
             int wobbleCount = 3,
@@ -79,25 +76,17 @@ namespace UnityUIToolkit.Extensions
 
                 if (segmentIndex >= totalSegments)
                 {
-                    FinishShake(target, state, onCompleted);
+                    StopShake(target, resetToBasePosition: true);
+                    onCompleted?.Invoke();
                     return;
                 }
 
-                float targetOffset;
-                if (segmentIndex == totalSegments - 1)
-                {
-                    targetOffset = 0f;
-                }
-                else
-                {
-                    var direction = segmentIndex % 2 == 0 ? 1f : -1f;
-                    targetOffset = amplitudePixels * direction;
-                }
+                // The last segment returns to rest. The others alternate right and left.
+                var targetOffset = segmentIndex == totalSegments - 1 ? 0f
+                    : segmentIndex % 2 == 0 ? amplitudePixels : -amplitudePixels;
 
-                state.Animation = target.experimental.animation.Start(currentOffset, targetOffset, wobbleDurationMs, (_, value) =>
-                {
-                    ApplyOffset(target, state, value);
-                });
+                state.Animation = target.experimental.animation.Start(currentOffset, targetOffset, wobbleDurationMs,
+                    (_, value) => ApplyOffset(target, state, value));
 
                 state.Animation.KeepAlive();
                 state.Animation.easingCurve = easingCurve ?? Easing.OutCubic;
@@ -116,8 +105,7 @@ namespace UnityUIToolkit.Extensions
         /// <summary>
         /// Stops an active shake for the given element.
         /// </summary>
-        /// <param name="target">Target visual element with an active shake.</param>
-        /// <param name="resetToBasePosition">If true, returns to the original translate position.</param>
+        /// <param name="resetToBasePosition">If true, returns the element to its original translate position.</param>
         public static void StopShake(VisualElement target, bool resetToBasePosition = true)
         {
             if (target == null || !ActiveShakes.TryGetValue(target, out var state))
@@ -129,14 +117,10 @@ namespace UnityUIToolkit.Extensions
 
             if (resetToBasePosition)
             {
-                RestoreBasePosition(target, state);
+                ApplyOffset(target, state, 0f);
             }
 
-            if (state.DetachCallback != null)
-            {
-                target.UnregisterCallback(state.DetachCallback);
-            }
-
+            target.UnregisterCallback(state.DetachCallback);
             ActiveShakes.Remove(target);
         }
 
@@ -146,27 +130,6 @@ namespace UnityUIToolkit.Extensions
                 new Length(state.BaseX + offsetX, LengthUnit.Pixel),
                 new Length(state.BaseY, LengthUnit.Pixel),
                 state.BaseZ);
-        }
-
-        private static void RestoreBasePosition(VisualElement target, ShakeState state)
-        {
-            target.style.translate = new Translate(
-                new Length(state.BaseX, LengthUnit.Pixel),
-                new Length(state.BaseY, LengthUnit.Pixel),
-                state.BaseZ);
-        }
-
-        private static void FinishShake(VisualElement target, ShakeState state, Action onCompleted)
-        {
-            RestoreBasePosition(target, state);
-
-            if (state.DetachCallback != null)
-            {
-                target.UnregisterCallback(state.DetachCallback);
-            }
-
-            ActiveShakes.Remove(target);
-            onCompleted?.Invoke();
         }
 
         private static void StopAnimation(ShakeState state)

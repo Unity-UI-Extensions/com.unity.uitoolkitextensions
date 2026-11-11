@@ -13,13 +13,6 @@ namespace UnityUIToolkit.Extensions
     /// <para>Call <see cref="SetBearing"/> each frame with the direction to the stop relative to where the camera
     /// faces: 0 is straight ahead, positive turns clockwise. The arrow follows without easing, so it never spins the
     /// long way round.</para>
-    /// <para>Props: <c>title</c>, <c>detail</c> (empty hides it), <c>bearing</c>, <c>arrived</c>.</para>
-    /// <para>USS classes: <c>wayfinderCard</c> (root), <c>wayfinderCard__disc</c>, <c>wayfinderCard__arrow</c>,
-    /// <c>wayfinderCard__check</c>, <c>wayfinderCard__texts</c>, <c>wayfinderCard__title</c>,
-    /// <c>wayfinderCard__detail</c>. Modifier: <c>wayfinderCard--arrived</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--c-on-primary</c>, <c>--radius-card</c>, <c>--radius-pill</c>, <c>--text-subtitle</c>,
-    /// <c>--text-caption</c>, <c>--font-display</c>, <c>--font-body</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class WayfinderCard : VisualElement
@@ -49,7 +42,7 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// A line under the title, such as "Ahead on the left, past the test cell."; empty hides it.
+        /// A line under the title, such as "Ahead on the left, past the test cell." Empty hides it.
         /// </summary>
         [UxmlAttribute("detail")]
         public string Detail
@@ -57,8 +50,7 @@ namespace UnityUIToolkit.Extensions
             get => detailLabel.text;
             set
             {
-                detailLabel.text = value ?? string.Empty;
-                detailLabel.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                detailLabel.SetTextOrHide(value);
             }
         }
 
@@ -72,9 +64,6 @@ namespace UnityUIToolkit.Extensions
             set => SetBearing(value);
         }
 
-        /// <summary>
-        /// Swaps the arrow for a check.
-        /// </summary>
         [UxmlAttribute("arrived")]
         public bool Arrived
         {
@@ -92,20 +81,14 @@ namespace UnityUIToolkit.Extensions
             this.UseThemeTokens();
             AddToClassList(RootClass);
 
-            var disc = UIToolkitExtensions.CreateVisualElement(this, DiscClass);
-            disc.pickingMode = PickingMode.Ignore;
+            var disc = UIToolkitExtensions.CreateVisualElement(this, DiscClass).IgnorePicking();
             disc.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
-            arrow = UIToolkitExtensions.CreateVisualElement(disc, ArrowClass);
-            arrow.pickingMode = PickingMode.Ignore;
-            var check = UIToolkitExtensions.CreateVisualElement(disc, CheckClass);
-            check.pickingMode = PickingMode.Ignore;
+            arrow = UIToolkitExtensions.CreateVisualElement(disc, ArrowClass).IgnorePicking();
+            var check = UIToolkitExtensions.CreateVisualElement(disc, CheckClass).IgnorePicking();
 
-            var texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass);
-            texts.pickingMode = PickingMode.Ignore;
-            titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass);
-            titleLabel.pickingMode = PickingMode.Ignore;
-            detailLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, DetailClass);
-            detailLabel.pickingMode = PickingMode.Ignore;
+            var texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass).IgnorePicking();
+            titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass).IgnorePicking();
+            detailLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, DetailClass).IgnorePicking();
 
             Detail = null;
             SetBearing(0f);

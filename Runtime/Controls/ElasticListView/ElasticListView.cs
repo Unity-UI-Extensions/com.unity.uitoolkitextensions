@@ -46,7 +46,7 @@ namespace UnityUIToolkit.Extensions
         public const string LoadMoreSpinnerClass = "elasticListView__loadMoreSpinner";
 
         private readonly ScrollView scrollView;
-        private VisualElement scrollViewport;
+        private readonly VisualElement scrollViewport;
         private readonly VisualElement manualViewport;
         private readonly VisualElement content;
         private readonly Label emptyLabel;
@@ -57,7 +57,6 @@ namespace UnityUIToolkit.Extensions
         private float touchElasticityAmount = 0.12f;
         private bool isUsingManualViewport;
         private int activeManualPointerId = -1;
-        private bool isManualPointerDown;
         private bool isManualDragging;
         private float manualPointerStartY;
         private float currentManualOffsetY;
@@ -119,13 +118,13 @@ namespace UnityUIToolkit.Extensions
             manualViewport.RegisterCallback<PointerCaptureOutEvent>(OnManualElasticPointerCaptureOut);
 
             scrollView.RegisterCallback<PointerMoveEvent>(OnScrollLoadMorePointerMove, TrickleDown.TrickleDown);
-            scrollView.RegisterCallback<PointerUpEvent>(OnScrollLoadMorePointerUp, TrickleDown.TrickleDown);
-            scrollView.RegisterCallback<PointerCancelEvent>(OnScrollLoadMorePointerCancel, TrickleDown.TrickleDown);
+            scrollView.RegisterCallback<PointerUpEvent>(_ => ReArmLoadMore(), TrickleDown.TrickleDown);
+            scrollView.RegisterCallback<PointerCancelEvent>(_ => ReArmLoadMore(), TrickleDown.TrickleDown);
         }
 
         private bool HasFooter => loadMoreFooter != null && loadMoreFooter.hierarchy.parent == content;
 
-        public int ItemCount => content == null ? 0 : content.childCount - (HasFooter ? 1 : 0);
+        public int ItemCount => content.childCount - (HasFooter ? 1 : 0);
 
         [UxmlAttribute("empty-text")]
         public string EmptyStateText
@@ -245,7 +244,7 @@ namespace UnityUIToolkit.Extensions
 
             schedule.Execute(() =>
             {
-                if (resetScroll && scrollView != null)
+                if (resetScroll)
                 {
                     scrollView.scrollOffset = Vector2.zero;
                 }
@@ -256,11 +255,6 @@ namespace UnityUIToolkit.Extensions
 
         public void EnableTouchElasticity(float elasticity = 0.12f)
         {
-            if (scrollView == null)
-            {
-                return;
-            }
-
             touchElasticityEnabled = true;
             touchElasticityAmount = Mathf.Max(0f, elasticity);
             RefreshViewportMode();
@@ -268,11 +262,6 @@ namespace UnityUIToolkit.Extensions
 
         public void RefreshLayout()
         {
-            if (scrollView == null || content == null || manualViewport == null)
-            {
-                return;
-            }
-
             UpdateEmptyState();
 
             if (ItemCount == 0)
@@ -287,12 +276,7 @@ namespace UnityUIToolkit.Extensions
         {
             bool empty = ItemCount == 0;
 
-            if (emptyLabel != null)
-            {
-                emptyLabel.style.display = empty && !string.IsNullOrEmpty(emptyLabel.text)
-                    ? DisplayStyle.Flex
-                    : DisplayStyle.None;
-            }
+            emptyLabel.SetDisplayed(empty && !string.IsNullOrEmpty(emptyLabel.text));
 
             if (empty)
             {
@@ -313,16 +297,11 @@ namespace UnityUIToolkit.Extensions
 
         private void RefreshViewportMode()
         {
-            if (scrollView == null || content == null || manualViewport == null)
-            {
-                return;
-            }
-
             bool shouldUseManualViewport = ContentFitsViewport();
             EnsureViewportHost(shouldUseManualViewport);
 
-            manualViewport.style.display = shouldUseManualViewport ? DisplayStyle.Flex : DisplayStyle.None;
-            scrollView.style.display = shouldUseManualViewport ? DisplayStyle.None : DisplayStyle.Flex;
+            manualViewport.SetDisplayed(shouldUseManualViewport);
+            scrollView.SetDisplayed(!shouldUseManualViewport);
 
             if (shouldUseManualViewport)
             {
@@ -333,24 +312,18 @@ namespace UnityUIToolkit.Extensions
 
             ResetManualElasticInteraction(resetOffset: true, releaseCapture: true);
 
+            scrollView.touchScrollBehavior = touchElasticityEnabled
+                ? ScrollView.TouchScrollBehavior.Elastic
+                : ScrollView.TouchScrollBehavior.Clamped;
+
             if (touchElasticityEnabled)
             {
-                scrollView.touchScrollBehavior = ScrollView.TouchScrollBehavior.Elastic;
                 scrollView.elasticity = touchElasticityAmount;
-            }
-            else
-            {
-                scrollView.touchScrollBehavior = ScrollView.TouchScrollBehavior.Clamped;
             }
         }
 
         private void EnsureViewportHost(bool useManualViewport)
         {
-            if (content == null || scrollView == null || manualViewport == null)
-            {
-                return;
-            }
-
             var expectedParent = useManualViewport ? manualViewport : scrollView.contentContainer;
             bool hostAlreadyCorrect = isUsingManualViewport == useManualViewport && content.hierarchy.parent == expectedParent;
             if (hostAlreadyCorrect)
@@ -382,55 +355,37 @@ namespace UnityUIToolkit.Extensions
 
         private float GetViewportHeight()
         {
+            float manualContentHeight = manualViewport.contentRect.height;
+
             if (isUsingManualViewport)
             {
-                if (manualViewport != null && manualViewport.layout.height > 0f)
+                if (manualViewport.layout.height > 0f)
                 {
                     return manualViewport.layout.height;
                 }
 
-                if (manualViewport != null && manualViewport.contentRect.height > 0f)
+                if (manualContentHeight > 0f)
                 {
-                    return manualViewport.contentRect.height;
+                    return manualContentHeight;
                 }
             }
 
-            if (scrollViewport == null && scrollView != null)
-            {
-                scrollViewport = scrollView.Q<VisualElement>(className: ScrollView.viewportUssClassName);
-            }
-
-            if (scrollViewport != null && scrollViewport.layout.height > 0f)
+            if (scrollViewport.layout.height > 0f)
             {
                 return scrollViewport.layout.height;
             }
 
-            if (scrollView != null && scrollView.contentRect.height > 0f)
+            if (scrollView.contentRect.height > 0f)
             {
                 return scrollView.contentRect.height;
             }
 
-            if (manualViewport != null && manualViewport.contentRect.height > 0f)
-            {
-                return manualViewport.contentRect.height;
-            }
-
-            return 0f;
+            return manualContentHeight > 0f ? manualContentHeight : 0f;
         }
 
         private float GetContentHeight()
         {
-            if (content == null)
-            {
-                return 0f;
-            }
-
-            if (content.layout.height > 0f)
-            {
-                return content.layout.height;
-            }
-
-            return content.contentRect.height;
+            return content.layout.height > 0f ? content.layout.height : content.contentRect.height;
         }
 
         private bool ContentFitsViewport()
@@ -438,12 +393,7 @@ namespace UnityUIToolkit.Extensions
             float viewportHeight = GetViewportHeight();
             float contentHeight = GetContentHeight();
 
-            if (viewportHeight <= 0f)
-            {
-                return true;
-            }
-
-            return contentHeight <= viewportHeight + ScrollFitTolerancePx;
+            return viewportHeight <= 0f || contentHeight <= viewportHeight + ScrollFitTolerancePx;
         }
 
         public void EnableLoadMore()
@@ -491,25 +441,19 @@ namespace UnityUIToolkit.Extensions
 
         private void EnsureLoadMoreFooter()
         {
-            if (content == null || !loadMoreEnabled)
+            if (!loadMoreEnabled)
             {
                 return;
             }
 
             if (loadMoreFooter == null)
             {
-                loadMoreFooter = UIToolkitExtensions.CreateVisualElement(LoadMoreFooterClass);
-                loadMoreFooter.pickingMode = PickingMode.Ignore;
+                loadMoreFooter = UIToolkitExtensions.CreateVisualElement(LoadMoreFooterClass).IgnorePicking();
                 loadMoreFooter.style.display = DisplayStyle.None;
                 loadMoreSpinner = UIToolkitExtensions.CreateVisualElement<LoadingIcon>(loadMoreFooter, LoadMoreSpinnerClass);
             }
 
-            if (loadMoreFooter.hierarchy.parent != content)
-            {
-                loadMoreFooter.RemoveFromHierarchy();
-                content.Add(loadMoreFooter);
-            }
-            else if (content.IndexOf(loadMoreFooter) != content.childCount - 1)
+            if (loadMoreFooter.hierarchy.parent != content || content.IndexOf(loadMoreFooter) != content.childCount - 1)
             {
                 loadMoreFooter.RemoveFromHierarchy();
                 content.Add(loadMoreFooter);
@@ -537,7 +481,7 @@ namespace UnityUIToolkit.Extensions
 
         private void OnScrollLoadMorePointerMove(PointerMoveEvent evt)
         {
-            if (!loadMoreEnabled || loadMoreInFlight || !loadMoreArmed || isUsingManualViewport || scrollView == null)
+            if (!loadMoreEnabled || loadMoreInFlight || !loadMoreArmed || isUsingManualViewport)
             {
                 return;
             }
@@ -558,23 +502,8 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        private void OnScrollLoadMorePointerUp(PointerUpEvent evt)
-        {
-            ReArmLoadMore();
-        }
-
-        private void OnScrollLoadMorePointerCancel(PointerCancelEvent evt)
-        {
-            ReArmLoadMore();
-        }
-
         private bool IsAtScrollBottom(float thresholdPx)
         {
-            if (scrollView == null)
-            {
-                return false;
-            }
-
             float maxScrollY = Mathf.Max(0f, GetContentHeight() - GetViewportHeight());
             return scrollView.scrollOffset.y >= maxScrollY - thresholdPx;
         }
@@ -588,14 +517,13 @@ namespace UnityUIToolkit.Extensions
 
             StopManualSnapBackAnimation();
             activeManualPointerId = evt.pointerId;
-            isManualPointerDown = true;
             isManualDragging = false;
             manualPointerStartY = evt.position.y;
         }
 
         private void OnManualElasticPointerMove(PointerMoveEvent evt)
         {
-            if (!isManualPointerDown || evt.pointerId != activeManualPointerId || !isUsingManualViewport)
+            if (activeManualPointerId == -1 || evt.pointerId != activeManualPointerId || !isUsingManualViewport)
             {
                 return;
             }
@@ -625,25 +553,17 @@ namespace UnityUIToolkit.Extensions
 
         private void OnManualElasticPointerUp(PointerUpEvent evt)
         {
-            if (evt.pointerId != activeManualPointerId)
-            {
-                return;
-            }
-
-            ReArmLoadMore();
-
-            bool shouldStopPropagation = isManualDragging || Mathf.Abs(currentManualOffsetY) > 0.01f;
-            CompleteManualElasticInteraction();
-
-            if (shouldStopPropagation)
-            {
-                evt.StopImmediatePropagation();
-            }
+            EndManualElasticPointer(evt, evt.pointerId);
         }
 
         private void OnManualElasticPointerCancel(PointerCancelEvent evt)
         {
-            if (evt.pointerId != activeManualPointerId)
+            EndManualElasticPointer(evt, evt.pointerId);
+        }
+
+        private void EndManualElasticPointer(EventBase evt, int pointerId)
+        {
+            if (pointerId != activeManualPointerId)
             {
                 return;
             }
@@ -651,7 +571,7 @@ namespace UnityUIToolkit.Extensions
             ReArmLoadMore();
 
             bool shouldStopPropagation = isManualDragging || Mathf.Abs(currentManualOffsetY) > 0.01f;
-            AbortManualElasticInteraction();
+            EndManualElasticInteraction();
 
             if (shouldStopPropagation)
             {
@@ -661,17 +581,17 @@ namespace UnityUIToolkit.Extensions
 
         private void OnManualElasticPointerCaptureOut(PointerCaptureOutEvent evt)
         {
-            if (evt.pointerId != activeManualPointerId || !isManualPointerDown)
+            if (evt.pointerId != activeManualPointerId || activeManualPointerId == -1)
             {
                 return;
             }
 
-            AbortManualElasticInteraction();
+            EndManualElasticInteraction();
         }
 
         private bool ShouldHandleManualElastic(IPointerEvent evt)
         {
-            if (!isUsingManualViewport || manualViewport == null || content == null)
+            if (!isUsingManualViewport)
             {
                 return false;
             }
@@ -684,25 +604,7 @@ namespace UnityUIToolkit.Extensions
             return activeManualPointerId == -1;
         }
 
-        private void CompleteManualElasticInteraction()
-        {
-            int pointerId = activeManualPointerId;
-            bool shouldSnapBack = Mathf.Abs(currentManualOffsetY) > 0.01f;
-
-            ClearManualPointerState();
-            ReleaseManualPointerCapture(pointerId);
-
-            if (shouldSnapBack)
-            {
-                StartManualSnapBackAnimation();
-            }
-            else
-            {
-                ApplyManualElasticOffset(0f);
-            }
-        }
-
-        private void AbortManualElasticInteraction()
+        private void EndManualElasticInteraction()
         {
             int pointerId = activeManualPointerId;
 
@@ -713,7 +615,7 @@ namespace UnityUIToolkit.Extensions
 
         private void StartManualSnapBackAnimation()
         {
-            if (content == null || Mathf.Abs(currentManualOffsetY) <= 0.01f)
+            if (Mathf.Abs(currentManualOffsetY) <= 0.01f)
             {
                 ApplyManualElasticOffset(0f);
                 return;
@@ -726,7 +628,7 @@ namespace UnityUIToolkit.Extensions
                 0f,
                 ManualElasticSnapBackDurationMs,
                 (_, value) => ApplyManualElasticOffset(value));
-            manualSnapBackAnimation.easingCurve = EaseOutCubic;
+            manualSnapBackAnimation.easingCurve = Ease.OutCubic;
             manualSnapBackAnimation.KeepAlive();
             manualSnapBackAnimation.onAnimationCompleted += () =>
             {
@@ -741,8 +643,10 @@ namespace UnityUIToolkit.Extensions
             {
                 manualSnapBackAnimation?.Stop();
             }
-            catch
-            { }
+            catch (InvalidOperationException)
+            {
+                // UI Toolkit can recycle an animation while a reference to it still exists.
+            }
             finally
             {
                 manualSnapBackAnimation = null;
@@ -753,10 +657,7 @@ namespace UnityUIToolkit.Extensions
         {
             currentManualOffsetY = offsetY;
 
-            if (content != null)
-            {
-                content.style.translate = new Translate(0f, offsetY, 0f);
-            }
+            content.style.translate = new Translate(0f, offsetY, 0f);
         }
 
         private void ResetManualElasticInteraction(bool resetOffset, bool releaseCapture)
@@ -780,24 +681,18 @@ namespace UnityUIToolkit.Extensions
         private void ClearManualPointerState()
         {
             activeManualPointerId = -1;
-            isManualPointerDown = false;
             isManualDragging = false;
             manualPointerStartY = 0f;
         }
 
         private void ReleaseManualPointerCapture(int pointerId)
         {
-            if (manualViewport == null || pointerId == -1 || !manualViewport.HasPointerCapture(pointerId))
+            if (pointerId == -1 || !manualViewport.HasPointerCapture(pointerId))
             {
                 return;
             }
 
             manualViewport.ReleasePointer(pointerId);
-        }
-
-        private static float EaseOutCubic(float t)
-        {
-            return 1f - Mathf.Pow(1f - t, 3f);
         }
     }
 }

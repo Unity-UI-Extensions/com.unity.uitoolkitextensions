@@ -11,16 +11,8 @@ namespace UnityUIToolkit.Extensions
     /// result count, a debounced query event and a submit event.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>placeholder</c>, <c>value</c>, <c>debounce-ms</c>, <c>result-count</c> (negative hides it),
-    /// <c>keyboard-type</c>. Events: <see cref="QueryChanged"/> (after the debounce), <see cref="Submitted"/>
-    /// (Enter or the keyboard's done key), <see cref="Cleared"/>. Methods: <see cref="ClearQuery"/>,
-    /// <see cref="FocusInput"/>.</para>
-    /// <para>USS classes: <c>searchField</c> (root), <c>searchField__icon</c>, <c>searchField__input</c>
-    /// (the RoundedInputField), <c>searchField__count</c>, <c>searchField__clear</c>.</para>
-    /// <para>Modifier classes: <c>searchField--hasValue</c> (shows the clear button), <c>searchField--focused</c>.</para>
-    /// <para>Tokens read: <c>--surface-raised</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--surface-border</c>, <c>--surface-accent</c>, <c>--surface-pressed</c>, <c>--radius-pill</c>,
-    /// <c>--space-1..4</c>, <c>--text-body</c>, <c>--text-caption</c>, <c>--font-body</c>.</para>
+    /// <para><see cref="Submitted"/> is raised by Enter or the keyboard's done key.
+    /// The class <c>searchField--hasValue</c> shows the clear button.</para>
     /// </remarks>
     [UxmlElement]
     public partial class SearchField : VisualElement
@@ -47,19 +39,10 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public event Action<string> QueryChanged;
 
-        /// <summary>
-        /// Raised with the query when the user submits it.
-        /// </summary>
         public event Action<string> Submitted;
 
-        /// <summary>
-        /// Raised when the clear button empties the field.
-        /// </summary>
         public event Action Cleared;
 
-        /// <summary>
-        /// The inner field; exposed for tests and focus handling.
-        /// </summary>
         public TextField TextField => textField;
 
         [UxmlAttribute("placeholder")]
@@ -92,7 +75,7 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// The number of results to show after the query; negative hides the count.
+        /// The number of results to show after the query. A negative value hides the count.
         /// </summary>
         [UxmlAttribute("result-count")]
         public int ResultCount
@@ -102,7 +85,7 @@ namespace UnityUIToolkit.Extensions
             {
                 resultCount = value;
                 countLabel.text = value >= 0 ? value.ToString() : string.Empty;
-                countLabel.style.display = value >= 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                countLabel.SetDisplayed(value >= 0);
             }
         }
 
@@ -120,8 +103,7 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
             this.MakePill();
 
-            var icon = UIToolkitExtensions.CreateVisualElement(this, IconClass);
-            icon.pickingMode = PickingMode.Ignore;
+            var icon = UIToolkitExtensions.CreateVisualElement(this, IconClass).IgnorePicking();
 
             input = new RoundedInputField();
             input.AddToClassList(InputClass);
@@ -129,8 +111,7 @@ namespace UnityUIToolkit.Extensions
             textField = input.Q<TextField>();
             textField.keyboardType = TouchScreenKeyboardType.Search;
 
-            countLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, CountClass);
-            countLabel.pickingMode = PickingMode.Ignore;
+            countLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, CountClass).IgnorePicking();
 
             clearButton = UIToolkitExtensions.CreateVisualElement(this, ClearClass);
             clearButton.focusable = true;
@@ -216,7 +197,7 @@ namespace UnityUIToolkit.Extensions
         {
             var has = Value.Length > 0;
             EnableInClassList(HasValueClass, has);
-            clearButton.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            clearButton.SetDisplayed(has);
         }
     }
 }

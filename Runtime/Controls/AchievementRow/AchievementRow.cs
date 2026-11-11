@@ -11,13 +11,7 @@ namespace UnityUIToolkit.Extensions
     /// "Conversationalist · 2 of 3 characters met", and an optional <see cref="LinearProgress"/>.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>title-text</c>, <c>progress</c> (negative hides the bar). Method: <see cref="SetIcon"/>.
-    /// Event: <see cref="Clicked"/>.</para>
-    /// <para>USS classes: <c>achievementRow</c> (root), <c>achievementRow__badge</c>, <c>achievementRow__icon</c>,
-    /// <c>achievementRow__texts</c>, <c>achievementRow__title</c>, <c>achievementRow__progress</c>.</para>
-    /// <para>Tokens read: <c>--surface-highlight</c>, <c>--surface-highlight-border</c>, <c>--surface-fg</c>,
-    /// <c>--c-on-primary</c>, <c>--grad-brand-start/end</c>, <c>--radius-pill</c>, <c>--space-1</c>, <c>--space-3</c>,
-    /// <c>--text-caption</c>, <c>--font-body-medium</c>, plus those of LinearProgress.</para>
+    /// <para>A negative <c>progress</c> hides the bar.</para>
     /// </remarks>
     [UxmlElement]
     public partial class AchievementRow : VisualElement
@@ -64,14 +58,11 @@ namespace UnityUIToolkit.Extensions
             this.UseThemeTokens();
             AddToClassList(RootClass);
 
-            var badge = UIToolkitExtensions.CreateVisualElement(this, BadgeClass);
-            badge.pickingMode = PickingMode.Ignore;
+            var badge = UIToolkitExtensions.CreateVisualElement(this, BadgeClass).IgnorePicking();
             badge.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
-            icon = UIToolkitExtensions.CreateVisualElement(badge, IconClass);
-            icon.pickingMode = PickingMode.Ignore;
+            icon = UIToolkitExtensions.CreateVisualElement(badge, IconClass).IgnorePicking();
 
-            var texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass);
-            texts.pickingMode = PickingMode.Ignore;
+            var texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass).IgnorePicking();
             title = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass);
             progress = new LinearProgress();
             progress.AddToClassList(ProgressClass);
@@ -90,8 +81,7 @@ namespace UnityUIToolkit.Extensions
 
         public void SetIcon(Background image)
         {
-            var has = image.texture != null || image.sprite != null || image.vectorImage != null || image.renderTexture != null;
-            icon.style.backgroundImage = has ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
+            var has = icon.SetImageOrNone(image);
         }
     }
 }

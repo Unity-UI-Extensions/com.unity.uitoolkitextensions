@@ -8,14 +8,13 @@ using UnityEngine.UIElements;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// An editable list of social links. Each row is a platform-labelled URL field; an "add" button
-    /// inserts a new row whose platform is chosen from a <see cref="DropDownControl"/> wheel picker
-    /// (only platforms not already present are offered). Choosing a platform commits the row;
-    /// dismissing the picker without a choice discards it.
-    ///
-    /// Platform display names and field placeholders are supplied by optional resolver delegates
-    /// (<see cref="PlatformNameResolver"/> / <see cref="PlatformPlaceholderResolver"/>) so the control
-    /// carries no localization dependency — they default to the enum name and a generic placeholder.
+    /// An editable list of social links. Each row is a platform-labelled URL field. An "add" button
+    /// inserts a new row whose platform is chosen from a <see cref="DropDownControl"/> wheel picker.
+    /// The picker offers only platforms not already present. Choosing a platform commits the row.
+    /// Dismissing the picker without a choice discards it.
+    /// Optional resolver delegates (<see cref="PlatformNameResolver"/> and <see cref="PlatformPlaceholderResolver"/>)
+    /// supply platform display names and field placeholders, so the control has no localization dependency.
+    /// They default to the enum name and a generic placeholder.
     /// </summary>
     [UxmlElement]
     public partial class SocialLinkContainer : VisualElement
@@ -81,7 +80,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 labelField.text = value;
-                labelField.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                labelField.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -117,7 +116,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 isInEditMode = value;
-                addButton.style.display = isInEditMode ? DisplayStyle.Flex : DisplayStyle.None;
+                addButton.SetDisplayed(isInEditMode);
             }
         }
 
@@ -150,9 +149,7 @@ namespace UnityUIToolkit.Extensions
             return socialContainer;
         }
 
-        /// <summary>
-        /// Insert a pending row containing a platform picker pre-populated with the platforms not yet used. Picking a platform turns the pending row into a real one; dismissing the picker without a choice removes it again.
-        /// </summary>
+        // Inserts a pending row with a picker of the unused platforms. Picking one makes the row real. Dismissing the picker removes it.
         private void BeginAddSocial()
         {
             if (pendingSocialRow != null)
@@ -222,12 +219,9 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            if (pendingPicker != null)
-            {
-                pendingPicker.ValueChanged -= OnPlatformPicked;
-                pendingPicker.OpenStateChanged -= OnPickerOpenStateChanged;
-                pendingPicker = null;
-            }
+            pendingPicker.ValueChanged -= OnPlatformPicked;
+            pendingPicker.OpenStateChanged -= OnPickerOpenStateChanged;
+            pendingPicker = null;
 
             pendingPlatformLookup.Clear();
             pendingSocialRow.RemoveFromHierarchy();
@@ -235,10 +229,12 @@ namespace UnityUIToolkit.Extensions
             UpdateAddButtonState();
         }
 
+        private static readonly SocialPlatform[] AllPlatforms = (SocialPlatform[])Enum.GetValues(typeof(SocialPlatform));
+
         private List<SocialPlatform> GetAvailablePlatforms()
         {
             var available = new List<SocialPlatform>();
-            foreach (SocialPlatform platform in Enum.GetValues(typeof(SocialPlatform)))
+            foreach (var platform in AllPlatforms)
             {
                 if (socialsContainer.Q(name: platform.ToString()) == null)
                 {
@@ -286,7 +282,7 @@ namespace UnityUIToolkit.Extensions
                     continue;
                 }
 
-                if (!string.IsNullOrEmpty(child.name) && Enum.TryParse<SocialPlatform>(child.name, out _))
+                if (Enum.TryParse<SocialPlatform>(child.name, out _))
                 {
                     var textField = child.Q<TextField>(className: ContainerChildInputClass);
                     if (textField != null && !string.IsNullOrWhiteSpace(textField.value))

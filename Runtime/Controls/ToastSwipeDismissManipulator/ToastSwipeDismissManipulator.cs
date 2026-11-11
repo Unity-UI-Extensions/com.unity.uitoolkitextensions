@@ -8,7 +8,7 @@ using UnityEngine.UIElements.Experimental;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// A manipulator that enables swipe-to-dismiss behavior for a toast-like UI element.
+    /// A manipulator that adds swipe-to-dismiss to a toast-like element.
     /// </summary>
     public sealed class ToastSwipeDismissManipulator : PointerManipulator
     {
@@ -23,7 +23,6 @@ namespace UnityUIToolkit.Extensions
         private const float SwipeAxisLockThreshold = 12f;
         private const float SwipeDismissThreshold = 80f;
         private const float DismissVelocityThreshold = 1100f;
-        private const float DragFollowFactor = 1f;
         private const int SnapBackDurationMs = 140;
         private const int DismissDurationMs = 180;
 
@@ -41,7 +40,6 @@ namespace UnityUIToolkit.Extensions
         private ValueAnimation<float> dismissAnimation;
         private int activePointerId = -1;
         private bool isPointerDown;
-        private bool hasSwipeAxisLock;
         private SwipeAxis swipeAxis = SwipeAxis.None;
         private SwipeAxis offsetAxis = SwipeAxis.None;
         private bool isDragging;
@@ -52,7 +50,6 @@ namespace UnityUIToolkit.Extensions
         private float pointerVelocityX;
         private float pointerVelocityY;
         private float currentOffset;
-        private int moveEventCount;
 
         public ToastSwipeDismissManipulator(
             Func<bool> canInteract,
@@ -82,7 +79,6 @@ namespace UnityUIToolkit.Extensions
             target.RegisterCallback<PointerMoveEvent>(OnPointerMove);
             target.RegisterCallback<PointerUpEvent>(OnPointerUp);
             target.RegisterCallback<PointerCancelEvent>(OnPointerCancel);
-            target.RegisterCallback<PointerCaptureEvent>(OnPointerCaptured);
             target.RegisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
         }
 
@@ -92,7 +88,6 @@ namespace UnityUIToolkit.Extensions
             target.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
             target.UnregisterCallback<PointerUpEvent>(OnPointerUp);
             target.UnregisterCallback<PointerCancelEvent>(OnPointerCancel);
-            target.UnregisterCallback<PointerCaptureEvent>(OnPointerCaptured);
             target.UnregisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
             ResetState();
         }
@@ -132,7 +127,6 @@ namespace UnityUIToolkit.Extensions
 
             activePointerId = evt.pointerId;
             isPointerDown = true;
-            hasSwipeAxisLock = false;
             swipeAxis = SwipeAxis.None;
             isDragging = false;
             pointerStart = evt.position;
@@ -140,7 +134,6 @@ namespace UnityUIToolkit.Extensions
             lastPointerSampleTime = Time.realtimeSinceStartup;
             pointerVelocityX = 0f;
             pointerVelocityY = 0f;
-            moveEventCount = 0;
 
             onInteractionStarted?.Invoke();
         }
@@ -159,23 +152,20 @@ namespace UnityUIToolkit.Extensions
             pointerVelocityY = (evt.position.y - lastPointerPosition.y) / sampleDeltaTime;
             lastPointerPosition = evt.position;
             lastPointerSampleTime = currentSampleTime;
-            moveEventCount++;
 
-            if (!hasSwipeAxisLock && delta.magnitude >= SwipeAxisLockThreshold)
+            if (swipeAxis == SwipeAxis.None && delta.magnitude >= SwipeAxisLockThreshold)
             {
                 bool isHorizontalDrag = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y);
                 if (isHorizontalDrag)
                 {
-                    hasSwipeAxisLock = true;
                     swipeAxis = SwipeAxis.Horizontal;
                 }
                 else if (delta.y < 0f)
                 {
-                    hasSwipeAxisLock = true;
                     swipeAxis = SwipeAxis.Vertical;
                 }
 
-                if (hasSwipeAxisLock)
+                if (swipeAxis != SwipeAxis.None)
                 {
                     offsetAxis = swipeAxis;
                     isDragging = true;
@@ -185,14 +175,14 @@ namespace UnityUIToolkit.Extensions
 
             bool hasCapture = target.HasPointerCapture(activePointerId);
 
-            if (!hasSwipeAxisLock || swipeAxis == SwipeAxis.None || !hasCapture)
+            if (swipeAxis == SwipeAxis.None || !hasCapture)
             {
                 return;
             }
 
             float axisDelta = swipeAxis == SwipeAxis.Horizontal ? delta.x : Mathf.Min(delta.y, 0f);
             float maxFollowOffset = Mathf.Max(GetDismissTravelDistance(), 0f);
-            float followOffset = Mathf.Clamp(axisDelta * DragFollowFactor, -maxFollowOffset, maxFollowOffset);
+            float followOffset = Mathf.Clamp(axisDelta, -maxFollowOffset, maxFollowOffset);
             ApplyOffset(followOffset);
             evt.StopPropagation();
         }
@@ -220,14 +210,6 @@ namespace UnityUIToolkit.Extensions
             if (shouldStopPropagation)
             {
                 evt.StopPropagation();
-            }
-        }
-
-        private void OnPointerCaptured(PointerCaptureEvent evt)
-        {
-            if (evt.pointerId != activePointerId)
-            {
-                return;
             }
         }
 
@@ -304,11 +286,6 @@ namespace UnityUIToolkit.Extensions
 
         private bool ShouldDismissOnRelease(Vector3 delta)
         {
-            if (!hasSwipeAxisLock)
-            {
-                return false;
-            }
-
             switch (swipeAxis)
             {
                 case SwipeAxis.Horizontal:
@@ -333,7 +310,7 @@ namespace UnityUIToolkit.Extensions
 
         private bool ShouldInvokeTap(Vector3 delta)
         {
-            if (hasSwipeAxisLock)
+            if (swipeAxis != SwipeAxis.None)
             {
                 return false;
             }
@@ -382,7 +359,7 @@ namespace UnityUIToolkit.Extensions
             StopSnapBackAnimation();
 
             snapBackAnimation = target.experimental.animation.Start(currentOffset, 0f, SnapBackDurationMs, (_, value) => ApplyOffset(value));
-            snapBackAnimation.easingCurve = EaseOutCubic;
+            snapBackAnimation.easingCurve = Ease.OutCubic;
             snapBackAnimation.KeepAlive();
             snapBackAnimation.onAnimationCompleted += () =>
             {
@@ -420,7 +397,7 @@ namespace UnityUIToolkit.Extensions
             isDismissAnimating = true;
 
             dismissAnimation = target.experimental.animation.Start(currentOffset, targetOffset, DismissDurationMs, (_, value) => ApplyOffset(value));
-            dismissAnimation.easingCurve = EaseOutCubic;
+            dismissAnimation.easingCurve = Ease.OutCubic;
             dismissAnimation.KeepAlive();
             dismissAnimation.onAnimationCompleted += () =>
             {
@@ -491,16 +468,10 @@ namespace UnityUIToolkit.Extensions
         {
             activePointerId = -1;
             isPointerDown = false;
-            hasSwipeAxisLock = false;
             swipeAxis = SwipeAxis.None;
             isDragging = false;
             pointerVelocityX = 0f;
             pointerVelocityY = 0f;
-        }
-
-        private static float EaseOutCubic(float t)
-        {
-            return 1f - Mathf.Pow(1f - t, 3f);
         }
     }
 }

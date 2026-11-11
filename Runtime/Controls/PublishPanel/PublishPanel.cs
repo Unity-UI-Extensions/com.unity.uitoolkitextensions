@@ -71,31 +71,13 @@ namespace UnityUIToolkit.Extensions
     }
 
     /// <summary>
-    /// The content of the save-and-publish sheet, as a panel (FS04_5): eyebrow, title and stats, a progress row per stage, a status
+    /// The content of the save-and-publish sheet, as a panel. It has an eyebrow, a title and stats, a progress row per stage, a status
     /// line that says why a space is not live yet, an optional visibility choice, the visitor code, and Keep as draft
-    /// and Publish. Host it in your own sheet; it has no sheet chrome.
+    /// and Publish buttons. Host it in your own sheet. It has no sheet chrome.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>state</c> (a <see cref="PublishState"/>), <c>eyebrow</c> (shown in capitals), <c>title-text</c>,
-    /// <c>detail</c> (stats, such as "Map 18 MB · 6 items"), <c>status-text</c>, <c>code-url</c> (empty hides the code
-    /// card), <c>primary-text</c> (default "Publish"), <c>secondary-text</c> (default "Keep as draft"),
-    /// <c>show-close</c>. Methods: <see cref="SetStages"/>, <see cref="SetStageProgress"/>,
-    /// <see cref="SetVisibilityOptions"/>, <see cref="StageElement"/>. Events: <see cref="PublishRequested"/>,
-    /// <see cref="KeepDraftRequested"/>, <see cref="CloseRequested"/>, <see cref="CopyRequested"/>,
-    /// <see cref="ShareRequested"/>, <see cref="VisibilityChanged"/>.</para>
     /// <para>Publish is disabled while validating, uploading or generating. The stage rows show while uploading and
-    /// after; in the draft state they hide unless one has progress.</para>
-    /// <para>USS classes: <c>publishPanel</c> (root), <c>publishPanel__header</c>, <c>publishPanel__headings</c>,
-    /// <c>publishPanel__eyebrow</c>, <c>publishPanel__title</c>, <c>publishPanel__detail</c>, <c>publishPanel__close</c>, <c>publishPanel__closeIcon</c>,
-    /// <c>publishPanel__stages</c>, <c>publishPanel__stage</c>, <c>publishPanel__stageLabels</c>,
-    /// <c>publishPanel__stageLabel</c>, <c>publishPanel__stagePercent</c>, <c>publishPanel__stageBar</c>,
-    /// <c>publishPanel__status</c>, <c>publishPanel__visibility</c> (a <see cref="SegmentedControl"/>),
-    /// <c>publishPanel__code</c> (a <see cref="QRCodeCard"/>), <c>publishPanel__actions</c>,
-    /// <c>publishPanel__secondary</c>, <c>publishPanel__primary</c>. Modifiers: <c>publishPanel--draft</c>,
-    /// <c>--validating</c>, <c>--uploading</c>, <c>--generating</c>, <c>--live</c>, <c>--failed</c>.</para>
-    /// <para>Tokens read: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-border-strong</c>,
-    /// <c>--surface-pressed</c>, <c>--c-warn</c>, <c>--radius-pill</c>, <c>--space-1..6</c>, <c>--text-micro</c>,
-    /// <c>--text-caption</c>, <c>--text-title</c>, <c>--font-display</c>, <c>--font-body-medium</c>.</para>
+    /// after. In the draft state they hide unless one has progress. An empty <c>code-url</c> hides the code card.</para>
     /// </remarks>
     [UxmlElement]
     public partial class PublishPanel : VisualElement
@@ -152,9 +134,6 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public event Action<string> ShareRequested;
 
-        /// <summary>
-        /// Raised when the visibility choice changes: index and text.
-        /// </summary>
         public event Action<int, string> VisibilityChanged;
 
         public PillButton PrimaryButton => primary;
@@ -184,7 +163,7 @@ namespace UnityUIToolkit.Extensions
             {
                 eyebrowText = value ?? string.Empty;
                 eyebrow.text = eyebrowText.ToUpperInvariant();
-                eyebrow.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                eyebrow.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -199,7 +178,7 @@ namespace UnityUIToolkit.Extensions
         public string Detail
         {
             get => detail.text;
-            set => SetText(detail, value);
+            set => detail.SetTextOrHide(value);
         }
 
         /// <summary>
@@ -209,7 +188,7 @@ namespace UnityUIToolkit.Extensions
         public string StatusText
         {
             get => status.text;
-            set => SetText(status, value);
+            set => status.SetTextOrHide(value);
         }
 
         [UxmlAttribute("code-url")]
@@ -219,7 +198,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 code.Text = value ?? string.Empty;
-                code.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                code.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -237,7 +216,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 secondary.Text = value ?? string.Empty;
-                secondary.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                secondary.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -245,7 +224,7 @@ namespace UnityUIToolkit.Extensions
         public bool ShowClose
         {
             get => close.style.display != DisplayStyle.None;
-            set => close.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => close.SetDisplayed(value);
         }
 
         public PublishPanel()
@@ -264,12 +243,7 @@ namespace UnityUIToolkit.Extensions
             close.tabIndex = 0;
             close.tooltip = "Close";
             UIToolkitExtensions.CreateVisualElement(close, CloseIconClass).pickingMode = PickingMode.Ignore;
-            close.RegisterCallback<ClickEvent>(_ => CloseRequested?.Invoke());
-            close.RegisterCallback<NavigationSubmitEvent>(evt =>
-            {
-                CloseRequested?.Invoke();
-                evt.StopPropagation();
-            });
+            close.RegisterActivate(() => CloseRequested?.Invoke());
 
             stagesContainer = UIToolkitExtensions.CreateVisualElement(this, StagesClass);
             status = UIToolkitExtensions.CreateVisualElement<Label>(this, StatusClass);
@@ -314,9 +288,6 @@ namespace UnityUIToolkit.Extensions
 
         private bool IsActionable => state is PublishState.Draft or PublishState.Failed or PublishState.Live;
 
-        /// <summary>
-        /// Sets the progress rows, such as the map and the content.
-        /// </summary>
         public void SetStages(IReadOnlyList<PublishStage> newStages)
         {
             stages.Clear();
@@ -374,7 +345,7 @@ namespace UnityUIToolkit.Extensions
         public void SetVisibilityOptions(IReadOnlyList<string> options, int selectedIndex = 0)
         {
             var show = options != null && options.Count > 1;
-            visibility.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            visibility.SetDisplayed(show);
             if (show)
             {
                 visibility.SetOptions(options, selectedIndex);
@@ -389,23 +360,28 @@ namespace UnityUIToolkit.Extensions
             row.Q<LinearProgress>().Value = stage.Progress;
         }
 
+        private static readonly string[] StateClasses =
+        {
+            RootClass + "--draft",
+            RootClass + "--validating",
+            RootClass + "--uploading",
+            RootClass + "--generating",
+            RootClass + "--live",
+            RootClass + "--failed",
+        };
+
         private void Refresh()
         {
-            foreach (PublishState value in Enum.GetValues(typeof(PublishState)))
+            for (var i = 0; i < StateClasses.Length; i++)
             {
-                EnableInClassList(RootClass + "--" + value.ToString().ToLowerInvariant(), value == state);
+                EnableInClassList(StateClasses[i], i == (int)state);
             }
 
             var anyProgress = stages.Exists(s => s.Progress > 0f);
-            stagesContainer.style.display = stages.Count > 0 && (state != PublishState.Draft || anyProgress) ? DisplayStyle.Flex : DisplayStyle.None;
+            stagesContainer.SetDisplayed(stages.Count > 0 && (state != PublishState.Draft || anyProgress));
             primary.SetEnabled(IsActionable);
             secondary.SetEnabled(state != PublishState.Validating && state != PublishState.Generating);
         }
 
-        private static void SetText(Label label, string text)
-        {
-            label.text = text ?? string.Empty;
-            label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
-        }
     }
 }

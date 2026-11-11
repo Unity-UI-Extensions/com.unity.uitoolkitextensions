@@ -47,15 +47,9 @@ namespace UnityUIToolkit.Extensions
     /// chip to navigate or focus. The map-free alternative to a map button.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>max</c> (chips shown, default 3). Methods: <see cref="SetItems"/> (sorted by distance here),
-    /// <see cref="UpdateItem"/> (moves one arrow and distance without a rebuild, for example every frame).
-    /// Event: <see cref="ItemTapped"/> (id). Distances use <see cref="WorldAnchoredLabel.FormatDistance"/>.</para>
-    /// <para>USS classes: <c>wayfinderChips</c> (root, a horizontal scroll row), <c>wayfinderChips__chip</c>,
-    /// <c>wayfinderChips__disc</c>, <c>wayfinderChips__arrow</c>, <c>wayfinderChips__name</c>,
-    /// <c>wayfinderChips__distance</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--surface-accent</c>, <c>--surface-pressed</c>, <c>--c-bg</c>, <c>--radius-pill</c>, <c>--space-1..3</c>,
-    /// <c>--text-caption</c>, <c>--text-label-sm</c>, <c>--font-body-medium</c>.</para>
+    /// <para>The <c>max</c> property sets how many chips show (default 3). <see cref="SetItems"/> sorts by distance.
+    /// <see cref="UpdateItem"/> moves one arrow and distance without a rebuild, for example every frame.
+    /// Distances use <see cref="WorldAnchoredLabel.FormatDistance"/>. The root is a horizontal scroll row.</para>
     /// </remarks>
     [UxmlElement]
     public partial class WayfinderChips : ScrollView
@@ -73,9 +67,6 @@ namespace UnityUIToolkit.Extensions
 
         public event Action<string> ItemTapped;
 
-        /// <summary>
-        /// The items shown, nearest first.
-        /// </summary>
         public IReadOnlyList<WayfinderChipItem> Items => items;
 
         [UxmlAttribute("max")]
@@ -123,20 +114,12 @@ namespace UnityUIToolkit.Extensions
                 chip.focusable = true;
                 chip.tabIndex = 0;
                 var id = item.Id;
-                chip.RegisterCallback<ClickEvent>(_ => ItemTapped?.Invoke(id));
-                chip.RegisterCallback<NavigationSubmitEvent>(evt =>
-                {
-                    ItemTapped?.Invoke(id);
-                    evt.StopPropagation();
-                });
+                chip.RegisterActivate(() => ItemTapped?.Invoke(id));
 
-                var disc = UIToolkitExtensions.CreateVisualElement(chip, DiscClass);
-                disc.pickingMode = PickingMode.Ignore;
+                var disc = UIToolkitExtensions.CreateVisualElement(chip, DiscClass).IgnorePicking();
                 UIToolkitExtensions.CreateVisualElement(disc, ArrowClass).pickingMode = PickingMode.Ignore;
-                var name = UIToolkitExtensions.CreateVisualElement<Label>(chip, NameClass);
-                name.pickingMode = PickingMode.Ignore;
-                var distance = UIToolkitExtensions.CreateVisualElement<Label>(chip, DistanceClass);
-                distance.pickingMode = PickingMode.Ignore;
+                var name = UIToolkitExtensions.CreateVisualElement<Label>(chip, NameClass).IgnorePicking();
+                var distance = UIToolkitExtensions.CreateVisualElement<Label>(chip, DistanceClass).IgnorePicking();
 
                 chips[id] = chip;
                 Apply(chip, item);
@@ -148,7 +131,16 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void UpdateItem(string id, float distanceMetres, float bearingDegrees)
         {
-            var item = items.Find(i => i.Id == id);
+            WayfinderChipItem item = null;
+            for (var i = 0; i < items.Count; i++)
+            {
+                if (items[i].Id == id)
+                {
+                    item = items[i];
+                    break;
+                }
+            }
+
             if (item == null || !chips.TryGetValue(id, out var chip))
             {
                 return;

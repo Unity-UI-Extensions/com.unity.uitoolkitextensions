@@ -9,7 +9,7 @@ namespace UnityUIToolkit.Extensions
     public enum ScreenHeaderVariant
     {
         /// <summary>
-        /// The original large header: a 120 px notch spacer, an 80 px bar and 64 px buttons.
+        /// The large header: a 120 px notch spacer, an 80 px bar and 64 px buttons.
         /// </summary>
         Default,
 
@@ -20,24 +20,18 @@ namespace UnityUIToolkit.Extensions
     }
 
     /// <summary>
-    /// A configurable screen header bar: an optional notch spacer, a centered title, and up to four
-    /// edge buttons (action 1, action 2, action 3, and action 4, which is a stateful on/off toggle).
-    ///
-    /// The control owns no application state. Button icons are supplied by the host via the icon
-    /// properties (or USS), and interactions are surfaced as events: <see cref="Action1Clicked"/>,
-    /// <see cref="Action2Clicked"/>, <see cref="Action3Clicked"/>, and <see cref="Action4Toggled"/>.
-    /// The host is responsible for any persistence logic behind the action-4 toggle.
+    /// A configurable screen header bar: an optional notch spacer, a centred title, and up to four
+    /// edge buttons (action 1, 2, 3, and action 4, which is a stateful on/off toggle).
+    /// The control owns no application state. The host supplies button icons through the icon
+    /// properties (or USS) and handles events: <see cref="Action1Clicked"/>,
+    /// <see cref="Action2Clicked"/>, <see cref="Action3Clicked"/> and <see cref="Action4Toggled"/>.
+    /// The host also keeps any persistence behind the action-4 toggle.
     /// </summary>
     /// <remarks>
-    /// <para>The buttons provided are just examples for common interactions.</para>
-    /// <para>The <see cref="ScreenHeaderVariant.Compact"/> variant (<c>screenHeader--compact</c>) reads ThemeTokens, so it
-    /// works on deep and light surfaces: a 56 px bar, a back chevron on action 1 unless an icon is set, an optional
-    /// <see cref="Eyebrow"/> line above the title (<c>screenHeader__eyebrow</c>), and <see cref="TopInset"/> as the
-    /// notch spacer height. <see cref="SetActionIcon"/> takes any <see cref="Background"/> (texture, sprite or vector
-    /// image) and leaves the tint to USS.</para>
-    /// <para>Tokens read by the compact variant: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-pressed</c>,
-    /// <c>--radius-pill</c>, <c>--space-1</c>, <c>--space-2</c>, <c>--text-subtitle</c>, <c>--text-micro</c>,
-    /// <c>--font-display</c>, <c>--font-body-semibold</c>.</para>
+    /// <para>The <see cref="ScreenHeaderVariant.Compact"/> variant reads ThemeTokens, so it
+    /// works on deep and light surfaces. It has a 56 px bar and a back chevron on action 1 unless an icon is set.
+    /// <see cref="TopInset"/> sets the notch spacer height. <see cref="SetActionIcon"/> takes any <see cref="Background"/>
+    /// and leaves the tint to USS.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ScreenHeader : VisualElement
@@ -79,8 +73,7 @@ namespace UnityUIToolkit.Extensions
             notchSpacer = UIToolkitExtensions.CreateVisualElement(this, NotchSpacerClass);
 
             var bar = UIToolkitExtensions.CreateVisualElement(this, BarClass);
-            var titles = UIToolkitExtensions.CreateVisualElement(bar, TitlesClass);
-            titles.pickingMode = PickingMode.Ignore;
+            var titles = UIToolkitExtensions.CreateVisualElement(bar, TitlesClass).IgnorePicking();
             eyebrowLabel = UIToolkitExtensions.CreateVisualElement<Label>(titles, EyebrowClass);
             eyebrowLabel.style.display = DisplayStyle.None;
             titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(titles, TitleClass);
@@ -124,8 +117,7 @@ namespace UnityUIToolkit.Extensions
             get => eyebrowLabel.text;
             set
             {
-                eyebrowLabel.text = value ?? string.Empty;
-                eyebrowLabel.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                eyebrowLabel.SetTextOrHide(value);
             }
         }
 
@@ -163,7 +155,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 titleLabel.text = value;
-                titleLabel.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                titleLabel.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -245,7 +237,7 @@ namespace UnityUIToolkit.Extensions
             bool showAction3 = false, bool showAction4Toggle = true)
         {
             ShowAction1 = showAction1;
-            titleLabel.style.display = showTitle ? DisplayStyle.Flex : DisplayStyle.None;
+            titleLabel.SetDisplayed(showTitle);
             ShowAction2 = showAction2;
             ShowAction3 = showAction3;
             ShowAction4Toggle = showAction4Toggle;
@@ -255,28 +247,28 @@ namespace UnityUIToolkit.Extensions
         public bool ShowAction1
         {
             get => action1Button.style.display.value == DisplayStyle.Flex;
-            set => action1Button.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => action1Button.SetDisplayed(value);
         }
 
         [UxmlAttribute("show-action2")]
         public bool ShowAction2
         {
             get => action2Button.style.display.value == DisplayStyle.Flex;
-            set => action2Button.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => action2Button.SetDisplayed(value);
         }
 
         [UxmlAttribute("show-action3")]
         public bool ShowAction3
         {
             get => action3Button.style.display.value == DisplayStyle.Flex;
-            set => action3Button.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => action3Button.SetDisplayed(value);
         }
 
         [UxmlAttribute("show-action4-toggle")]
         public bool ShowAction4Toggle
         {
             get => action4Toggle.style.display.value == DisplayStyle.Flex;
-            set => action4Toggle.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => action4Toggle.SetDisplayed(value);
         }
 
         public void SetAction1ButtonVisible(bool isVisible) => ShowAction1 = isVisible;

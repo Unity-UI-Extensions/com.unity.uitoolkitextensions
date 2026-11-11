@@ -22,9 +22,9 @@ namespace UnityUIToolkit.Extensions
 
         public event Action Clicked;
 
-        private VisualElement button;
-        private VisualElement icon;
-        private Label label;
+        private readonly VisualElement button;
+        private readonly VisualElement icon;
+        private readonly Label label;
 
         public IconLabelButton()
         {
@@ -35,11 +35,15 @@ namespace UnityUIToolkit.Extensions
             icon = UIToolkitExtensions.CreateVisualElement(button, IconClass);
             label = UIToolkitExtensions.CreateVisualElement<Label>(button, LabelClass);
 
-            button.RegisterCallback<ClickEvent>(OnClicked);
-            button.RegisterCallback<MouseEnterEvent>(OnMouseEnter);
-            button.RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
-            button.RegisterCallback<MouseDownEvent>(OnMouseDown);
-            button.RegisterCallback<MouseUpEvent>(OnMouseUp);
+            button.RegisterCallback<ClickEvent>(_ => Clicked?.Invoke());
+            button.RegisterCallback<MouseEnterEvent>(_ => button.AddToClassList(HoverClass));
+            button.RegisterCallback<MouseLeaveEvent>(_ =>
+            {
+                button.RemoveFromClassList(HoverClass);
+                button.RemoveFromClassList(PressedClass);
+            });
+            button.RegisterCallback<MouseDownEvent>(_ => button.AddToClassList(PressedClass));
+            button.RegisterCallback<MouseUpEvent>(_ => button.RemoveFromClassList(PressedClass));
         }
 
         [UxmlAttribute("text")]
@@ -54,32 +58,6 @@ namespace UnityUIToolkit.Extensions
         {
             get => icon.style.backgroundImage.value.texture;
             set => icon.style.backgroundImage = value != null ? new StyleBackground(value) : (StyleBackground)StyleKeyword.Null;
-        }
-
-        private void OnClicked(ClickEvent evt)
-        {
-            Clicked?.Invoke();
-        }
-
-        private void OnMouseEnter(MouseEnterEvent evt)
-        {
-            button.AddToClassList(HoverClass);
-        }
-
-        private void OnMouseLeave(MouseLeaveEvent evt)
-        {
-            button.RemoveFromClassList(HoverClass);
-            button.RemoveFromClassList(PressedClass);
-        }
-
-        private void OnMouseDown(MouseDownEvent evt)
-        {
-            button.AddToClassList(PressedClass);
-        }
-
-        private void OnMouseUp(MouseUpEvent evt)
-        {
-            button.RemoveFromClassList(PressedClass);
         }
     }
 }

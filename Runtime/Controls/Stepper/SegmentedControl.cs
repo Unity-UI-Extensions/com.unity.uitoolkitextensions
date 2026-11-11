@@ -7,17 +7,12 @@ namespace UnityUIToolkit.Extensions
 {
     /// <summary>
     /// A row of N segments with a sliding selection indicator, themed with <see cref="ThemeTokens"/>.
-    /// The extended <see cref="QuadrantStepper"/> under its general-purpose name: same API, events
-    /// and child classes, plus icons, disabled segments, content sizing and keyboard navigation.
+    /// It is a <see cref="QuadrantStepper"/> under a general-purpose name, with the same API, events
+    /// and child classes.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>options</c>, <c>selected-index</c>, <c>sizing</c> (Equal or Content).
-    /// Event: <see cref="QuadrantStepper.SelectionChanged"/> (index, text).</para>
-    /// <para>USS classes: <c>segmentedControl</c> on the root, alongside <c>quadrantStepper</c>;
-    /// children and modifiers as documented on <see cref="QuadrantStepper"/>.</para>
-    /// <para>Tokens read: <c>--surface-raised</c>, <c>--surface-fg</c>, <c>--surface-border</c>,
-    /// <c>--surface-accent</c>, <c>--c-primary</c>, <c>--c-on-primary</c>, <c>--radius-pill</c>,
-    /// <c>--space-2</c>, <c>--space-3</c>, <c>--text-label</c>, <c>--font-body</c>.</para>
+    /// <para>The root carries the class <c>segmentedControl</c> alongside <c>quadrantStepper</c>.
+    /// Children and modifiers are the same as on <see cref="QuadrantStepper"/>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class SegmentedControl : QuadrantStepper

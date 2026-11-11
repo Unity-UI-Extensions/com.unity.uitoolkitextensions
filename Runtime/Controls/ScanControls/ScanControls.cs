@@ -13,12 +13,12 @@ namespace UnityUIToolkit.Extensions
     public enum ScanControlsState
     {
         /// <summary>
-        /// Before scanning (FS04_2): Help and Start scan; no ring.
+        /// Before scanning: Help and Start scan; no ring.
         /// </summary>
         Ready,
 
         /// <summary>
-        /// While scanning (FS04_3): the coverage ring, the timer, Cancel and Stop and save.
+        /// While scanning: the coverage ring, the timer, Cancel and Stop and save.
         /// </summary>
         Scanning,
 
@@ -29,8 +29,8 @@ namespace UnityUIToolkit.Extensions
     }
 
     /// <summary>
-    /// The scan controls (FS04_2, FS04_3): a coverage ring near the top, and at the bottom a status line (timer,
-    /// quality chip, warning, path preview) over two actions. A content layer for a mode screen; the host adds its own
+    /// The scan controls: a coverage ring near the top, and at the bottom a status line (timer,
+    /// quality chip, warning, path preview) over two actions. It is a content layer for a mode screen. The host adds its own
     /// coaching card.
     /// </summary>
     /// <remarks>
@@ -38,21 +38,6 @@ namespace UnityUIToolkit.Extensions
     /// <c>bottom-inset</c> from the bottom, and only the controls take input. Stop stays disabled until
     /// <see cref="ElapsedSeconds"/> reaches <see cref="MinSeconds"/>; <see cref="MaxReached"/> is raised once when it
     /// reaches <see cref="MaxSeconds"/>, so the host can stop and save.</para>
-    /// <para>Props: <c>state</c>, <c>coverage</c> (0 to 1), <c>coverage-label</c> (shown in capitals),
-    /// <c>elapsed-seconds</c>, <c>min-seconds</c>, <c>max-seconds</c> (0 for no limit), <c>bottom-gap</c> (default 34), <c>help-text</c>,
-    /// <c>start-text</c>, <c>cancel-text</c>, <c>stop-text</c>, <c>top-inset</c>, <c>bottom-inset</c>.
-    /// Methods: <see cref="SetQuality"/>, <see cref="ShowWarning"/>, <see cref="ClearWarning"/>, <see cref="SetPath"/>,
-    /// <see cref="SetStartIcon"/>, <see cref="SetStopIcon"/>, <see cref="FormatTime"/>. Events:
-    /// <see cref="StartRequested"/>, <see cref="StopRequested"/>, <see cref="HelpRequested"/>,
-    /// <see cref="CancelRequested"/>, <see cref="MaxReached"/>.</para>
-    /// <para>USS classes: <c>scanControls</c> (root), <c>scanControls__ring</c> (a <see cref="ProgressRing"/>),
-    /// <c>scanControls__bottom</c>, <c>scanControls__status</c>, <c>scanControls__timer</c>,
-    /// <c>scanControls__quality</c> and <c>scanControls__warning</c> (<see cref="StatusChip"/>s),
-    /// <c>scanControls__path</c>, <c>scanControls__actions</c>, <c>scanControls__secondary</c>,
-    /// <c>scanControls__primary</c>. Modifiers: <c>scanControls--ready</c>, <c>--scanning</c>, <c>--saving</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-accent</c>,
-    /// <c>--radius-pill</c>, <c>--radius-sm</c>, <c>--space-2..6</c>, <c>--text-label</c>, <c>--font-display</c>,
-    /// and those of the ring, the chips and the pills.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ScanControls : VisualElement
@@ -75,7 +60,7 @@ namespace UnityUIToolkit.Extensions
         private static readonly CustomStyleProperty<Color> PathColorProperty = new("--scan-path");
 
         /// <summary>
-        /// The default gap between the actions and the bottom edge, before the inset (FS04_2).
+        /// The default gap between the actions and the bottom edge, before the inset.
         /// </summary>
         public const float DefaultBottomGap = 34f;
 
@@ -114,9 +99,6 @@ namespace UnityUIToolkit.Extensions
 
         public event Action CancelRequested;
 
-        /// <summary>
-        /// Raised once per scan when <see cref="ElapsedSeconds"/> reaches <see cref="MaxSeconds"/>.
-        /// </summary>
         public event Action MaxReached;
 
         public ProgressRing Ring => ring;
@@ -125,9 +107,6 @@ namespace UnityUIToolkit.Extensions
 
         public PillButton SecondaryButton => secondary;
 
-        /// <summary>
-        /// True when Stop is allowed: scanning and past <see cref="MinSeconds"/>.
-        /// </summary>
         public bool CanStop => state == ScanControlsState.Scanning && elapsed >= minSeconds;
 
         [UxmlAttribute("state")]
@@ -180,9 +159,6 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// Seconds of scanning before Stop is allowed.
-        /// </summary>
         [UxmlAttribute("min-seconds")]
         public float MinSeconds
         {
@@ -263,7 +239,7 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// The gap between the actions and the bottom edge, before <see cref="BottomInset"/>. Default 34 (FS04_2).
+        /// The gap between the actions and the bottom edge, before <see cref="BottomInset"/>. Default 34.
         /// </summary>
         [UxmlAttribute("bottom-gap")]
         public float BottomGap
@@ -301,10 +277,8 @@ namespace UnityUIToolkit.Extensions
             ring.AddToClassList(RingClass);
             Add(ring);
 
-            bottom = UIToolkitExtensions.CreateVisualElement(this, BottomClass);
-            bottom.pickingMode = PickingMode.Ignore;
-            status = UIToolkitExtensions.CreateVisualElement(bottom, StatusClass);
-            status.pickingMode = PickingMode.Ignore;
+            bottom = UIToolkitExtensions.CreateVisualElement(this, BottomClass).IgnorePicking();
+            status = UIToolkitExtensions.CreateVisualElement(bottom, StatusClass).IgnorePicking();
             timer = UIToolkitExtensions.CreateVisualElement<Label>(status, TimerClass).MakePill();
             quality = new StatusChip();
             quality.AddToClassList(QualityClass);
@@ -312,12 +286,10 @@ namespace UnityUIToolkit.Extensions
             warning = new StatusChip { State = StatusState.Warn, Filled = true };
             warning.AddToClassList(WarningClass);
             status.Add(warning);
-            path = UIToolkitExtensions.CreateVisualElement(status, PathClass);
-            path.pickingMode = PickingMode.Ignore;
+            path = UIToolkitExtensions.CreateVisualElement(status, PathClass).IgnorePicking();
             path.generateVisualContent += DrawPath;
 
-            actions = UIToolkitExtensions.CreateVisualElement(bottom, ActionsClass);
-            actions.pickingMode = PickingMode.Ignore;
+            actions = UIToolkitExtensions.CreateVisualElement(bottom, ActionsClass).IgnorePicking();
             secondary = new PillButton { Variant = PillButtonVariant.Ghost };
             secondary.AddToClassList(SecondaryClass);
             secondary.Clicked += OnSecondary;
@@ -350,16 +322,13 @@ namespace UnityUIToolkit.Extensions
         {
             quality.Text = text;
             quality.State = chipState;
-            quality.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+            quality.SetDisplayed(!string.IsNullOrEmpty(text));
         }
 
-        /// <summary>
-        /// Shows a filled amber warning chip, such as "Slow down".
-        /// </summary>
         public void ShowWarning(string text)
         {
             warning.Text = text;
-            warning.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+            warning.SetDisplayed(!string.IsNullOrEmpty(text));
         }
 
         public void ClearWarning() => ShowWarning(null);
@@ -375,7 +344,7 @@ namespace UnityUIToolkit.Extensions
                 pathPoints.AddRange(points);
             }
 
-            path.style.display = pathPoints.Count > 1 ? DisplayStyle.Flex : DisplayStyle.None;
+            path.SetDisplayed(pathPoints.Count > 1);
             path.MarkDirtyRepaint();
         }
 
@@ -391,9 +360,6 @@ namespace UnityUIToolkit.Extensions
             Refresh();
         }
 
-        /// <summary>
-        /// "0:42", "12:05".
-        /// </summary>
         public static string FormatTime(float seconds)
         {
             var total = Mathf.Max(0, Mathf.FloorToInt(seconds));
@@ -437,12 +403,12 @@ namespace UnityUIToolkit.Extensions
 
             var ready = state == ScanControlsState.Ready;
             // The ring shows coverage while scanning only; once the scan stops it has nothing more to say.
-            ring.style.display = state == ScanControlsState.Scanning ? DisplayStyle.Flex : DisplayStyle.None;
-            status.style.display = state == ScanControlsState.Scanning ? DisplayStyle.Flex : DisplayStyle.None;
+            ring.SetDisplayed(state == ScanControlsState.Scanning);
+            status.SetDisplayed(state == ScanControlsState.Scanning);
             actions.style.display = state == ScanControlsState.Saving ? DisplayStyle.None : DisplayStyle.Flex;
 
             secondary.Text = ready ? helpText : cancelText;
-            secondary.style.display = string.IsNullOrEmpty(secondary.Text) ? DisplayStyle.None : DisplayStyle.Flex;
+            secondary.SetDisplayed(!string.IsNullOrEmpty(secondary.Text));
             primary.Text = ready ? startText : stopText;
             primary.Variant = ready ? PillButtonVariant.Primary : PillButtonVariant.Danger;
             primary.SetIcon(ready ? startIcon : stopIcon);
@@ -469,17 +435,12 @@ namespace UnityUIToolkit.Extensions
             painter.lineJoin = LineJoin.Round;
             painter.strokeColor = pathColor;
             painter.BeginPath();
-            for (var i = 0; i < pathPoints.Count; i++)
+            Vector2 Point(int index) => new(rect.x + (pathPoints[index].x * rect.width), rect.y + (pathPoints[index].y * rect.height));
+
+            painter.MoveTo(Point(0));
+            for (var i = 1; i < pathPoints.Count; i++)
             {
-                var point = new Vector2(rect.x + (pathPoints[i].x * rect.width), rect.y + (pathPoints[i].y * rect.height));
-                if (i == 0)
-                {
-                    painter.MoveTo(point);
-                }
-                else
-                {
-                    painter.LineTo(point);
-                }
+                painter.LineTo(Point(i));
             }
 
             painter.Stroke();

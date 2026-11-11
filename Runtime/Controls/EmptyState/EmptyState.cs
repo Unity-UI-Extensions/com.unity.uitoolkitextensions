@@ -11,13 +11,7 @@ namespace UnityUIToolkit.Extensions
     /// at most one action.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>icon</c>, <c>title-text</c>, <c>body-text</c>, <c>action-text</c> (empty hides the action).
-    /// Event: <see cref="ActionClicked"/>.</para>
-    /// <para>USS classes: <c>emptyState</c> (root), <c>emptyState__icon</c>, <c>emptyState__title</c>,
-    /// <c>emptyState__body</c>, <c>emptyState__action</c> (a primary compact <see cref="PillButton"/>).
-    /// Modifier: <c>emptyState--hasIcon</c>.</para>
-    /// <para>Tokens read: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--space-2..6</c>, <c>--text-subtitle</c>,
-    /// <c>--text-label</c>, <c>--font-display</c>, <c>--font-body</c>, plus the PillButton primary tokens.</para>
+    /// <para>An empty <c>action-text</c> hides the action. The action is a primary compact <see cref="PillButton"/>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class EmptyState : VisualElement
@@ -54,14 +48,14 @@ namespace UnityUIToolkit.Extensions
         public string TitleText
         {
             get => title.text;
-            set => SetText(title, value);
+            set => title.SetTextOrHide(value);
         }
 
         [UxmlAttribute("body-text")]
         public string BodyText
         {
             get => body.text;
-            set => SetText(body, value);
+            set => body.SetTextOrHide(value);
         }
 
         [UxmlAttribute("action-text")]
@@ -71,7 +65,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 action.Text = value ?? string.Empty;
-                action.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                action.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -81,8 +75,7 @@ namespace UnityUIToolkit.Extensions
             this.UseThemeTokens();
             AddToClassList(RootClass);
 
-            icon = UIToolkitExtensions.CreateVisualElement(this, IconClass);
-            icon.pickingMode = PickingMode.Ignore;
+            icon = UIToolkitExtensions.CreateVisualElement(this, IconClass).IgnorePicking();
             title = UIToolkitExtensions.CreateVisualElement<Label>(this, TitleClass);
             body = UIToolkitExtensions.CreateVisualElement<Label>(this, BodyClass);
 
@@ -110,16 +103,10 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetIcon(Background background)
         {
-            var has = background.texture != null || background.sprite != null || background.vectorImage != null || background.renderTexture != null;
-            icon.style.backgroundImage = has ? new StyleBackground(background) : new StyleBackground(StyleKeyword.None);
-            icon.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            var has = icon.SetImageOrNone(background);
+            icon.SetDisplayed(has);
             EnableInClassList(HasIconClass, has);
         }
 
-        private static void SetText(Label label, string text)
-        {
-            label.text = text ?? string.Empty;
-            label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
-        }
     }
 }

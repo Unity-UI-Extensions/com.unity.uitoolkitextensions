@@ -1,6 +1,7 @@
 // Copyright (c) Reality Collective. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 using System;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UIElements;
@@ -13,12 +14,13 @@ namespace UnityUIToolkit.Extensions
     public static class UIToolkitExtensions
     {
         private const string ControlStylesAssetPath = "Packages/com.unity.uitoolkitextensions/Runtime/Styles/UIToolkitExtensionsControlStyles.uss";
+        private const string EmailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
 
         private static StyleSheet controlStyles;
 
         /// <summary>
-        /// The shared stylesheet containing the default styles for all UI Toolkit Extensions controls.
-        /// Resolved via the AssetDatabase, so it is only available in the Editor (including Play Mode).
+        /// The shared stylesheet with the default styles for all controls.
+        /// It loads through the AssetDatabase, so it is null in player builds.
         /// </summary>
         public static StyleSheet ControlStyles
         {
@@ -35,53 +37,35 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Attaches the shared UI Toolkit Extensions stylesheet to an element, so controls render
-        /// correctly while authoring (UI Builder) and in Play Mode without requiring the stylesheet
-        /// to be referenced manually.
+        /// Attaches the shared stylesheet to an element, so controls render correctly in UI Builder
+        /// and in Play Mode without a manual stylesheet reference.
         /// </summary>
         /// <remarks>
-        /// This is an Editor-side convenience and does nothing in player builds. For builds, the
-        /// stylesheet is referenced explicitly by the starter templates via a UXML Style element,
-        /// and by the theme created by the "GameObject/UI Toolkit/Extensions" menu; code-first UI
-        /// should add the stylesheet to its panel theme or root element.
+        /// This does nothing in player builds. For builds, the starter templates and the theme from
+        /// the "GameObject/UI Toolkit/Extensions" menu reference the stylesheet. Code-first UI must
+        /// add the stylesheet to its panel theme or root element.
         /// </remarks>
-        /// <param name="element">The element to attach the shared stylesheet to</param>
-        public static void ApplyControlStyles(this VisualElement element)
-        {
-            var styles = ControlStyles;
-            if (styles != null && !element.styleSheets.Contains(styles))
-            {
-                element.styleSheets.Add(styles);
-            }
-        }
+        public static void ApplyControlStyles(this VisualElement element) => element.AttachOnce(ControlStyles);
 
         /// <summary>
-        /// Creates a VisualElement with the specified CSS class names.
+        /// Creates a VisualElement with the given USS classes.
         /// </summary>
-        /// <param name="classNames">CSS class names to add to the element</param>
-        /// <returns>A new VisualElement with the specified classes</returns>
         public static VisualElement CreateVisualElement(params string[] classNames)
         {
             return CreateVisualElement<VisualElement>(classNames);
         }
 
         /// <summary>
-        /// Creates a VisualElement with the specified CSS class names and adds it to a parent.
+        /// Creates a VisualElement with the given USS classes and adds it to a parent.
         /// </summary>
-        /// <param name="parent">The parent element to add the new element to</param>
-        /// <param name="classNames">CSS class names to add to the element</param>
-        /// <returns>A new VisualElement with the specified classes, added to the parent</returns>
         public static VisualElement CreateVisualElement(VisualElement parent, params string[] classNames)
         {
             return CreateVisualElement<VisualElement>(parent, classNames);
         }
 
         /// <summary>
-        /// Creates a typed VisualElement with the specified CSS class names.
+        /// Creates an element of type T with the given USS classes.
         /// </summary>
-        /// <typeparam name="T">The type of VisualElement to create</typeparam>
-        /// <param name="classNames">CSS class names to add to the element</param>
-        /// <returns>A new VisualElement of type T with the specified classes</returns>
         public static T CreateVisualElement<T>(params string[] classNames) where T : VisualElement, new()
         {
             var ele = new T();
@@ -94,12 +78,8 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Creates a typed VisualElement with the specified CSS class names and adds it to a parent.
+        /// Creates an element of type T with the given USS classes and adds it to a parent.
         /// </summary>
-        /// <typeparam name="T">The type of VisualElement to create</typeparam>
-        /// <param name="parent">The parent element to add the new element to</param>
-        /// <param name="classNames">CSS class names to add to the element</param>
-        /// <returns>A new VisualElement of type T with the specified classes, added to the parent</returns>
         public static T CreateVisualElement<T>(VisualElement parent, params string[] classNames) where T : VisualElement, new()
         {
             var ele = CreateVisualElement<T>(classNames);
@@ -108,107 +88,137 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Creates a hyperlink-styled label with underlined text.
+        /// Creates a label with underlined text and the "link-text" class.
         /// </summary>
-        /// <param name="parent">The parent element to add the label to</param>
-        /// <param name="text">The text content for the label</param>
-        /// <returns>A Label configured as a hyperlink</returns>
         public static Label CreateHyperlinkLabel(VisualElement parent, string text)
         {
-            var label = CreateVisualElement<Label>("link-text");
+            var label = CreateVisualElement<Label>(parent, "link-text");
             label.text = $"<u>{text}</u>";
             label.enableRichText = true;
-            parent.Add(label);
             return label;
         }
 
         /// <summary>
-        /// Creates a text input field with placeholder text and auto-selection behavior.
+        /// Creates a text field that shows the placeholder as its value and selects all text on focus.
         /// </summary>
-        /// <param name="parent">The parent element to add the text field to</param>
-        /// <param name="placeholder">The placeholder text for the field</param>
-        /// <returns>A TextField configured with the specified placeholder and auto-selection</returns>
         public static TextField CreateTextInputField(VisualElement parent, string placeholder)
         {
-            var textField = CreateVisualElement<TextField>("text-field");
+            var textField = CreateVisualElement<TextField>(parent, "text-field");
             textField.value = placeholder;
             textField.selectAllOnFocus = true;
             textField.RegisterCallback<FocusInEvent>(evt => textField.SelectAll());
-            parent.Add(textField);
             return textField;
         }
 
         /// <summary>
-        /// Validates that a TextField contains a valid email address and updates its visual style accordingly.
+        /// Checks that a TextField holds an email address. Colours the text black when valid, red when not.
         /// </summary>
-        /// <param name="inputText">The TextField to validate</param>
-        /// <returns>True if the text field contains a valid email address</returns>
         public static bool ValidateTextFieldEmailAddress(this TextField inputText)
         {
-            // Regex pattern for validating email
-            string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-            var isValidEmail = System.Text.RegularExpressions.Regex.IsMatch(inputText.value, emailPattern);
-            if (isValidEmail)
-            {
-                inputText.style.color = Color.black;
-            }
-            else
-            {
-                inputText.style.color = Color.red;
-            }
+            var isValidEmail = Regex.IsMatch(inputText.value, EmailPattern);
+            inputText.style.color = isValidEmail ? Color.black : Color.red;
             return isValidEmail;
         }
 
         /// <summary>
-        /// Creates a button with the specified text and click action.
+        /// Creates a button that invokes a UnityEvent on click.
         /// </summary>
-        /// <param name="parent">The parent element to add the button to</param>
-        /// <param name="text">The text content for the button</param>
-        /// <param name="onClickAction">The action to perform when the button is clicked</param>
-        /// <param name="isInitiallyVisible">Whether the button is visible initially</param>
-        /// <param name="className">Optional CSS class name to apply to the button</param>
-        /// <returns>A new Button element</returns>
         public static Button CreateButton(VisualElement parent, string text, UnityEvent onClickAction, bool isInitiallyVisible = true, string className = null)
         {
-            Button button;
-            if (string.IsNullOrEmpty(className))
-            {
-                button = CreateVisualElement<Button>(parent);
-            }
-            else
-            {
-                button = CreateVisualElement<Button>(parent, className);
-            }
-            button.text = text;
-            button.clicked += () => onClickAction?.Invoke();
-            button.style.display = isInitiallyVisible ? DisplayStyle.Flex : DisplayStyle.None;
-            return button;
+            return CreateButton(parent, text, () => onClickAction?.Invoke(), isInitiallyVisible, className);
         }
 
         /// <summary>
-        /// Creates a button with the specified text and click action.
+        /// Creates a button that invokes an Action on click.
         /// </summary>
-        /// <param name="parent">The parent element to add the button to</param>
-        /// <param name="text">The text content for the button</param>
-        /// <param name="onClickAction">The action to perform when the button is clicked</param>
-        /// <param name="isInitiallyVisible">Whether the button is visible initially</param>
-        /// <param name="className">Optional CSS class name to apply to the button</param>
-        /// <returns>A new Button element</returns>
         public static Button CreateButton(VisualElement parent, string text, Action onClickAction, bool isInitiallyVisible = true, string className = null)
         {
-            Button button;
-            if (string.IsNullOrEmpty(className))
-            {
-                button = CreateVisualElement<Button>(parent);
-            }
-            else
-            {
-                button = CreateVisualElement<Button>(parent, className);
-            }
+            var button = string.IsNullOrEmpty(className)
+                ? CreateVisualElement<Button>(parent)
+                : CreateVisualElement<Button>(parent, className);
             button.text = text;
-            button.clicked += () => onClickAction?.Invoke();
-            button.style.display = isInitiallyVisible ? DisplayStyle.Flex : DisplayStyle.None;
+            button.clicked += onClickAction;
+            button.SetDisplayed(isInitiallyVisible);
             return button;
+        }
+
+        internal static void AttachOnce(this VisualElement element, StyleSheet sheet)
+        {
+            if (sheet != null && !element.styleSheets.Contains(sheet))
+            {
+                element.styleSheets.Add(sheet);
+            }
+        }
+
+        internal static void SetDisplayed(this VisualElement element, bool shown)
+        {
+            element.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        /// <summary>
+        /// Sets the text and hides the element when the text is null or empty.
+        /// </summary>
+        internal static void SetTextOrHide(this TextElement element, string text)
+        {
+            element.text = text ?? string.Empty;
+            element.SetDisplayed(!string.IsNullOrEmpty(text));
+        }
+
+        /// <summary>
+        /// Makes pointer events pass through the element. Returns the element for chaining.
+        /// </summary>
+        internal static T IgnorePicking<T>(this T element) where T : VisualElement
+        {
+            element.pickingMode = PickingMode.Ignore;
+            return element;
+        }
+
+        /// <summary>
+        /// Calls the action on a click and on a keyboard or gamepad submit.
+        /// </summary>
+        internal static void RegisterActivate(this VisualElement element, Action action)
+        {
+            element.RegisterCallback<ClickEvent>(_ => action());
+            element.RegisterCallback<NavigationSubmitEvent>(evt =>
+            {
+                action();
+                evt.StopPropagation();
+            });
+        }
+
+        /// <summary>
+        /// The longest transition duration of the element, in milliseconds.
+        /// </summary>
+        internal static float LongestTransitionMs(this VisualElement element)
+        {
+            var longest = 0f;
+            foreach (var duration in element.resolvedStyle.transitionDuration)
+            {
+                longest = Mathf.Max(longest, duration.unit == TimeUnit.Second ? duration.value * 1000f : duration.value);
+            }
+
+            return longest;
+        }
+
+        internal static Color ParseColorOr(string hex, Color fallback)
+        {
+            return ColorUtility.TryParseHtmlString(hex, out var color) ? color : fallback;
+        }
+
+        internal static bool HasContent(this Background background)
+        {
+            return background.texture != null || background.sprite != null || background.vectorImage != null || background.renderTexture != null;
+        }
+
+        /// <summary>
+        /// Shows the image as the element background, or no background when the image is empty.
+        /// </summary>
+        /// <returns>True when the image has content.</returns>
+        internal static bool SetImageOrNone(this VisualElement element, Background image)
+        {
+            var has = image.HasContent();
+            element.style.backgroundImage = has ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
+            return has;
         }
     }
 }

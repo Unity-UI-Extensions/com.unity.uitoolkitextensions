@@ -29,7 +29,7 @@ namespace UnityUIToolkit.Extensions
         Fail,
 
         /// <summary>
-        /// A recording in progress (FS08_4 "REC 00:12"): red fill, white dot and text.
+        /// A recording in progress, such as "REC 00:12": red fill, white dot and text.
         /// </summary>
         Recording,
     }
@@ -39,20 +39,8 @@ namespace UnityUIToolkit.Extensions
     /// Use <see cref="StatusChipHost"/> to manage several by id.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>text</c>, <c>state</c>, <c>filled</c> (the chip takes its state's colour, as the amber
-    /// "Offline" chip in FS10_5). Method: <see cref="SetIcon"/> (an icon in place of the dot). Event:
-    /// <see cref="Clicked"/>. The <see cref="StatusState.Recording"/> state is always filled: red, with a white dot
+    /// <para>The <see cref="StatusState.Recording"/> state is always filled: red, with a white dot
     /// and bold text.</para>
-    /// <para>USS classes: <c>statusChip</c> (root), <c>statusChip__indicator</c>, <c>statusChip__icon</c>,
-    /// <c>statusChip__spinner</c> (a <see cref="LoadingIcon"/>), <c>statusChip__label</c>.</para>
-    /// <para>Modifier classes: <c>statusChip--info</c>, <c>statusChip--busy</c>, <c>statusChip--ok</c>,
-    /// <c>statusChip--warn</c>, <c>statusChip--fail</c>, <c>statusChip--recording</c>, <c>statusChip--filled</c>,
-    /// <c>statusChip--hasIcon</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-fg</c>, <c>--surface-border</c>,
-    /// <c>--surface-accent</c>, <c>--c-success</c>, <c>--c-danger</c>, <c>--c-warn</c>, <c>--c-on-warn</c>,
-    /// <c>--c-on-danger</c>, <c>--c-record</c>, <c>--c-on-record</c>, <c>--c-primary</c>, <c>--c-on-primary</c>,
-    /// <c>--radius-pill</c>, <c>--space-1..3</c>, <c>--text-caption</c>, <c>--text-label</c>,
-    /// <c>--font-body-medium</c>, <c>--font-display</c>, <c>--motion-fast</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class StatusChip : VisualElement
@@ -78,9 +66,6 @@ namespace UnityUIToolkit.Extensions
         private readonly Label label;
         private StatusState state;
 
-        /// <summary>
-        /// Raised when the chip is tapped, for example to open details or retry.
-        /// </summary>
         public event Action Clicked;
 
         [UxmlAttribute("text")]
@@ -116,8 +101,7 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetIcon(Background image)
         {
-            var hasIcon = image.texture != null || image.sprite != null || image.vectorImage != null || image.renderTexture != null;
-            icon.style.backgroundImage = hasIcon ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
+            var hasIcon = icon.SetImageOrNone(image);
             EnableInClassList(HasIconClass, hasIcon);
             indicator.style.display = state == StatusState.Busy || hasIcon ? DisplayStyle.None : DisplayStyle.Flex;
         }
@@ -129,17 +113,14 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
             this.MakePill();
 
-            indicator = UIToolkitExtensions.CreateVisualElement(this, IndicatorClass);
-            indicator.pickingMode = PickingMode.Ignore;
-            icon = UIToolkitExtensions.CreateVisualElement(this, IconClass);
-            icon.pickingMode = PickingMode.Ignore;
+            indicator = UIToolkitExtensions.CreateVisualElement(this, IndicatorClass).IgnorePicking();
+            icon = UIToolkitExtensions.CreateVisualElement(this, IconClass).IgnorePicking();
 
             spinner = new LoadingIcon();
             spinner.AddToClassList(SpinnerClass);
             Add(spinner);
 
-            label = UIToolkitExtensions.CreateVisualElement<Label>(this, LabelClass);
-            label.pickingMode = PickingMode.Ignore;
+            label = UIToolkitExtensions.CreateVisualElement<Label>(this, LabelClass).IgnorePicking();
 
             RegisterCallback<ClickEvent>(_ => Clicked?.Invoke());
             RegisterCallback<DetachFromPanelEvent>(_ => spinner.StopLoading());
@@ -172,7 +153,7 @@ namespace UnityUIToolkit.Extensions
 
             var busy = state == StatusState.Busy;
             indicator.style.display = busy || ClassListContains(HasIconClass) ? DisplayStyle.None : DisplayStyle.Flex;
-            spinner.style.display = busy ? DisplayStyle.Flex : DisplayStyle.None;
+            spinner.SetDisplayed(busy);
             if (busy && panel != null)
             {
                 spinner.PlayLoading();
@@ -189,11 +170,7 @@ namespace UnityUIToolkit.Extensions
     /// <see cref="Resolve"/> removes it, optionally after showing a final state for a moment.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>linger-ms</c> (how long a resolved chip stays), <c>top-inset</c>.
-    /// Events: <see cref="StatusResolved"/>, <see cref="ChipClicked"/>.</para>
-    /// <para>USS classes: <c>statusChipHost</c> (root); chips carry <c>statusChipHost__chip</c> and, once
-    /// shown, <c>statusChipHost__chip--shown</c>.</para>
-    /// <para>Tokens read: <c>--space-2</c>, <c>--space-4</c>, <c>--motion-fast</c>.</para>
+    /// <para>The <c>linger-ms</c> value sets how long a resolved chip stays.</para>
     /// </remarks>
     [UxmlElement]
     public partial class StatusChipHost : VisualElement
@@ -206,14 +183,8 @@ namespace UnityUIToolkit.Extensions
         private readonly Dictionary<string, IVisualElementScheduledItem> pendingRemovals = new();
         private int lingerMs = 1500;
 
-        /// <summary>
-        /// Raised when a chip leaves, with its id.
-        /// </summary>
         public event Action<string> StatusResolved;
 
-        /// <summary>
-        /// Raised when a chip is tapped, with its id.
-        /// </summary>
         public event Action<string> ChipClicked;
 
         [UxmlAttribute("linger-ms")]
@@ -223,9 +194,6 @@ namespace UnityUIToolkit.Extensions
             set => lingerMs = Mathf.Max(0, value);
         }
 
-        /// <summary>
-        /// Top safe-area inset, added above the chips.
-        /// </summary>
         [UxmlAttribute("top-inset")]
         public float TopInset
         {
@@ -245,9 +213,6 @@ namespace UnityUIToolkit.Extensions
 
         public bool TryGetChip(string id, out StatusChip chip) => chips.TryGetValue(id, out chip);
 
-        /// <summary>
-        /// Adds a chip, or updates the text and state of the chip with this id.
-        /// </summary>
         public StatusChip ShowStatus(string id, string text, StatusState state)
         {
             if (string.IsNullOrEmpty(id))
@@ -310,9 +275,6 @@ namespace UnityUIToolkit.Extensions
             return true;
         }
 
-        /// <summary>
-        /// Removes all tracked statuses and cancels their pending removals.
-        /// </summary>
         public void ClearStatuses()
         {
             foreach (var id in new List<string>(chips.Keys))
@@ -342,11 +304,7 @@ namespace UnityUIToolkit.Extensions
             chip.RemoveFromClassList(ChipShownClass);
             chip.pickingMode = PickingMode.Ignore;
 
-            var delayMs = 0f;
-            foreach (var duration in chip.resolvedStyle.transitionDuration)
-            {
-                delayMs = Mathf.Max(delayMs, duration.unit == TimeUnit.Second ? duration.value * 1000f : duration.value);
-            }
+            var delayMs = chip.LongestTransitionMs();
 
             if (delayMs <= 0f || chip.panel == null)
             {

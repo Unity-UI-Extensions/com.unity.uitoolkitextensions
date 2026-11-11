@@ -7,21 +7,14 @@ using UnityEngine.UIElements;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// A QR code with its caption and link actions (FS04_5 "Visitor code"): the code on the left, then a title, the
+    /// A QR code with its caption and link actions: the code on the left, then a title, the
     /// link as text, and Copy link and Share.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>text</c> (encoded, such as the visitor link), <c>title-text</c> (default "Visitor code"),
-    /// <c>caption</c> (empty shows the link without its scheme, see <see cref="DisplayText"/>), <c>copy-text</c>
-    /// (default "Copy link"; empty hides it), <c>share-text</c> (empty hides it), <c>qr-size</c> (default 96),
-    /// <c>card</c> (draw the card, default true). Events: <see cref="CopyRequested"/> and <see cref="ShareRequested"/>,
-    /// with the encoded text; the app copies or shares it.</para>
-    /// <para>USS classes: <c>qrCodeCard</c> (root), <c>qrCodeCard__code</c> (a <see cref="QRCodeView"/>),
-    /// <c>qrCodeCard__texts</c>, <c>qrCodeCard__title</c>, <c>qrCodeCard__caption</c>, <c>qrCodeCard__links</c>,
-    /// <c>qrCodeCard__link</c>. Modifier: <c>qrCodeCard--card</c>.</para>
-    /// <para>Tokens read: <c>--surface-raised</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--surface-accent</c>, <c>--space-1..4</c>, <c>--text-caption</c>, <c>--font-display</c>,
-    /// <c>--font-body-semibold</c>.</para>
+    /// <para>The default <c>title-text</c> is "Visitor code". An empty <c>caption</c> shows the link without its scheme
+    /// (see <see cref="DisplayText"/>). The default <c>copy-text</c> is "Copy link". An empty <c>copy-text</c> or <c>share-text</c> hides that action.
+    /// The default <c>qr-size</c> is 96. <c>card</c> draws the card and defaults to true.
+    /// <see cref="CopyRequested"/> and <see cref="ShareRequested"/> pass the encoded text. The app copies or shares it.</para>
     /// </remarks>
     [UxmlElement]
     public partial class QRCodeCard : VisualElement
@@ -41,7 +34,6 @@ namespace UnityUIToolkit.Extensions
         private readonly Label copy;
         private readonly Label share;
         private string captionText;
-        private bool card = true;
 
         public event Action<string> CopyRequested;
 
@@ -82,14 +74,14 @@ namespace UnityUIToolkit.Extensions
         public string CopyText
         {
             get => copy.text;
-            set => SetLink(copy, value);
+            set => copy.SetTextOrHide(value);
         }
 
         [UxmlAttribute("share-text")]
         public string ShareText
         {
             get => share.text;
-            set => SetLink(share, value);
+            set => share.SetTextOrHide(value);
         }
 
         [UxmlAttribute("qr-size")]
@@ -102,12 +94,8 @@ namespace UnityUIToolkit.Extensions
         [UxmlAttribute("card")]
         public bool Card
         {
-            get => card;
-            set
-            {
-                card = value;
-                EnableInClassList(CardClass, card);
-            }
+            get => ClassListContains(CardClass);
+            set => EnableInClassList(CardClass, value);
         }
 
         public QRCodeCard()
@@ -141,7 +129,7 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// The link as people read it: "https://example.com/go/x/" becomes "example.com/go/x".
+        /// The link as people read it. "https://example.com/go/x/" becomes "example.com/go/x".
         /// </summary>
         public static string DisplayText(string text)
         {
@@ -165,20 +153,10 @@ namespace UnityUIToolkit.Extensions
             var link = UIToolkitExtensions.CreateVisualElement<Label>(parent, LinkClass);
             link.focusable = true;
             link.tabIndex = 0;
-            link.RegisterCallback<ClickEvent>(_ => action());
-            link.RegisterCallback<NavigationSubmitEvent>(evt =>
-            {
-                action();
-                evt.StopPropagation();
-            });
+            link.RegisterActivate(action);
             return link;
         }
 
-        private static void SetLink(Label link, string text)
-        {
-            link.text = text ?? string.Empty;
-            link.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
-        }
 
         private void UpdateCaption()
         {

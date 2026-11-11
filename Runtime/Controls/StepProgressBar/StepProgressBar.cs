@@ -30,18 +30,20 @@ namespace UnityUIToolkit.Extensions
             this.ApplyControlStyles();
             AddToClassList(RootClass);
 
-            backgroundBar = new VisualElement();
-            backgroundBar.AddToClassList(BackgroundBarClass);
-
-            fillBar = new VisualElement();
-            fillBar.AddToClassList(FillBarClass);
-
-            backgroundBar.Add(fillBar);
-            Add(backgroundBar);
+            backgroundBar = UIToolkitExtensions.CreateVisualElement(this, BackgroundBarClass);
+            fillBar = UIToolkitExtensions.CreateVisualElement(backgroundBar, FillBarClass);
 
             RegisterCallback<DetachFromPanelEvent>(_ => DestroyFillTexture());
+            RegisterCallback<AttachToPanelEvent>(_ =>
+            {
+                if (fillTexture == null)
+                {
+                    RebuildFillTexture();
+                }
+            });
 
-            UpdateFillDisplay();
+            UpdateFillWidth();
+            RebuildFillTexture();
         }
 
         public float NormalizedProgress => maxSteps > 0 ? (float)currentSteps / maxSteps : 0f;
@@ -67,7 +69,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 innerColor = value;
-                UpdateFillDisplay();
+                RebuildFillTexture();
             }
         }
 
@@ -78,7 +80,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 outerColor = value;
-                UpdateFillDisplay();
+                RebuildFillTexture();
             }
         }
 
@@ -93,29 +95,24 @@ namespace UnityUIToolkit.Extensions
             currentSteps = Mathf.Clamp(steps, 0, maxSteps);
             this.maxSteps = maxSteps;
 
-            UpdateFillDisplay();
+            UpdateFillWidth();
         }
 
-        public void SetInnerColor(string colorHex)
-        {
-            InnerColor = ColorUtility.TryParseHtmlString(colorHex, out var parsed) ? parsed : Color.blue;
-        }
+        public void SetInnerColor(string colorHex) => InnerColor = UIToolkitExtensions.ParseColorOr(colorHex, Color.blue);
 
-        public void SetOuterColor(string colorHex)
-        {
-            OuterColor = ColorUtility.TryParseHtmlString(colorHex, out var parsed) ? parsed : Color.cyan;
-        }
+        public void SetOuterColor(string colorHex) => OuterColor = UIToolkitExtensions.ParseColorOr(colorHex, Color.cyan);
 
         public void SetGradientColors(string innerColorHex, string outerColorHex)
         {
-            innerColor = ColorUtility.TryParseHtmlString(innerColorHex, out var parsedInner) ? parsedInner : Color.blue;
-            outerColor = ColorUtility.TryParseHtmlString(outerColorHex, out var parsedOuter) ? parsedOuter : Color.cyan;
-            UpdateFillDisplay();
+            innerColor = UIToolkitExtensions.ParseColorOr(innerColorHex, Color.blue);
+            outerColor = UIToolkitExtensions.ParseColorOr(outerColorHex, Color.cyan);
+            RebuildFillTexture();
         }
 
-        private void UpdateFillDisplay()
+        private void UpdateFillWidth() => fillBar.style.width = Length.Percent(NormalizedProgress * 100f);
+
+        private void RebuildFillTexture()
         {
-            fillBar.style.width = Length.Percent(NormalizedProgress * 100f);
             DestroyFillTexture();
             fillTexture = ProceduralTextureUtility.CreateHorizontalGradient(innerColor, outerColor);
             fillBar.style.backgroundImage = new StyleBackground(fillTexture);

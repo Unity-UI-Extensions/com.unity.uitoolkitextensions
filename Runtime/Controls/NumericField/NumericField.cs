@@ -7,21 +7,13 @@ using UnityEngine.UIElements;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// A number with a label, a unit and step buttons, for inspectors (Studio Dark, the desktop editor). Drag the label
+    /// A number with a label, a unit and step buttons, for inspectors in a desktop editor. Drag the label
     /// sideways to scrub; type a value; or press minus and plus.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>label</c> (also the scrub handle), <c>value</c>, <c>step</c> (default 0.1), <c>min</c> and
-    /// <c>max</c> (NaN for no limit), <c>unit</c> (such as "m" or "°"), <c>decimals</c> (default 2),
-    /// <c>show-steppers</c> (default true), <c>scrub-pixels</c> (pixels of drag per step, default 4). Event:
-    /// <see cref="ValueChanged"/>. Method: <see cref="SetValueWithoutNotify"/>.</para>
-    /// <para>USS classes: <c>numericField</c> (root), <c>numericField__label</c>, <c>numericField__box</c>,
-    /// <c>numericField__input</c> (a <see cref="FloatField"/>), <c>numericField__unit</c>, <c>numericField__step</c>,
-    /// <c>numericField__minus</c>, <c>numericField__plus</c>. Modifier: <c>numericField--scrubbing</c>.</para>
-    /// <para>Tokens read: <c>--surface-input</c>, <c>--surface-input-border</c>, <c>--surface-fg</c>,
-    /// <c>--surface-muted</c>, <c>--surface-accent</c>, <c>--surface-pressed</c>, <c>--radius-sm</c>,
-    /// <c>--space-1..2</c>, <c>--text-caption</c>, <c>--text-label-sm</c>, <c>--font-body</c>,
-    /// <c>--font-body-medium</c>.</para>
+    /// <para>The label is also the scrub handle. <c>step</c> defaults to 0.1, <c>decimals</c> to 2 and <c>show-steppers</c>
+    /// to true. <c>min</c> and <c>max</c> are NaN for no limit. <c>scrub-pixels</c> is the pixels of drag per step, default 4.
+    /// The input is a <see cref="FloatField"/>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class NumericField : VisualElement
@@ -64,8 +56,7 @@ namespace UnityUIToolkit.Extensions
             get => label.text;
             set
             {
-                label.text = value ?? string.Empty;
-                label.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                label.SetTextOrHide(value);
             }
         }
 
@@ -111,8 +102,7 @@ namespace UnityUIToolkit.Extensions
             get => unit.text;
             set
             {
-                unit.text = value ?? string.Empty;
-                unit.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                unit.SetTextOrHide(value);
             }
         }
 
@@ -134,8 +124,8 @@ namespace UnityUIToolkit.Extensions
             get => minus.style.display != DisplayStyle.None;
             set
             {
-                minus.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
-                plus.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+                minus.SetDisplayed(value);
+                plus.SetDisplayed(value);
             }
         }
 
@@ -264,18 +254,12 @@ namespace UnityUIToolkit.Extensions
     }
 
     /// <summary>
-    /// Position, rotation and scale as <see cref="NumericField"/>s, three to a row (FS04, Studio Dark), with uniform
+    /// Position, rotation and scale as <see cref="NumericField"/>s, three to a row, with uniform
     /// scale by default. The non-gesture route for moving content.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>uniform-scale</c> (default true: one scale field), <c>position-step</c> (0.05 m),
-    /// <c>rotation-step</c> (5°), <c>scale-step</c> (0.05), <c>position-label</c>, <c>rotation-label</c>,
-    /// <c>scale-label</c> (shown in capitals). Properties: <see cref="Position"/>, <see cref="Rotation"/> (Euler
-    /// degrees), <see cref="Scale"/>. Method: <see cref="SetPose"/>. Event: <see cref="PoseChanged"/>.</para>
-    /// <para>USS classes: <c>transformGroup</c> (root), <c>transformGroup__section</c>, <c>transformGroup__heading</c>,
-    /// <c>transformGroup__row</c>, <c>transformGroup__field</c>.</para>
-    /// <para>Tokens read: <c>--surface-muted</c>, <c>--space-1..3</c>, <c>--text-micro</c>, <c>--font-body-medium</c>,
-    /// and those of <see cref="NumericField"/>.</para>
+    /// <para><c>uniform-scale</c> defaults to true: one scale field. The steps default to 0.05 m for position, 5° for
+    /// rotation and 0.05 for scale. The section labels show in capitals. <see cref="Rotation"/> is in Euler degrees.</para>
     /// </remarks>
     [UxmlElement]
     public partial class TransformGroup : VisualElement
@@ -317,8 +301,8 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 uniform = value;
-                uniformScale.style.display = uniform ? DisplayStyle.Flex : DisplayStyle.None;
-                scaleAxes.style.display = uniform ? DisplayStyle.None : DisplayStyle.Flex;
+                uniformScale.SetDisplayed(uniform);
+                scaleAxes.SetDisplayed(!uniform);
             }
         }
 
@@ -415,15 +399,16 @@ namespace UnityUIToolkit.Extensions
             applying = false;
         }
 
+        private static readonly string[] AxisNames = { "X", "Y", "Z" };
+
         private Label CreateSection(NumericField[] fields, string unitText, float stepSize, out VisualElement row)
         {
             var section = UIToolkitExtensions.CreateVisualElement(this, SectionClass);
             var heading = UIToolkitExtensions.CreateVisualElement<Label>(section, HeadingClass);
             row = UIToolkitExtensions.CreateVisualElement(section, RowClass);
-            var axes = new[] { "X", "Y", "Z" };
             for (var i = 0; i < 3; i++)
             {
-                var field = new NumericField(axes[i], 0f, unitText) { Step = stepSize, ShowSteppers = false };
+                var field = new NumericField(AxisNames[i], 0f, unitText) { Step = stepSize, ShowSteppers = false };
                 field.AddToClassList(FieldClass);
                 field.ValueChanged += _ => RaisePose();
                 row.Add(field);

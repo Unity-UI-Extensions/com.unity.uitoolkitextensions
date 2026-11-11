@@ -38,15 +38,7 @@ namespace UnityUIToolkit.Extensions
     /// <para>Manipulation itself is gesture-only; this chip only teaches it. Report gestures with
     /// <see cref="NotifyGesture"/>. With <see cref="ShowOnce"/>, <see cref="Show"/> does nothing after the first
     /// dismissal; persist <see cref="HasBeenDismissed"/> yourself to carry that across sessions.</para>
-    /// <para>Props: <c>platform</c>, <c>show-once</c>, <c>inspector-text</c> (empty hides the inspector link).
-    /// Methods: <see cref="Show"/>, <see cref="Dismiss"/>, <see cref="NotifyGesture"/>, <see cref="SetHintText"/>.
-    /// Events: <see cref="Dismissed"/>, <see cref="OpenInspector"/>.</para>
-    /// <para>USS classes: <c>gestureHint</c> (root), <c>gestureHint__item</c>, <c>gestureHint__prefix</c>,
-    /// <c>gestureHint__verb</c>, <c>gestureHint__inspector</c>. Modifiers: <c>gestureHint--shown</c>,
-    /// <c>gestureHint--mouse</c>.</para>
-    /// <para>Tokens read: <c>--c-panel</c>, <c>--c-divider</c>, <c>--c-fg</c>, <c>--c-fg-muted</c>, <c>--c-accent</c>,
-    /// <c>--radius-pill</c>, <c>--space-2..4</c>, <c>--text-micro</c>, <c>--text-caption</c>, <c>--font-body-medium</c>, <c>--motion-base</c>.
-    /// The chip sits over the camera, so it uses the deep palette directly.</para>
+    /// <para>An empty <c>inspector-text</c> hides the inspector link. The chip sits over the camera, so it uses the deep palette directly.</para>
     /// </remarks>
     [UxmlElement]
     public partial class GestureHint : VisualElement
@@ -121,8 +113,7 @@ namespace UnityUIToolkit.Extensions
             get => inspector.text;
             set
             {
-                inspector.text = value ?? string.Empty;
-                inspector.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                inspector.SetTextOrHide(value);
             }
         }
 
@@ -135,12 +126,9 @@ namespace UnityUIToolkit.Extensions
 
             foreach (Gesture gesture in Enum.GetValues(typeof(Gesture)))
             {
-                var item = UIToolkitExtensions.CreateVisualElement(this, ItemClass);
-                item.pickingMode = PickingMode.Ignore;
-                var prefix = UIToolkitExtensions.CreateVisualElement<Label>(item, PrefixClass);
-                prefix.pickingMode = PickingMode.Ignore;
-                var verb = UIToolkitExtensions.CreateVisualElement<Label>(item, VerbClass);
-                verb.pickingMode = PickingMode.Ignore;
+                var item = UIToolkitExtensions.CreateVisualElement(this, ItemClass).IgnorePicking();
+                var prefix = UIToolkitExtensions.CreateVisualElement<Label>(item, PrefixClass).IgnorePicking();
+                var verb = UIToolkitExtensions.CreateVisualElement<Label>(item, VerbClass).IgnorePicking();
                 items[gesture] = (prefix, verb);
             }
 
@@ -207,10 +195,7 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void NotifyGesture(Gesture gesture)
         {
-            if (isShown)
-            {
-                DismissByUser();
-            }
+            DismissByUser();
         }
 
         private void DismissByUser()

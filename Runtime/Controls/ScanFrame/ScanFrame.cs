@@ -34,14 +34,8 @@ namespace UnityUIToolkit.Extensions
     /// <see cref="Size"/>; padding on the root moves that centre. <see cref="SetTargetRect"/> moves them around a
     /// rectangle in panel space, such as a tracked image projected to the screen, with <see cref="TargetPadding"/>
     /// around it; <see cref="ClearTarget"/> returns to the centred square.</para>
-    /// <para>While <see cref="Searching"/>, the brackets pulse gently; the pulse stops with reduce motion.</para>
-    /// <para>Props: <c>tone</c>, <c>size</c>, <c>target-padding</c>, <c>searching</c>.</para>
-    /// <para>USS classes: <c>scanFrame</c> (root), <c>scanFrame__frame</c>, <c>scanFrame__corner</c>, and per corner
-    /// <c>scanFrame__corner--topLeft</c>, <c>--topRight</c>, <c>--bottomLeft</c>, <c>--bottomRight</c>.</para>
-    /// <para>Modifier classes: <c>scanFrame--success</c>, <c>scanFrame--warn</c>, <c>scanFrame--searching</c>,
-    /// <c>scanFrame--pulsed</c> (the far point of the pulse), <c>scanFrame--targeted</c>.</para>
-    /// <para>Tokens read: <c>--c-accent</c>, <c>--c-success</c>, <c>--c-warn</c>, <c>--radius-sm</c>,
-    /// <c>--motion-fast</c>, <c>--motion-slow</c>.</para>
+    /// <para>While <see cref="Searching"/>, the brackets pulse gently. The pulse stops with reduce motion.
+    /// The class <c>scanFrame--pulsed</c> marks the far point of the pulse.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ScanFrame : VisualElement
@@ -56,12 +50,12 @@ namespace UnityUIToolkit.Extensions
         public const string TargetedClass = "scanFrame--targeted";
 
         /// <summary>
-        /// The default side of the centred square.
+        /// The default side of the centred square, in pixels.
         /// </summary>
         public const float DefaultSize = 250f;
 
         /// <summary>
-        /// Time between pulse phases.
+        /// Time between pulse phases in milliseconds.
         /// </summary>
         public const int PulseIntervalMs = 900;
 
@@ -89,9 +83,6 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// The side of the centred square, in pixels.
-        /// </summary>
         [UxmlAttribute("size")]
         public float Size
         {
@@ -139,9 +130,6 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// True while the brackets follow a target rectangle.
-        /// </summary>
         public bool IsTargeted => targeted;
 
         /// <summary>
@@ -156,8 +144,7 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
             pickingMode = PickingMode.Ignore;
 
-            frame = UIToolkitExtensions.CreateVisualElement(this, FrameClass);
-            frame.pickingMode = PickingMode.Ignore;
+            frame = UIToolkitExtensions.CreateVisualElement(this, FrameClass).IgnorePicking();
             foreach (var name in CornerNames)
             {
                 var corner = UIToolkitExtensions.CreateVisualElement(frame, CornerClass);
@@ -186,9 +173,6 @@ namespace UnityUIToolkit.Extensions
             frame.style.height = local.height + targetPadding * 2f;
         }
 
-        /// <summary>
-        /// Returns the brackets to the centred square.
-        /// </summary>
         public void ClearTarget()
         {
             targeted = false;

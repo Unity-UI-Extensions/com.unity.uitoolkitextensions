@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -111,22 +110,8 @@ namespace UnityUIToolkit.Extensions
     /// <para>The dialog fills its parent as an overlay layer and is hidden until opened.
     /// <see cref="Show"/> configures and opens it and returns a task that completes when it closes.
     /// Children added to the dialog go into the custom content slot between the body and the actions.</para>
-    /// <para>Props: <c>title-text</c>, <c>body-text</c>, <c>primary-text</c>, <c>secondary-text</c>,
-    /// <c>variant</c>, <c>dismissible</c>. Events: <see cref="Opened"/>, <see cref="Closed"/>.</para>
     /// <para>Back (<see cref="HandleBack"/>, Escape, gamepad cancel) is the cancel action: it dismisses a
     /// dismissible dialog and is swallowed by a non-dismissible one.</para>
-    /// <para>USS classes: <c>modalDialog</c> (root), <c>modalDialog__scrim</c>, <c>modalDialog__card</c>,
-    /// <c>modalDialog__header</c> (hidden while empty), <c>modalDialog__title</c>, <c>modalDialog__body</c>, <c>modalDialog__input</c>,
-    /// <c>modalDialog__choices</c>, <c>modalDialog__content</c>, <c>modalDialog__actions</c>,
-    /// <c>modalDialog__button</c>, <c>modalDialog__button--primary</c>, <c>modalDialog__button--secondary</c>.</para>
-    /// <para>Modifier classes: <c>modalDialog--open</c> (shown and transitioning in),
-    /// <c>modalDialog--destructive</c>, <c>modalDialog--hasInput</c>, <c>modalDialog--hasChoices</c>,
-    /// <c>modalDialog--single</c> (no secondary action), <c>modalDialog--hasHeader</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--surface-border</c>, <c>--surface-accent</c>, <c>--c-scrim</c>, <c>--c-primary</c>,
-    /// <c>--c-danger</c>, <c>--c-on-primary</c>, <c>--radius-dialog</c>, <c>--radius-pill</c>,
-    /// <c>--radius-sm</c>, <c>--space-2..6</c>, <c>--text-title</c>, <c>--text-body</c>,
-    /// <c>--text-label</c>, <c>--font-display</c>, <c>--font-body</c>, <c>--motion-fast</c>, <c>--motion-base</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ModalDialog : VisualElement
@@ -163,6 +148,7 @@ namespace UnityUIToolkit.Extensions
         private readonly Button primaryButton;
         private readonly Button secondaryButton;
 
+        private readonly List<VisualElement> focusableBuffer = new();
         private readonly GradientFill primaryFill = new(GradientPreset.Brand, GradientDirection.Horizontal);
         private DialogVariant variant;
         private bool dismissible = true;
@@ -171,9 +157,6 @@ namespace UnityUIToolkit.Extensions
         private Focusable focusBeforeOpen;
         private IVisualElementScheduledItem hideItem;
 
-        /// <summary>
-        /// Raised when the dialog opens.
-        /// </summary>
         public event Action Opened;
 
         /// <summary>
@@ -211,14 +194,14 @@ namespace UnityUIToolkit.Extensions
         public string TitleText
         {
             get => titleLabel.text;
-            set => SetText(titleLabel, value);
+            set => titleLabel.SetTextOrHide(value);
         }
 
         [UxmlAttribute("body-text")]
         public string BodyText
         {
             get => bodyLabel.text;
-            set => SetText(bodyLabel, value);
+            set => bodyLabel.SetTextOrHide(value);
         }
 
         [UxmlAttribute("primary-text")]
@@ -239,7 +222,7 @@ namespace UnityUIToolkit.Extensions
             {
                 secondaryButton.text = value ?? string.Empty;
                 var single = string.IsNullOrEmpty(value);
-                secondaryButton.style.display = single ? DisplayStyle.None : DisplayStyle.Flex;
+                secondaryButton.SetDisplayed(!single);
                 EnableInClassList(SingleActionClass, single);
             }
         }
@@ -253,8 +236,7 @@ namespace UnityUIToolkit.Extensions
             get => tertiaryButton.text;
             set
             {
-                tertiaryButton.text = value ?? string.Empty;
-                tertiaryButton.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                tertiaryButton.SetTextOrHide(value);
             }
         }
 
@@ -366,17 +348,17 @@ namespace UnityUIToolkit.Extensions
             inputField.label = options.InputLabel ?? string.Empty;
             inputField.SetValueWithoutNotify(options.InputValue ?? string.Empty);
             inputField.isPasswordField = options.InputIsPassword;
-            inputField.style.display = hasInput ? DisplayStyle.Flex : DisplayStyle.None;
+            inputField.SetDisplayed(hasInput);
             EnableInClassList(HasInputClass, hasInput);
 
             var hasChoices = options.Choices != null && options.Choices.Count > 0;
             choicesField.label = options.ChoicesLabel ?? string.Empty;
-            choicesField.choices = hasChoices ? options.Choices.ToList() : new List<string>();
+            choicesField.choices = hasChoices ? new List<string>(options.Choices) : new List<string>();
             if (hasChoices)
             {
                 choicesField.index = Mathf.Clamp(options.ChoiceIndex, 0, options.Choices.Count - 1);
             }
-            choicesField.style.display = hasChoices ? DisplayStyle.Flex : DisplayStyle.None;
+            choicesField.SetDisplayed(hasChoices);
             EnableInClassList(HasChoicesClass, hasChoices);
 
             pending = new TaskCompletionSource<DialogResult>();
@@ -396,7 +378,7 @@ namespace UnityUIToolkit.Extensions
                 header.Add(element);
             }
 
-            header.style.display = element != null ? DisplayStyle.Flex : DisplayStyle.None;
+            header.SetDisplayed(element != null);
             EnableInClassList(HasHeaderClass, element != null);
         }
 
@@ -445,7 +427,7 @@ namespace UnityUIToolkit.Extensions
             isOpen = false;
             RemoveFromClassList(OpenClass);
 
-            var delayMs = Mathf.CeilToInt(LongestTransitionMs(card));
+            var delayMs = Mathf.CeilToInt(card.LongestTransitionMs());
             if (delayMs <= 0)
             {
                 style.display = DisplayStyle.None;
@@ -504,23 +486,6 @@ namespace UnityUIToolkit.Extensions
             return result;
         }
 
-        private static void SetText(Label label, string text)
-        {
-            label.text = text ?? string.Empty;
-            label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
-        }
-
-        private static float LongestTransitionMs(VisualElement element)
-        {
-            var longest = 0f;
-            foreach (var duration in element.resolvedStyle.transitionDuration)
-            {
-                var ms = duration.unit == TimeUnit.Second ? duration.value * 1000f : duration.value;
-                longest = Mathf.Max(longest, ms);
-            }
-
-            return longest;
-        }
 
         private void OnScrimClicked(ClickEvent evt)
         {
@@ -552,23 +517,33 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         private List<VisualElement> Focusables()
         {
-            var result = new List<VisualElement>();
-            foreach (var element in card.Query<VisualElement>().ToList())
+            focusableBuffer.Clear();
+            foreach (var element in card.Query<VisualElement>().Build())
             {
                 if (!element.focusable || !element.canGrabFocus || element.tabIndex < 0 || !IsShown(element))
                 {
                     continue;
                 }
 
-                if (result.Any(outer => outer.Contains(element)))
+                bool insideOuter = false;
+                for (int i = 0; i < focusableBuffer.Count; i++)
+                {
+                    if (focusableBuffer[i].Contains(element))
+                    {
+                        insideOuter = true;
+                        break;
+                    }
+                }
+
+                if (insideOuter)
                 {
                     continue;
                 }
 
-                result.Add(element);
+                focusableBuffer.Add(element);
             }
 
-            return result;
+            return focusableBuffer;
         }
 
         private bool IsShown(VisualElement element)
@@ -614,7 +589,16 @@ namespace UnityUIToolkit.Extensions
             }
 
             var current = focusController?.focusedElement as VisualElement;
-            var index = focusables.FindIndex(e => e == current || (current != null && e.Contains(current)));
+            var index = -1;
+            for (int i = 0; i < focusables.Count; i++)
+            {
+                if (focusables[i] == current || (current != null && focusables[i].Contains(current)))
+                {
+                    index = i;
+                    break;
+                }
+            }
+
             var step = evt.direction == NavigationMoveEvent.Direction.Next ? 1 : -1;
             var next = index < 0 ? (step > 0 ? 0 : focusables.Count - 1) : (index + step + focusables.Count) % focusables.Count;
 

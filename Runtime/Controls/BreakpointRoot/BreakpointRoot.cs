@@ -32,12 +32,8 @@ namespace UnityUIToolkit.Extensions
     /// matching classes on itself, so descendants' USS can change layout, such as docking a sheet at medium and above.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>medium-min</c> (default 600), <c>expanded-min</c> (default 840), in panel pixels. Properties:
-    /// <see cref="Current"/>, <see cref="IsLandscape"/>. Events: <see cref="BreakpointChanged"/>,
-    /// <see cref="OrientationChanged"/>.</para>
-    /// <para>USS classes: <c>breakpointRoot</c> (fills its parent), <c>breakpointRoot--compact</c>,
-    /// <c>breakpointRoot--medium</c>, <c>breakpointRoot--expanded</c>, <c>breakpointRoot--portrait</c>,
-    /// <c>breakpointRoot--landscape</c>. Descendant rules use them as ancestors, for example
+    /// <para><c>medium-min</c> defaults to 600 and <c>expanded-min</c> to 840, in panel pixels. The root fills its parent.
+    /// Descendant rules use the classes as ancestors, for example
     /// <c>.breakpointRoot--expanded .myList { flex-direction: row; }</c>.</para>
     /// </remarks>
     [UxmlElement]

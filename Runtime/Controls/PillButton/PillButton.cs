@@ -12,7 +12,7 @@ namespace UnityUIToolkit.Extensions
     public enum PillButtonVariant
     {
         /// <summary>
-        /// The inner and outer colour gradient (the original behaviour).
+        /// The inner and outer colour gradient.
         /// </summary>
         Custom,
 
@@ -38,26 +38,17 @@ namespace UnityUIToolkit.Extensions
     }
 
     /// <summary>
-    /// A pill-shaped button with a horizontal gradient background driven by two hex colors,
-    /// a brief flash feedback animation on click, and a centered text label.
+    /// A pill-shaped button with a horizontal gradient background driven by two hex colours,
+    /// a brief flash feedback animation on click, and a centred text label.
     /// </summary>
     /// <remarks>
-    /// <para>Does not use the inbuilt Unity Button class, as this creates aberrant style issues.  A cleaner approach for just a clickable surface.
-    /// ALso supports a colour gradient between an inner and outer colour.</para>
-    /// <para>Variants (<see cref="Variant"/>) style the button from ThemeTokens instead of the inner and outer colours:
-    /// <c>pillButton--primary</c> (brand gradient fill), <c>pillButton--ghost</c> (transparent with a strong border),
-    /// <c>pillButton--warn</c> (ghost in the warning colour), <c>pillButton--danger</c> (danger gradient fill).
-    /// <see cref="Compact"/> adds <c>pillButton--compact</c>
-    /// (46 px instead of 52 px, smaller label). A variant button disabled with <c>SetEnabled(false)</c> becomes a
+    /// <para>It does not use the Unity Button class, which causes style problems. It is a plain clickable surface.</para>
+    /// <para>A <see cref="Variant"/> styles the button from ThemeTokens instead of the inner and outer colours.
+    /// <see cref="Compact"/> is 46 px high instead of 52 px, with a smaller label. A variant button disabled with <c>SetEnabled(false)</c> becomes a
     /// half-strength outline with muted text. <see cref="SetTextColor"/> and <see cref="SetFontSize"/> set inline
     /// styles and win over a variant.</para>
-    /// <para><see cref="SetIcon"/> adds a 20 px icon before the label (<c>pillButton__icon</c>, modifier
-    /// <c>pillButton--hasIcon</c>); the icon and label are centred together. The token variants tint the icon to
-    /// match the label; <see cref="SetTextColor"/> tints it too.</para>
-    /// <para>Tokens read by the variants: <c>--grad-brand-start/end</c> and <c>--grad-danger-start/end</c> (through
-    /// <see cref="GradientFill"/>), <c>--c-on-primary</c>, <c>--c-on-danger</c>, <c>--c-warn</c>, <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-border</c>,
-    /// <c>--surface-border-strong</c>, <c>--radius-pill</c>, <c>--space-4</c>, <c>--text-label</c>,
-    /// <c>--text-label-sm</c>, <c>--font-body-medium</c>, <c>--font-body-semibold</c>.</para>
+    /// <para><see cref="SetIcon"/> adds a 20 px icon before the label. The icon and label are centred together. The token variants tint the icon to
+    /// match the label. <see cref="SetTextColor"/> tints it too.</para>
     /// </remarks>
     [UxmlElement]
     public partial class PillButton : VisualElement
@@ -102,11 +93,9 @@ namespace UnityUIToolkit.Extensions
 
             background = UIToolkitExtensions.CreateVisualElement(this, BackgroundClass);
 
-            flashOverlay = UIToolkitExtensions.CreateVisualElement(background, FlashClass);
-            flashOverlay.pickingMode = PickingMode.Ignore;
+            flashOverlay = UIToolkitExtensions.CreateVisualElement(background, FlashClass).IgnorePicking();
 
-            icon = UIToolkitExtensions.CreateVisualElement(background, IconClass);
-            icon.pickingMode = PickingMode.Ignore;
+            icon = UIToolkitExtensions.CreateVisualElement(background, IconClass).IgnorePicking();
 
             label = UIToolkitExtensions.CreateVisualElement<Label>(background, LabelClass);
 
@@ -125,9 +114,8 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetIcon(Background image)
         {
-            var has = image.texture != null || image.sprite != null || image.vectorImage != null || image.renderTexture != null;
-            icon.style.backgroundImage = has ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
-            icon.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
+            var has = icon.SetImageOrNone(image);
+            icon.SetDisplayed(has);
             EnableInClassList(HasIconClass, has);
         }
 
@@ -146,9 +134,6 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// The shorter variant height with a smaller label.
-        /// </summary>
         [UxmlAttribute("compact")]
         public bool Compact
         {
@@ -219,7 +204,7 @@ namespace UnityUIToolkit.Extensions
 
         private void OnAttachToPanel(AttachToPanelEvent evt)
         {
-            // The texture is released on detach; a re-attached custom button needs it back.
+            // The button releases the texture on detach, so a re-attached custom button needs it back.
             if (variant == PillButtonVariant.Custom && backgroundTexture == null)
             {
                 UpdateGradientBackground();
@@ -257,8 +242,7 @@ namespace UnityUIToolkit.Extensions
             {
                 if (fill == null)
                 {
-                    fill = UIToolkitExtensions.CreateVisualElement(FillClass);
-                    fill.pickingMode = PickingMode.Ignore;
+                    fill = UIToolkitExtensions.CreateVisualElement(FillClass).IgnorePicking();
                     fill.AddManipulator(new GradientFill(GradientPreset.Brand, GradientDirection.Horizontal));
                     fill.MakePill();
                     background.Insert(0, fill);

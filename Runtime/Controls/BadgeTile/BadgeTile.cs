@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// One badge (FS10_8): a star disc, filled with the primary gradient when unlocked and muted with an outline star
+    /// One badge: a star disc, filled with the primary gradient when unlocked and muted with an outline star
     /// when locked, then the name and a status such as "Unlocked", "8 of 12 stops" or "Locked".
     /// </summary>
     /// <remarks>
@@ -16,15 +16,7 @@ namespace UnityUIToolkit.Extensions
     /// <para>Badge art set with <see cref="SetIcon"/> replaces the star. It fills the disc untinted, scaled and cropped,
     /// clipped round, inside a 1.5 px ring; the primary gradient is not drawn behind it. A locked badge shows its art at
     /// 45% opacity.</para>
-    /// <para>Props: <c>title-text</c>, <c>status</c>, <c>unlocked</c>, <c>size</c> (disc diameter, default 64; the
-    /// <see cref="AchievementCard"/> uses 96). Method: <see cref="SetIcon"/>. Event: <see cref="Clicked"/>. Strings are
-    /// display text.</para>
-    /// <para>USS classes: <c>badgeTile</c> (root), <c>badgeTile__disc</c>, <c>badgeTile__icon</c>,
-    /// <c>badgeTile__title</c>, <c>badgeTile__status</c>. Modifiers: <c>badgeTile--unlocked</c>,
-    /// <c>badgeTile--locked</c>, <c>badgeTile--hasIcon</c>.</para>
-    /// <para>Tokens read: <c>--grad-brand-start/end</c> (through <see cref="GradientFill"/>), <c>--c-on-primary</c>,
-    /// <c>--surface-tile</c>, <c>--surface-ring</c>, <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-accent</c>,
-    /// <c>--radius-pill</c>, <c>--space-1..2</c>, <c>--text-caption</c>, <c>--font-body-semibold</c>.</para>
+    /// <para>The disc <c>size</c> defaults to 64; the <see cref="AchievementCard"/> uses 96. Strings are display text.</para>
     /// </remarks>
     [UxmlElement]
     public partial class BadgeTile : VisualElement
@@ -63,8 +55,7 @@ namespace UnityUIToolkit.Extensions
             get => title.text;
             set
             {
-                title.text = value ?? string.Empty;
-                title.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                title.SetTextOrHide(value);
                 FitTitle();
             }
         }
@@ -77,8 +68,7 @@ namespace UnityUIToolkit.Extensions
             get => status.text;
             set
             {
-                status.text = value ?? string.Empty;
-                status.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                status.SetTextOrHide(value);
             }
         }
 
@@ -96,8 +86,8 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Disc diameter. Badge art fills it; the star's box follows the boards, 30 in a 64 disc (FS10_8) and 48 in a
-        /// 96 disc (FS10_7), and scales between them.
+        /// Disc diameter. Badge art fills it; the star's box follows the boards, 30 in a 64 disc and 48 in a
+        /// 96 disc, and scales between them.
         /// </summary>
         [UxmlAttribute("size")]
         public float Size
@@ -120,24 +110,15 @@ namespace UnityUIToolkit.Extensions
             focusable = true;
             tabIndex = 0;
 
-            disc = UIToolkitExtensions.CreateVisualElement(this, DiscClass);
-            disc.pickingMode = PickingMode.Ignore;
+            disc = UIToolkitExtensions.CreateVisualElement(this, DiscClass).IgnorePicking();
             disc.MakePill();
-            icon = UIToolkitExtensions.CreateVisualElement(disc, IconClass);
-            icon.pickingMode = PickingMode.Ignore;
+            icon = UIToolkitExtensions.CreateVisualElement(disc, IconClass).IgnorePicking();
             icon.MakePill();
-            title = UIToolkitExtensions.CreateVisualElement<Label>(this, TitleClass);
-            title.pickingMode = PickingMode.Ignore;
-            status = UIToolkitExtensions.CreateVisualElement<Label>(this, StatusClass);
-            status.pickingMode = PickingMode.Ignore;
+            title = UIToolkitExtensions.CreateVisualElement<Label>(this, TitleClass).IgnorePicking();
+            status = UIToolkitExtensions.CreateVisualElement<Label>(this, StatusClass).IgnorePicking();
 
             title.RegisterCallback<GeometryChangedEvent>(_ => FitTitle());
-            RegisterCallback<ClickEvent>(_ => Clicked?.Invoke());
-            RegisterCallback<NavigationSubmitEvent>(evt =>
-            {
-                Clicked?.Invoke();
-                evt.StopPropagation();
-            });
+            this.RegisterActivate(() => Clicked?.Invoke());
 
             Size = size;
             Unlocked = false;
@@ -206,7 +187,7 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetIcon(Background image)
         {
-            hasIcon = image.texture != null || image.sprite != null || image.vectorImage != null || image.renderTexture != null;
+            hasIcon = image.HasContent();
             icon.style.backgroundImage = hasIcon ? new StyleBackground(image) : new StyleBackground(StyleKeyword.Null);
             EnableInClassList(HasIconClass, hasIcon);
             ApplyIconSize();

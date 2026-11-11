@@ -48,15 +48,9 @@ namespace UnityUIToolkit.Extensions
         private readonly Action onCancelled;
         private readonly VisualElement modalPanel;
         private readonly VisualElement header;
-        private readonly Label titleLabel;
-        private readonly VisualElement viewportHost;
         private readonly VisualElement cropViewport;
         private readonly VisualElement imageElement;
         private readonly VisualElement footer;
-        private readonly VisualElement cancelButtonSlot;
-        private readonly VisualElement saveButtonSlot;
-        private readonly PillButton cancelButton;
-        private readonly PillButton saveButton;
         private readonly Dictionary<int, Vector2> activePointers = new();
 
         private float viewportSizePx;
@@ -175,10 +169,10 @@ namespace UnityUIToolkit.Extensions
             header = UIToolkitExtensions.CreateVisualElement(modalPanel, HeaderClass);
             header.RegisterCallback<GeometryChangedEvent>(OnLayoutGeometryChanged);
 
-            titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(header, TitleClass);
+            var titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(header, TitleClass);
             titleLabel.text = string.IsNullOrWhiteSpace(this.configuration.Title) ? "Move and Scale" : this.configuration.Title;
 
-            viewportHost = UIToolkitExtensions.CreateVisualElement(modalPanel, ViewportHostClass);
+            var viewportHost = UIToolkitExtensions.CreateVisualElement(modalPanel, ViewportHostClass);
 
             cropViewport = UIToolkitExtensions.CreateVisualElement(viewportHost, ViewportClass);
             cropViewport.pickingMode = PickingMode.Position;
@@ -195,16 +189,16 @@ namespace UnityUIToolkit.Extensions
             footer = UIToolkitExtensions.CreateVisualElement(modalPanel, FooterClass);
             footer.RegisterCallback<GeometryChangedEvent>(OnLayoutGeometryChanged);
 
-            cancelButtonSlot = UIToolkitExtensions.CreateVisualElement(footer, ButtonSlotClass);
-            cancelButton = UIToolkitExtensions.CreateVisualElement<PillButton>(cancelButtonSlot, ButtonClass, ButtonCancelClass);
+            var cancelButtonSlot = UIToolkitExtensions.CreateVisualElement(footer, ButtonSlotClass);
+            var cancelButton = UIToolkitExtensions.CreateVisualElement<PillButton>(cancelButtonSlot, ButtonClass, ButtonCancelClass);
             cancelButton.Text = this.configuration.CancelLabel ?? "Cancel";
             cancelButton.SetInnerColor("#485164");
             cancelButton.SetOuterColor("#5C667A");
             cancelButton.SetTextColor(Color.white);
             cancelButton.Clicked += OnCancelButtonClicked;
 
-            saveButtonSlot = UIToolkitExtensions.CreateVisualElement(footer, ButtonSlotClass);
-            saveButton = UIToolkitExtensions.CreateVisualElement<PillButton>(saveButtonSlot, ButtonClass, ButtonSaveClass);
+            var saveButtonSlot = UIToolkitExtensions.CreateVisualElement(footer, ButtonSlotClass);
+            var saveButton = UIToolkitExtensions.CreateVisualElement<PillButton>(saveButtonSlot, ButtonClass, ButtonSaveClass);
             saveButton.Text = this.configuration.SaveLabel ?? "Save";
             saveButton.SetInnerColor("#4A90E2");
             saveButton.SetOuterColor("#7B68EE");
@@ -282,7 +276,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            activePointers[evt.pointerId] = ToVector2(evt.localPosition);
+            activePointers[evt.pointerId] = (Vector2)evt.localPosition;
             cropViewport.CapturePointer(evt.pointerId);
 
             if (activePointers.Count == 1)
@@ -304,7 +298,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            Vector2 localPosition = ToVector2(evt.localPosition);
+            Vector2 localPosition = evt.localPosition;
             activePointers[evt.pointerId] = localPosition;
 
             if (HasActivePinch())
@@ -383,8 +377,8 @@ namespace UnityUIToolkit.Extensions
             }
 
             float step = evt.delta.y > 0f ? 0.9f : 1.1f;
-            float newZoom = Mathf.Clamp(currentZoom * step, 1f, Mathf.Max(1f, configuration.MaxZoom));
-            SetZoomAroundAnchor(newZoom, ToVector2(evt.localMousePosition));
+            float newZoom = ClampZoom(currentZoom * step);
+            SetZoomAroundAnchor(newZoom, evt.localMousePosition);
             evt.StopImmediatePropagation();
         }
 
@@ -405,23 +399,13 @@ namespace UnityUIToolkit.Extensions
 
         private void StartPan(int pointerId)
         {
-            if (!activePointers.TryGetValue(pointerId, out Vector2 startPosition))
-            {
-                return;
-            }
-
             panPointerId = pointerId;
-            panStartPointerPosition = startPosition;
+            panStartPointerPosition = activePointers[pointerId];
             panStartOffsetPx = currentOffsetPx;
         }
 
         private void StartPinchGesture()
         {
-            if (activePointers.Count < 2)
-            {
-                return;
-            }
-
             using var enumerator = activePointers.GetEnumerator();
             enumerator.MoveNext();
             KeyValuePair<int, Vector2> firstPointer = enumerator.Current;
@@ -448,18 +432,10 @@ namespace UnityUIToolkit.Extensions
 
         private void UpdatePinchGesture()
         {
-            if (!HasActivePinch())
-            {
-                return;
-            }
-
             Vector2 pointerA = activePointers[pinchPointerIdA];
             Vector2 pointerB = activePointers[pinchPointerIdB];
             float currentDistance = Mathf.Max(Vector2.Distance(pointerA, pointerB), MinPinchDistancePx);
-            float newZoom = Mathf.Clamp(
-                pinchStartZoom * (currentDistance / pinchStartDistancePx),
-                1f,
-                Mathf.Max(1f, configuration.MaxZoom));
+            float newZoom = ClampZoom(pinchStartZoom * (currentDistance / pinchStartDistancePx));
             Vector2 currentCenter = (pointerA + pointerB) * 0.5f;
             Vector2 newOffset = ComputeOffsetForAnchor(newZoom, currentCenter, pinchAnchorNormalized);
             ApplyImageTransform(newZoom, newOffset);
@@ -496,7 +472,7 @@ namespace UnityUIToolkit.Extensions
 
         private void ApplyImageTransform(float zoom, Vector2 offset)
         {
-            currentZoom = Mathf.Clamp(zoom, 1f, Mathf.Max(1f, configuration.MaxZoom));
+            currentZoom = ClampZoom(zoom);
             currentOffsetPx = ClampOffset(offset, currentZoom);
 
             Rect imageRect = GetImageRect(currentZoom, currentOffsetPx);
@@ -539,9 +515,9 @@ namespace UnityUIToolkit.Extensions
                 Mathf.Clamp(offset.y, -maxOffsetY, maxOffsetY));
         }
 
-        private static Vector2 ToVector2(Vector3 value)
+        private float ClampZoom(float zoom)
         {
-            return new Vector2(value.x, value.y);
+            return Mathf.Clamp(zoom, 1f, Mathf.Max(1f, configuration.MaxZoom));
         }
 
         private static Vector4 SanitizeCornerRadiusPercent(Vector4 cornerRadiusPercent)
@@ -555,7 +531,7 @@ namespace UnityUIToolkit.Extensions
 
         private void OnCancelButtonClicked()
         {
-            CloseOverlay();
+            RemoveFromHierarchy();
             onCancelled?.Invoke();
         }
 
@@ -564,7 +540,7 @@ namespace UnityUIToolkit.Extensions
             try
             {
                 Texture2D croppedTexture = CreateCroppedTexture();
-                CloseOverlay();
+                RemoveFromHierarchy();
                 onConfirmed?.Invoke(croppedTexture);
             }
             catch (Exception ex)
@@ -652,11 +628,6 @@ namespace UnityUIToolkit.Extensions
                 RenderTexture.active = previousActiveTexture;
                 RenderTexture.ReleaseTemporary(temporaryTexture);
             }
-        }
-
-        private void CloseOverlay()
-        {
-            RemoveFromHierarchy();
         }
     }
 }

@@ -79,12 +79,6 @@ namespace UnityUIToolkit.Extensions
     /// </summary>
     /// <remarks>
     /// <para>Rows are recycled by a <see cref="ListView"/>, so large catalogues stay cheap.</para>
-    /// <para>Props: <c>columns</c> (0 for automatic), <c>min-tile-width</c>, <c>thumbnail-aspect</c>, <c>selection-mode</c>, <c>is-loading</c>,
-    /// <c>empty-title</c>, <c>empty-body</c>, <c>empty-action-text</c>, <c>load-more-threshold</c>. Methods: <see cref="SetItems"/>,
-    /// <see cref="RefreshItem"/>, <see cref="SetSelection"/>, <see cref="ClearSelection"/>, <see cref="EnableLoadMore"/>,
-    /// <see cref="DisableLoadMore"/>, <see cref="BeginLoadMore"/>, <see cref="EndLoadMore"/>.
-    /// Events: <see cref="ItemTapped"/>, <see cref="SelectionChanged"/>, <see cref="DragStarted"/>,
-    /// <see cref="EmptyActionClicked"/>, <see cref="LoadMoreRequested"/>.</para>
     /// <para>Drag-out: hold a tile for <see cref="LongPressMs"/>, then move; <see cref="DragStarted"/> carries the item
     /// and the pointer position, and the owner takes over (for example to place the item in the world).</para>
     /// <para>Paging: after <see cref="EnableLoadMore"/>, <see cref="LoadMoreRequested"/> is raised when the end of the items
@@ -92,18 +86,7 @@ namespace UnityUIToolkit.Extensions
     /// scrolling. Answer it by fetching the next page between <see cref="BeginLoadMore"/> and <see cref="EndLoadMore"/>,
     /// passing all items so far to <see cref="SetItems"/>; the scroll offset and the rows on screen are kept. Call
     /// <see cref="DisableLoadMore"/> when there are no more.</para>
-    /// <para>USS classes: <c>contentGrid</c> (root), <c>contentGrid__list</c>, <c>contentGrid__row</c>,
-    /// <c>contentGrid__tile</c>, <c>contentGrid__thumb</c>, <c>contentGrid__badge</c>, <c>contentGrid__check</c>,
-    /// <c>contentGrid__name</c>, <c>contentGrid__meta</c>, <c>contentGrid__skeleton</c>, <c>contentGrid__empty</c>.</para>
-    /// <para>Modifier classes: <c>contentGrid--loading</c>, <c>contentGrid--empty</c>, <c>contentGrid--loading-more</c>
-    /// (between <see cref="BeginLoadMore"/> and <see cref="EndLoadMore"/>); on tiles
-    /// <c>contentGrid__tile--selected</c>, <c>contentGrid__tile--armed</c> (long-press reached),
-    /// <c>contentGrid__tile--hidden</c> (padding cell in the last row), <c>contentGrid__tile--disabled</c> (the item's
-    /// <see cref="ContentGridItem.IsEnabled"/> is false: thumbnail, badge and text at 45% opacity).</para>
-    /// <para>Tokens read: <c>--surface-raised</c>, <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-border</c>,
-    /// <c>--surface-accent</c>, <c>--surface-skeleton</c>, <c>--c-scrim</c>, <c>--c-on-primary</c>, <c>--radius-card</c>,
-    /// <c>--radius-pill</c>, <c>--space-1..3</c>, <c>--text-label</c>, <c>--text-caption</c>, <c>--font-body</c>,
-    /// <c>--font-body-medium</c>, <c>--font-body-semibold</c>, <c>--motion-fast</c>.</para>
+    /// <para>A disabled tile shows its thumbnail, badge and text at 45% opacity.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ContentGrid : VisualElement
@@ -147,6 +130,10 @@ namespace UnityUIToolkit.Extensions
 
         private readonly ListView list;
         private readonly ScrollView scrollView;
+        private readonly UQueryState<VisualElement> tileQuery;
+        private readonly UQueryState<VisualElement> rowQuery;
+        private readonly Action applyRowHeight;
+        private readonly Action onLoadMoreCheckDue;
         private readonly SkeletonTile skeleton;
         private readonly EmptyState empty;
         private readonly List<ContentGridItem> items = new();
@@ -383,13 +370,16 @@ namespace UnityUIToolkit.Extensions
                 // Every row is the same height, so rows are placed by index. With DynamicHeight the list estimated the height of a
                 // row scrolling in from the top, measured it, then corrected the scroll offset a frame later: a visible jump on every
                 // scroll back towards the start. The height is measured from the rows themselves (OnRowGeometryChanged).
-                // Legacy: virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight.
                 virtualizationMethod = CollectionVirtualizationMethod.FixedHeight,
                 showAlternatingRowBackgrounds = AlternatingRowBackground.None,
                 horizontalScrollingEnabled = false,
             };
             list.AddToClassList(ListClass);
             hierarchy.Add(list);
+            tileQuery = list.Query(className: TileClass).Build();
+            rowQuery = list.Query(className: RowClass).Build();
+            applyRowHeight = ApplyRowHeight;
+            onLoadMoreCheckDue = OnLoadMoreCheckDue;
 
             // Paging: scrolling, or the view resizing (a sheet changing detent), can bring the end of the items into reach.
             scrollView = list.Q<ScrollView>();
@@ -435,7 +425,7 @@ namespace UnityUIToolkit.Extensions
                 }
             }
 
-            var removed = selection.RemoveWhere(id => !ids.Contains(id)) > 0;
+            var removed = selection.Count > 0 && selection.RemoveWhere(id => !ids.Contains(id)) > 0;
             UpdateMetaLine();
             RebuildRows();
             UpdateState();
@@ -631,7 +621,7 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         private float RowWidth()
         {
-            var viewport = list.Q<ScrollView>()?.contentViewport.layout.width ?? float.NaN;
+            var viewport = scrollView.contentViewport.layout.width;
             var width = !float.IsNaN(viewport) && viewport > 0f ? viewport : contentRect.width;
             return float.IsNaN(width) || width <= 0f ? float.NaN : width;
         }
@@ -640,7 +630,6 @@ namespace UnityUIToolkit.Extensions
         /// Recounts the rows. A change of items refreshes the list, which keeps its scroll offset and its recycled rows, as when a
         /// page of items is appended; a change of columns rebuilds it, since every row's tiles change.
         /// </summary>
-        /// <remarks>Legacy: every change rebuilt the list, which also forgot every measured row height.</remarks>
         private void RebuildRows(bool rebuild = false)
         {
             rows.Clear();
@@ -685,7 +674,7 @@ namespace UnityUIToolkit.Extensions
             }
 
             rowHeightScheduled = true;
-            list.schedule.Execute(ApplyRowHeight);
+            list.schedule.Execute(applyRowHeight);
         }
 
         /// <summary>
@@ -697,9 +686,6 @@ namespace UnityUIToolkit.Extensions
         /// <see cref="RowHeightChangeBudget"/> changes without settling it only grows, so no feedback, such as a scroller that
         /// appears and narrows the tiles, can become a loop.
         /// </summary>
-        /// <remarks>Legacy: the last tile to report set the height and the list was rebuilt each time. A padding cell made with
-        /// empty labels, or a tile with no meta, measured shorter than its neighbours, so the list rebuilt between the two heights
-        /// every frame or two, and no tap landed on a tile that lived long enough to be clicked.</remarks>
         private void ApplyRowHeight()
         {
             rowHeightScheduled = false;
@@ -746,9 +732,12 @@ namespace UnityUIToolkit.Extensions
             rowHeightChanges++;
             list.fixedItemHeight = height;
             // The setter refreshes the list, which lays out the content for the new height but leaves the rows already made at
-            // the old one, so they are resized here, in place. Legacy: the list was rebuilt, which made every row and tile again
-            // and cancelled any press on them.
-            list.Query(className: RowClass).ForEach(row => row.style.height = height);
+            // the old one, so they are resized here, in place.
+            foreach (var row in rowQuery)
+            {
+                row.style.height = height;
+            }
+
             ScheduleRowHeightCheck();
         }
 
@@ -782,7 +771,7 @@ namespace UnityUIToolkit.Extensions
             {
                 // Not inside the event that asked (a scroll, say), so a host answering at once does not change the list mid-event.
                 loadMoreCheckScheduled = true;
-                list.schedule.Execute(OnLoadMoreCheckDue);
+                list.schedule.Execute(onLoadMoreCheckDue);
             }
         }
 
@@ -862,11 +851,11 @@ namespace UnityUIToolkit.Extensions
         private float TallestTileHeight()
         {
             var tallest = float.NaN;
-            list.Query(className: TileClass).ForEach(tile =>
+            foreach (var tile in tileQuery)
             {
                 if (tile.userData is not ContentGridItem || tile.ClassListContains(HiddenTileClass) || tile.parent?.resolvedStyle.display == DisplayStyle.None)
                 {
-                    return;
+                    continue;
                 }
 
                 var height = tile.layout.height;
@@ -874,7 +863,7 @@ namespace UnityUIToolkit.Extensions
                 {
                     tallest = height;
                 }
-            });
+            }
 
             return tallest;
         }
@@ -905,16 +894,12 @@ namespace UnityUIToolkit.Extensions
             var isEmpty = !isLoading && items.Count == 0;
             EnableInClassList(LoadingClass, isLoading);
             EnableInClassList(EmptyModifierClass, isEmpty);
-            list.style.display = !isLoading && !isEmpty ? DisplayStyle.Flex : DisplayStyle.None;
-            skeleton.style.display = isLoading ? DisplayStyle.Flex : DisplayStyle.None;
-            empty.style.display = isEmpty ? DisplayStyle.Flex : DisplayStyle.None;
+            list.SetDisplayed(!isLoading && !isEmpty);
+            skeleton.SetDisplayed(isLoading);
+            empty.SetDisplayed(isEmpty);
         }
 
-        private VisualElement MakeRow()
-        {
-            var row = UIToolkitExtensions.CreateVisualElement(RowClass);
-            return row;
-        }
+        private VisualElement MakeRow() => UIToolkitExtensions.CreateVisualElement(RowClass);
 
         private void BindRow(VisualElement row, int rowIndex)
         {
@@ -948,8 +933,7 @@ namespace UnityUIToolkit.Extensions
                 if (index >= items.Count)
                 {
                     // A padding cell in a short last row. It is bound like a tile with blank lines, so it measures like one, then
-                    // left without an item, so taps, presses, selection and TileFor pass it by. Legacy: it kept whatever text a
-                    // recycled tile had, or none when freshly made, and then measured two lines short.
+                    // left without an item, so taps, presses, selection and TileFor pass it by.
                     BindTile(tile, PaddingItem);
                     tile.userData = null;
                     tile.AddToClassList(HiddenTileClass);
@@ -965,21 +949,16 @@ namespace UnityUIToolkit.Extensions
         {
             var tile = UIToolkitExtensions.CreateVisualElement(TileClass);
             tile.RegisterCallback<GeometryChangedEvent>(_ => OnTileGeometryChanged(tile));
-            var thumb = UIToolkitExtensions.CreateVisualElement(tile, ThumbClass);
-            thumb.pickingMode = PickingMode.Ignore;
+            var thumb = UIToolkitExtensions.CreateVisualElement(tile, ThumbClass).IgnorePicking();
             thumb.RegisterCallback<GeometryChangedEvent>(evt => OnThumbGeometryChanged(thumb, evt.newRect.width));
 
-            var badge = UIToolkitExtensions.CreateVisualElement<Label>(thumb, BadgeClass).MakePill();
-            badge.pickingMode = PickingMode.Ignore;
-            var check = UIToolkitExtensions.CreateVisualElement(thumb, CheckClass);
-            check.pickingMode = PickingMode.Ignore;
+            var badge = UIToolkitExtensions.CreateVisualElement<Label>(thumb, BadgeClass).MakePill().IgnorePicking();
+            var check = UIToolkitExtensions.CreateVisualElement(thumb, CheckClass).IgnorePicking();
 
-            var name = UIToolkitExtensions.CreateVisualElement<Label>(tile, NameClass);
-            name.pickingMode = PickingMode.Ignore;
-            var meta = UIToolkitExtensions.CreateVisualElement<Label>(tile, MetaClass);
-            meta.pickingMode = PickingMode.Ignore;
+            var name = UIToolkitExtensions.CreateVisualElement<Label>(tile, NameClass).IgnorePicking();
+            var meta = UIToolkitExtensions.CreateVisualElement<Label>(tile, MetaClass).IgnorePicking();
 
-            tile.RegisterCallback<ClickEvent>(evt => OnTileClicked(tile));
+            tile.RegisterCallback<ClickEvent>(_ => OnTileClicked(tile));
             tile.RegisterCallback<PointerDownEvent>(evt => OnTilePointerDown(tile, evt));
             return tile;
         }
@@ -988,19 +967,17 @@ namespace UnityUIToolkit.Extensions
         {
             tile.userData = item;
             var thumb = tile.Q(className: ThumbClass);
-            var hasThumb = item.Thumbnail.texture != null || item.Thumbnail.sprite != null || item.Thumbnail.vectorImage != null || item.Thumbnail.renderTexture != null;
+            var hasThumb = item.Thumbnail.HasContent();
             thumb.style.backgroundImage = hasThumb ? new StyleBackground(item.Thumbnail) : new StyleBackground(StyleKeyword.Null);
 
             var badge = tile.Q<Label>(className: BadgeClass);
-            badge.text = item.TypeLabel ?? string.Empty;
-            badge.style.display = string.IsNullOrEmpty(item.TypeLabel) ? DisplayStyle.None : DisplayStyle.Flex;
+            badge.SetTextOrHide(item.TypeLabel);
 
             // Every tile has the same lines, blank where an item has no text, so every tile is the same height.
-            // Legacy: an empty name measured no height and an empty meta was hidden, so such a tile measured shorter.
             SetLine(tile.Q<Label>(className: NameClass), item.Name);
             var meta = tile.Q<Label>(className: MetaClass);
             SetLine(meta, item.Meta);
-            meta.style.display = showMetaLine ? DisplayStyle.Flex : DisplayStyle.None;
+            meta.SetDisplayed(showMetaLine);
 
             tile.EnableInClassList(SelectedClass, selection.Contains(item.Id));
             tile.EnableInClassList(DisabledTileClass, !item.IsEnabled);

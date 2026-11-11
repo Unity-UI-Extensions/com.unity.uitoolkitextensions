@@ -6,14 +6,10 @@ using UnityEngine.UIElements;
 namespace UnityUIToolkit.Extensions
 {
     /// <summary>
-    /// The ground a component is drawn on. Selects which set of surface tokens
-    /// (<see cref="ThemeTokens.Surface"/>) the component and its children read.
+    /// The ground a component is drawn on. It selects the surface tokens (<see cref="ThemeTokens.Surface"/>) that the component and its children read.
     /// </summary>
     public enum ThemeSurface
     {
-        /// <summary>
-        /// Inherit the surface of the parent element.
-        /// </summary>
         Inherit,
 
         /// <summary>
@@ -43,17 +39,14 @@ namespace UnityUIToolkit.Extensions
     /// @import url("/Assets/UI/ApplicationTheme.uss");
     /// </code>
     /// <para>
-    /// Components never declare colours, radii, spacing, type sizes or durations of their own; they
-    /// read the variables named here, mostly through the surface layer so the same component
+    /// Components never declare colours, radii, spacing, type sizes or durations of their own.
+    /// They read these variables, mostly through the surface layer, so the same component
     /// reads correctly on deep and light grounds.
     /// </para>
-    /// <para>Modifier classes, set on any ancestor (normally the panel root):</para>
-    /// <list type="bullet">
-    /// <item><c>surface--deep</c>, <c>surface--light</c>: remap the <see cref="Surface"/> tokens for that subtree.</item>
-    /// <item><c>reduce-motion</c>: sets every motion token to 0 ms.</item>
-    /// <item><c>text-scale--115</c>, <c>text-scale--130</c>: scale the type tokens by 1.15 or 1.3.</item>
-    /// <item><c>theme--high-contrast</c>: stronger muted text and dividers, more opaque panels.</item>
-    /// </list>
+    /// <para>
+    /// Modifier classes go on any ancestor, normally the panel root. <c>reduce-motion</c> sets every motion token to 0 ms.
+    /// <c>text-scale--115</c> and <c>text-scale--130</c> scale the type tokens by 1.15 and 1.3.
+    /// </para>
     /// </remarks>
     public static class ThemeTokens
     {
@@ -278,14 +271,7 @@ namespace UnityUIToolkit.Extensions
         /// theme does not import the token sheet; never on a component, or its <c>:root</c>
         /// defaults would shadow the application's overrides for that component.
         /// </summary>
-        public static void ApplyThemeTokens(this VisualElement root)
-        {
-            var sheet = StyleSheet;
-            if (sheet != null && !root.styleSheets.Contains(sheet))
-            {
-                root.styleSheets.Add(sheet);
-            }
-        }
+        public static void ApplyThemeTokens(this VisualElement root) => root.AttachOnce(StyleSheet);
 
         /// <summary>
         /// Marks a component as reading the token contract. In the Editor it logs one warning per
@@ -300,9 +286,6 @@ namespace UnityUIToolkit.Extensions
 #endif
         }
 
-        /// <summary>
-        /// True when the element's styles resolved the token sheet's version marker.
-        /// </summary>
         public static bool HasThemeTokens(ICustomStyle customStyle)
         {
             return customStyle.TryGetValue(TokensProperty, out _);
@@ -327,9 +310,6 @@ namespace UnityUIToolkit.Extensions
                              $"\"/{StyleSheetAssetPath}\". Add it to the theme (.tss) before the control styles, or call ApplyThemeTokens() on the document root.");
         }
 
-        /// <summary>
-        /// Sets the surface a subtree is drawn on.
-        /// </summary>
         public static void SetSurface(this VisualElement element, ThemeSurface surface)
         {
             element.EnableInClassList(DeepSurfaceClass, surface == ThemeSurface.Deep);
@@ -362,9 +342,6 @@ namespace UnityUIToolkit.Extensions
             root.EnableInClassList(HighContrastClass, highContrast);
         }
 
-        /// <summary>
-        /// True when the element or any ancestor carries <see cref="ReduceMotionClass"/>.
-        /// </summary>
         public static bool IsReduceMotion(this VisualElement element)
         {
             for (var current = element; current != null; current = current.hierarchy.parent)

@@ -48,20 +48,8 @@ namespace UnityUIToolkit.Extensions
     /// indicator, fades at the edges that have more content, and an optional leading search tab.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>labels</c> (UXML shorthand: ids are the labels), <c>selected-id</c>, <c>variant</c>,
-    /// <c>show-search</c>. Methods: <see cref="SetItems"/>, <see cref="Select"/>.
-    /// Events: <see cref="SelectionChanged"/> (id, index), <see cref="SearchRequested"/>.</para>
-    /// <para>Left/Right (or gamepad navigation) move the selection while the row has focus.</para>
-    /// <para>USS classes: <c>scrollingTabs</c> (root), <c>scrollingTabs__scroll</c>, <c>scrollingTabs__row</c>,
-    /// <c>scrollingTabs__tab</c>, <c>scrollingTabs__label</c>, <c>scrollingTabs__count</c>,
-    /// <c>scrollingTabs__search</c>, <c>scrollingTabs__indicator</c>, <c>scrollingTabs__fade</c>.</para>
-    /// <para>Modifier classes: <c>scrollingTabs--tabs</c>, <c>scrollingTabs--chips</c>; on tabs
-    /// <c>scrollingTabs__tab--active</c>; on fades <c>scrollingTabs__fade--start</c>,
-    /// <c>scrollingTabs__fade--end</c>, <c>scrollingTabs__fade--visible</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--surface-border</c>, <c>--surface-raised</c>, <c>--surface-accent</c>, <c>--c-primary</c>,
-    /// <c>--c-on-primary</c>, <c>--radius-pill</c>, <c>--space-1..4</c>, <c>--text-label</c>,
-    /// <c>--text-caption</c>, <c>--font-body-medium</c>, <c>--font-body-semibold</c>, <c>--motion-base</c>.</para>
+    /// <para>The <c>labels</c> UXML shorthand makes each label its own id.</para>
+    /// <para>Left and Right (or gamepad navigation) move the selection while the row has focus.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ScrollingTabs : VisualElement
@@ -105,18 +93,12 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public event Action<string, int> SelectionChanged;
 
-        /// <summary>
-        /// Raised when the search tab is tapped.
-        /// </summary>
         public event Action SearchRequested;
 
         public IReadOnlyList<TabItem> Items => items;
 
         public int SelectedIndex => selectedIndex;
 
-        /// <summary>
-        /// The scroll view; exposed for tests.
-        /// </summary>
         public ScrollView ScrollView => scroll;
 
         [UxmlAttribute("labels")]
@@ -125,16 +107,7 @@ namespace UnityUIToolkit.Extensions
             get => items.ConvertAll(i => i.Label);
             set
             {
-                var list = new List<TabItem>();
-                if (value != null)
-                {
-                    foreach (var label in value)
-                    {
-                        list.Add(new TabItem(label, label));
-                    }
-                }
-
-                SetItems(list, SelectedId);
+                SetItems(value?.ConvertAll(l => new TabItem(l, l)) ?? new List<TabItem>(), SelectedId);
             }
         }
 
@@ -175,7 +148,7 @@ namespace UnityUIToolkit.Extensions
         public bool ShowSearch
         {
             get => search.style.display != DisplayStyle.None;
-            set => search.style.display = value ? DisplayStyle.Flex : DisplayStyle.None;
+            set => search.SetDisplayed(value);
         }
 
         public ScrollingTabs()
@@ -203,15 +176,12 @@ namespace UnityUIToolkit.Extensions
             search.RegisterCallback<ClickEvent>(_ => SearchRequested?.Invoke());
             search.style.display = DisplayStyle.None;
 
-            indicator = UIToolkitExtensions.CreateVisualElement(IndicatorClass);
-            indicator.pickingMode = PickingMode.Ignore;
+            indicator = UIToolkitExtensions.CreateVisualElement(IndicatorClass).IgnorePicking();
             row.Add(indicator);
 
-            fadeStart = UIToolkitExtensions.CreateVisualElement(FadeClass, FadeStartClass);
-            fadeStart.pickingMode = PickingMode.Ignore;
+            fadeStart = UIToolkitExtensions.CreateVisualElement(FadeClass, FadeStartClass).IgnorePicking();
             hierarchy.Add(fadeStart);
-            fadeEnd = UIToolkitExtensions.CreateVisualElement(FadeClass, FadeEndClass);
-            fadeEnd.pickingMode = PickingMode.Ignore;
+            fadeEnd = UIToolkitExtensions.CreateVisualElement(FadeClass, FadeEndClass).IgnorePicking();
             hierarchy.Add(fadeEnd);
 
             scroll.horizontalScroller.valueChanged += _ => UpdateFades();
@@ -258,7 +228,7 @@ namespace UnityUIToolkit.Extensions
 
                     var count = UIToolkitExtensions.CreateVisualElement<Label>(tab, CountClass);
                     count.text = item.Count >= 0 ? item.Count.ToString() : string.Empty;
-                    count.style.display = item.Count >= 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                    count.SetDisplayed(item.Count >= 0);
                     count.pickingMode = PickingMode.Ignore;
 
                     row.Insert(row.IndexOf(indicator), tab);
@@ -285,14 +255,9 @@ namespace UnityUIToolkit.Extensions
             return true;
         }
 
-        /// <summary>
-        /// The element of a tab, for focus and tests.
-        /// </summary>
         public VisualElement TabElement(int index) => tabs[index];
 
-        /// <summary>
-        /// Chips are pills; text tabs keep the stylesheet's corners.
-        /// </summary>
+        // Chips are pills. Text tabs keep the stylesheet's corners.
         private void ApplyTabShape(VisualElement tab)
         {
             if (variant == ScrollingTabsVariant.Chips)
@@ -354,9 +319,7 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// True while a selected tab waits for a layout to scroll into view.
-        /// </summary>
+        // True while a selected tab waits for a layout to scroll into view.
         internal bool HasPendingScroll => pendingScrollTab != null;
 
         private void ScrollPendingIntoView()
@@ -378,7 +341,7 @@ namespace UnityUIToolkit.Extensions
         private void UpdateIndicator(bool animate)
         {
             var show = variant == ScrollingTabsVariant.Tabs && selectedIndex >= 0 && selectedIndex < tabs.Count;
-            indicator.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            indicator.SetDisplayed(show);
             if (!show)
             {
                 return;
@@ -426,25 +389,8 @@ namespace UnityUIToolkit.Extensions
         private void ReleaseFadeTextures()
         {
             fadeColor = Color.clear;
-            foreach (var texture in new[] { fadeStartTexture, fadeEndTexture })
-            {
-                if (texture == null)
-                {
-                    continue;
-                }
-
-                if (Application.isPlaying)
-                {
-                    UnityEngine.Object.Destroy(texture);
-                }
-                else
-                {
-                    UnityEngine.Object.DestroyImmediate(texture);
-                }
-            }
-
-            fadeStartTexture = null;
-            fadeEndTexture = null;
+            ProceduralTextureUtility.Release(ref fadeStartTexture);
+            ProceduralTextureUtility.Release(ref fadeEndTexture);
         }
 
         private void OnNavigationMove(NavigationMoveEvent evt)

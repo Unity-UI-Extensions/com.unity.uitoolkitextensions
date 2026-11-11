@@ -33,14 +33,7 @@ namespace UnityUIToolkit.Extensions
     /// an ancestor carries <c>reduce-motion</c>.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>count</c>, <c>shape</c>, <c>columns</c>, <c>lines</c>, <c>animate</c>, <c>thumbnail-aspect</c>.</para>
-    /// <para>USS classes: <c>skeletonTile</c> (root), <c>skeletonTile__item</c>, <c>skeletonTile__thumb</c>,
-    /// <c>skeletonTile__avatar</c>, <c>skeletonTile__lines</c>, <c>skeletonTile__line</c>.</para>
-    /// <para>Modifier classes: <c>skeletonTile--tile</c>, <c>skeletonTile--row</c>, <c>skeletonTile--text</c>,
-    /// <c>skeletonTile--circle</c>, <c>skeletonTile--dim</c> (the low point of the pulse),
-    /// <c>skeletonTile__line--short</c>.</para>
-    /// <para>Tokens read: <c>--surface-skeleton</c>, <c>--radius-sm</c>, <c>--radius-card</c>, <c>--radius-pill</c>,
-    /// <c>--space-2</c>, <c>--space-3</c>, <c>--motion-slow</c>.</para>
+    /// <para>The class <c>skeletonTile--dim</c> marks the low point of the pulse.</para>
     /// </remarks>
     [UxmlElement]
     public partial class SkeletonTile : VisualElement
@@ -55,7 +48,7 @@ namespace UnityUIToolkit.Extensions
         public const string DimClass = "skeletonTile--dim";
 
         /// <summary>
-        /// Time between pulse phases.
+        /// Time between pulse phases in milliseconds.
         /// </summary>
         public const int PulseIntervalMs = 700;
 
@@ -149,9 +142,6 @@ namespace UnityUIToolkit.Extensions
             }
         }
 
-        /// <summary>
-        /// Whether the pulse is running now (animated, attached, and no reduce-motion ancestor).
-        /// </summary>
         public bool IsPulsing => animate && panel != null && !this.IsReduceMotion();
 
         public SkeletonTile()
@@ -174,12 +164,20 @@ namespace UnityUIToolkit.Extensions
             Rebuild();
         }
 
+        private static readonly string[] ShapeClasses =
+        {
+            RootClass + "--tile",
+            RootClass + "--row",
+            RootClass + "--text",
+            RootClass + "--circle",
+        };
+
         private void Rebuild()
         {
             Clear();
-            foreach (SkeletonShape value in System.Enum.GetValues(typeof(SkeletonShape)))
+            for (var i = 0; i < ShapeClasses.Length; i++)
             {
-                EnableInClassList($"{RootClass}--{value.ToString().ToLowerInvariant()}", value == shape);
+                EnableInClassList(ShapeClasses[i], i == (int)shape);
             }
 
             var perRow = shape is SkeletonShape.Tile or SkeletonShape.Circle ? columns : 1;

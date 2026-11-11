@@ -1,7 +1,6 @@
 /// Credit SimonDarksideJ
 
 using System;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityUIToolkit.Extensions
@@ -14,16 +13,8 @@ namespace UnityUIToolkit.Extensions
     /// <para>The pill hugs its content; a long title ends with an ellipsis. With no title and no subtitle it shows
     /// the logo alone, centred, at least 56 px wide, for the HUD before an experience or space is open. Dim it
     /// while a dialog is open over it; a dimmed pill ignores taps and keyboard focus.</para>
-    /// <para>Props: <c>title</c>, <c>subtitle</c> (shown in capitals), <c>dimmed</c>, <c>tint-logo</c> (tints the logo
-    /// with the text colour, default on, for a white or single-colour logo). Methods: <see cref="SetLogo"/>.
-    /// Events: <see cref="Tapped"/> (a click, or submit from the keyboard).</para>
-    /// <para>USS classes: <c>contextPill</c> (root), <c>contextPill__logo</c>, <c>contextPill__divider</c>,
-    /// <c>contextPill__texts</c>, <c>contextPill__title</c>, <c>contextPill__subtitle</c>.</para>
-    /// <para>Modifier classes: <c>contextPill--dimmed</c>, <c>contextPill--noLogo</c>, <c>contextPill--noSubtitle</c>,
-    /// <c>contextPill--logoOnly</c> (no title and no subtitle), <c>contextPill--tintLogo</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-accent</c>, <c>--surface-fg</c>,
-    /// <c>--surface-muted</c>, <c>--radius-pill</c>, <c>--space-3</c>, <c>--text-label</c>, <c>--text-micro</c>,
-    /// <c>--font-display</c>, <c>--font-body-medium</c>, <c>--motion-base</c>.</para>
+    /// <para><c>tint-logo</c> tints the logo with the text colour. It is on by default, for a white or single-colour logo.
+    /// <see cref="Tapped"/> is a click, or submit from the keyboard.</para>
     /// </remarks>
     [UxmlElement]
     public partial class ContextPill : VisualElement
@@ -132,24 +123,14 @@ namespace UnityUIToolkit.Extensions
             this.MakePill();
             tabIndex = 0;
 
-            logo = UIToolkitExtensions.CreateVisualElement(this, LogoClass);
-            logo.pickingMode = PickingMode.Ignore;
-            divider = UIToolkitExtensions.CreateVisualElement(this, DividerClass);
-            divider.pickingMode = PickingMode.Ignore;
+            logo = UIToolkitExtensions.CreateVisualElement(this, LogoClass).IgnorePicking();
+            divider = UIToolkitExtensions.CreateVisualElement(this, DividerClass).IgnorePicking();
 
-            texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass);
-            texts.pickingMode = PickingMode.Ignore;
-            titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass);
-            titleLabel.pickingMode = PickingMode.Ignore;
-            subtitleLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, SubtitleClass);
-            subtitleLabel.pickingMode = PickingMode.Ignore;
+            texts = UIToolkitExtensions.CreateVisualElement(this, TextsClass).IgnorePicking();
+            titleLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass).IgnorePicking();
+            subtitleLabel = UIToolkitExtensions.CreateVisualElement<Label>(texts, SubtitleClass).IgnorePicking();
 
-            RegisterCallback<ClickEvent>(_ => OnTapped());
-            RegisterCallback<NavigationSubmitEvent>(evt =>
-            {
-                OnTapped();
-                evt.StopPropagation();
-            });
+            this.RegisterActivate(OnTapped);
 
             TintLogo = true;
             Dimmed = false;
@@ -173,7 +154,7 @@ namespace UnityUIToolkit.Extensions
             hasLogo = aspect > 0f;
             logo.style.backgroundImage = hasLogo ? new StyleBackground(image) : new StyleBackground(StyleKeyword.None);
             logo.style.width = hasLogo ? new StyleLength(LogoHeight * aspect) : new StyleLength(StyleKeyword.Null);
-            logo.style.display = hasLogo ? DisplayStyle.Flex : DisplayStyle.None;
+            logo.SetDisplayed(hasLogo);
             EnableInClassList(NoLogoClass, !hasLogo);
             UpdateParts();
         }
@@ -181,14 +162,9 @@ namespace UnityUIToolkit.Extensions
         // The divider shows only between a logo and some text; the text block hides when it has nothing to show.
         private void UpdateParts()
         {
-            if (texts == null)
-            {
-                return;
-            }
-
             var hasText = titleLabel.text.Length > 0 || subtitle.Length > 0;
-            texts.style.display = hasText ? DisplayStyle.Flex : DisplayStyle.None;
-            divider.style.display = hasLogo && hasText ? DisplayStyle.Flex : DisplayStyle.None;
+            texts.SetDisplayed(hasText);
+            divider.SetDisplayed(hasLogo && hasText);
             EnableInClassList(LogoOnlyClass, hasLogo && !hasText);
         }
 
@@ -205,26 +181,28 @@ namespace UnityUIToolkit.Extensions
         {
             if (image.texture != null)
             {
-                return image.texture.height > 0 ? (float)image.texture.width / image.texture.height : 1f;
+                return Ratio(image.texture.width, image.texture.height);
             }
 
             if (image.sprite != null)
             {
                 var rect = image.sprite.rect;
-                return rect.height > 0f ? rect.width / rect.height : 1f;
+                return Ratio(rect.width, rect.height);
             }
 
             if (image.vectorImage != null)
             {
-                return image.vectorImage.height > 0f ? image.vectorImage.width / image.vectorImage.height : 1f;
+                return Ratio(image.vectorImage.width, image.vectorImage.height);
             }
 
             if (image.renderTexture != null)
             {
-                return image.renderTexture.height > 0 ? (float)image.renderTexture.width / image.renderTexture.height : 1f;
+                return Ratio(image.renderTexture.width, image.renderTexture.height);
             }
 
             return 0f;
         }
+
+        private static float Ratio(float w, float h) => h > 0f ? w / h : 1f;
     }
 }

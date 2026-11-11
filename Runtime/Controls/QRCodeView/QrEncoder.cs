@@ -252,14 +252,18 @@ namespace UnityUIToolkit.Extensions
             return text.Length > 0 && numeric ? Mode.Numeric : text.Length > 0 && alphanumeric ? Mode.Alphanumeric : Mode.Byte;
         }
 
+        private static readonly int[] NumericCountBits = { 10, 12, 14 };
+        private static readonly int[] AlphanumericCountBits = { 9, 11, 13 };
+        private static readonly int[] ByteCountBits = { 8, 16, 16 };
+
         private static int CharCountBits(Mode mode, int version)
         {
             var band = version <= 9 ? 0 : version <= 26 ? 1 : 2;
             return mode switch
             {
-                Mode.Numeric => new[] { 10, 12, 14 }[band],
-                Mode.Alphanumeric => new[] { 9, 11, 13 }[band],
-                _ => new[] { 8, 16, 16 }[band],
+                Mode.Numeric => NumericCountBits[band],
+                Mode.Alphanumeric => AlphanumericCountBits[band],
+                _ => ByteCountBits[band],
             };
         }
 
@@ -602,12 +606,12 @@ namespace UnityUIToolkit.Extensions
 
                         if (b + 10 < size)
                         {
-                            if (IsFinderLike(i => Modules[a, b + i]))
+                            if (IsFinderLike(a, b, column: false))
                             {
                                 result += 40;
                             }
 
-                            if (IsFinderLike(i => Modules[b + i, a]))
+                            if (IsFinderLike(a, b, column: true))
                             {
                                 result += 40;
                             }
@@ -621,10 +625,11 @@ namespace UnityUIToolkit.Extensions
             }
 
             // 1:1:3:1:1 dark-light-dark-light-dark with four light modules on one side.
-            private static bool IsFinderLike(Func<int, bool> at)
+            private bool IsFinderLike(int a, int b, bool column)
             {
-                bool Core(int o) => at(o) && !at(o + 1) && at(o + 2) && at(o + 3) && at(o + 4) && !at(o + 5) && at(o + 6);
-                bool Light(int o) => !at(o) && !at(o + 1) && !at(o + 2) && !at(o + 3);
+                bool At(int i) => column ? Modules[b + i, a] : Modules[a, b + i];
+                bool Core(int o) => At(o) && !At(o + 1) && At(o + 2) && At(o + 3) && At(o + 4) && !At(o + 5) && At(o + 6);
+                bool Light(int o) => !At(o) && !At(o + 1) && !At(o + 2) && !At(o + 3);
                 return (Core(0) && Light(7)) || (Light(0) && Core(4));
             }
 

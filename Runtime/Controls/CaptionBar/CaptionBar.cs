@@ -24,7 +24,7 @@ namespace UnityUIToolkit.Extensions
     public enum CaptionBackground
     {
         /// <summary>
-        /// The translucent dark card with the accent edge (FS07_2).
+        /// The translucent dark card with the accent edge.
         /// </summary>
         Panel,
 
@@ -78,24 +78,12 @@ namespace UnityUIToolkit.Extensions
     /// </summary>
     /// <remarks>
     /// <para>Captions follow the text-scale root classes through <c>--text-label</c>, and the line clamp follows the font
-    /// size. The cross-fade uses <c>--motion-fast</c>, so <c>reduce-motion</c> swaps the text at once. The owner syncs
-    /// cues to the audio; the bar only shows them.</para>
-    /// <para>Props: <c>speaker</c>, <c>text</c>, <c>max-lines</c>, <c>caption-size</c> (Small, Medium, Large,
-    /// ExtraLarge), <c>background</c> (Panel, Solid, None), <c>floating</c> (the bar positions itself in its parent),
-    /// <c>placement</c> (Bottom, Top, Free: drag to move), <c>top-inset</c>, <c>bottom-inset</c> (keep clear of a sheet
-    /// or the HUD bar), <c>announce</c> (speak each cue through <see cref="A11yAnnouncer"/>). Methods:
-    /// <see cref="SetCue"/>, <see cref="ClearCue"/>, <see cref="SetCues"/> with <see cref="Position"/> (shows the cue for a
-    /// time), <see cref="SyncTo"/> (follows an <see cref="AudioSource"/>), <see cref="StopSync"/>. Events:
-    /// <see cref="CueChanged"/> (cue index, or -1), <see cref="Moved"/> (the free offset). Property: <see cref="IsEmpty"/>.</para>
-    /// <para>USS classes: <c>captionBar</c> (root), <c>captionBar__speaker</c>, <c>captionBar__text</c>.</para>
-    /// <para>Modifier classes: <c>captionBar--empty</c> (no cue: hidden), <c>captionBar--changing</c> (the faded-out
-    /// moment of a cross-fade), <c>captionBar--noSpeaker</c>, <c>captionBar--small</c>, <c>--large</c>,
-    /// <c>--extraLarge</c>, <c>captionBar--solid</c>, <c>captionBar--plain</c>, <c>captionBar--floating</c>,
-    /// <c>captionBar--top</c>, <c>captionBar--free</c>.</para>
-    /// <para>Tokens read: <c>--c-panel</c>, <c>--c-divider</c>, <c>--c-primary</c>, <c>--c-accent</c>, <c>--c-fg</c>,
-    /// <c>--c-panel-strong</c>, <c>--space-3..4</c>, <c>--text-micro</c>, <c>--text-caption</c>, <c>--text-label</c>,
-    /// <c>--text-body</c>, <c>--text-subtitle</c>, <c>--font-body</c>, <c>--font-body-medium</c>, <c>--motion-fast</c>.
-    /// Captions sit over the camera, so they use the deep palette directly.</para>
+    /// size. The cross-fade uses <c>--motion-fast</c>, so <c>reduce-motion</c> swaps the text at once. The bar only shows
+    /// text and plays nothing. Set cues with <see cref="SetCue"/>, or set timed cues and drive <see cref="Position"/>
+    /// yourself.</para>
+    /// <para>A bar with <c>announce</c> on speaks each cue through <see cref="A11yAnnouncer"/>. <see cref="SyncTo"/> follows any
+    /// clock the owner passes in, such as an audio or video player's time. Captions sit over the camera, so they use the deep
+    /// palette directly.</para>
     /// </remarks>
     [UxmlElement]
     public partial class CaptionBar : VisualElement
@@ -116,7 +104,7 @@ namespace UnityUIToolkit.Extensions
         public const string FreeClass = "captionBar--free";
 
         /// <summary>
-        /// How often <see cref="SyncTo"/> reads the audio position.
+        /// How often <see cref="SyncTo"/> reads the clock.
         /// </summary>
         public const int SyncIntervalMs = 100;
 
@@ -133,12 +121,14 @@ namespace UnityUIToolkit.Extensions
         private bool announce;
         private float position;
         private int cueIndex = -1;
-        private AudioSource syncSource;
+        private Func<float> syncTime;
         private DisplayedTimer syncTimer;
         private int dragPointer = PointerId.invalidPointerId;
         private float dragStartY;
         private float dragStartOffset;
         private int maxLines = 3;
+        private string lineSample = string.Empty;
+        private int lineSampleLines;
         private IVisualElementScheduledItem swap;
         private string pendingSpeaker;
         private string pendingText;
@@ -319,10 +309,8 @@ namespace UnityUIToolkit.Extensions
             AddToClassList(RootClass);
             pickingMode = PickingMode.Ignore;
 
-            speakerLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, SpeakerClass);
-            speakerLabel.pickingMode = PickingMode.Ignore;
-            textLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, TextClass);
-            textLabel.pickingMode = PickingMode.Ignore;
+            speakerLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, SpeakerClass).IgnorePicking();
+            textLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, TextClass).IgnorePicking();
             textLabel.RegisterCallback<GeometryChangedEvent>(_ => ApplyLineClamp());
 
             RegisterCallback<PointerDownEvent>(OnDragStart);
@@ -351,25 +339,41 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Follows an audio source: every 100 ms the bar shows the cue for its time. Pauses while the bar is hidden and
-        /// stops on detach.
+        /// Follows a clock: every 100 ms the bar reads <paramref name="currentTime"/> in seconds and shows the cue for that
+        /// time. Pass any time source, for example <c>() =&gt; audioSource.time</c> or <c>() =&gt; (float)videoPlayer.time</c>.
+        /// Null stops following. The sync pauses while the bar is hidden, stops on detach, and stops if the clock throws,
+        /// for example because its source was destroyed.
         /// </summary>
-        public void SyncTo(AudioSource source)
+        public void SyncTo(Func<float> currentTime)
         {
             StopSync();
-            syncSource = source;
-            if (source == null)
+            syncTime = currentTime;
+            if (currentTime == null)
             {
                 return;
             }
 
-            // Paused while the bar is hidden; the next tick catches up with the source's time.
+            // Paused while the bar is hidden; the next tick catches up with the clock.
             syncTimer = DisplayedTimer.Start(this, () =>
             {
-                if (syncSource != null)
+                if (syncTime == null)
                 {
-                    Position = syncSource.time;
+                    return;
                 }
+
+                float seconds;
+                try
+                {
+                    seconds = syncTime();
+                }
+                catch (Exception exception)
+                {
+                    StopSync();
+                    Debug.LogException(exception);
+                    return;
+                }
+
+                Position = seconds;
             }, SyncIntervalMs);
         }
 
@@ -377,7 +381,7 @@ namespace UnityUIToolkit.Extensions
         {
             syncTimer?.Stop();
             syncTimer = null;
-            syncSource = null;
+            syncTime = null;
         }
 
         /// <summary>
@@ -431,7 +435,7 @@ namespace UnityUIToolkit.Extensions
         {
             speakerLabel.text = speaker ?? string.Empty;
             textLabel.text = text ?? string.Empty;
-            speakerLabel.style.display = string.IsNullOrEmpty(speaker) ? DisplayStyle.None : DisplayStyle.Flex;
+            speakerLabel.SetDisplayed(!string.IsNullOrEmpty(speaker));
             EnableInClassList(NoSpeakerClass, string.IsNullOrEmpty(speaker));
             EnableInClassList(EmptyClass, string.IsNullOrEmpty(text));
             RemoveFromClassList(ChangingClass);
@@ -445,7 +449,16 @@ namespace UnityUIToolkit.Extensions
 
         private void ShowCueAt(float time)
         {
-            var found = cues.FindIndex(c => time >= c.Start && time < c.End);
+            var found = -1;
+            for (var i = 0; i < cues.Count; i++)
+            {
+                if (time >= cues[i].Start && time < cues[i].End)
+                {
+                    found = i;
+                    break;
+                }
+            }
+
             if (found == cueIndex)
             {
                 return;
@@ -525,16 +538,7 @@ namespace UnityUIToolkit.Extensions
             Moved?.Invoke(freeOffset);
         }
 
-        private int FadeDurationMs()
-        {
-            var longest = 0f;
-            foreach (var duration in textLabel.resolvedStyle.transitionDuration)
-            {
-                longest = Mathf.Max(longest, duration.unit == TimeUnit.Second ? duration.value * 1000f : duration.value);
-            }
-
-            return Mathf.CeilToInt(longest);
-        }
+        private int FadeDurationMs() => Mathf.CeilToInt(textLabel.LongestTransitionMs());
 
         private void ApplyLineClamp()
         {
@@ -544,34 +548,29 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            // USS has no line clamp: measure that many lines in the current font, so line spacing counts, then add
-            // the label's padding and borders, which max-height includes.
-            var lines = new string[maxLines];
-            for (var i = 0; i < maxLines; i++)
+            // USS has no line clamp. Measure that many lines in the current font, so line spacing counts.
+            // Then add the label padding and borders, because max-height includes them.
+            if (lineSampleLines != maxLines)
             {
-                lines[i] = "Ag";
+                lineSampleLines = maxLines;
+                lineSample = "Ag";
+                for (var i = 1; i < maxLines; i++)
+                {
+                    lineSample += "\nAg";
+                }
             }
 
-            var height = textLabel.MeasureTextSize(string.Join("\n", lines), 0f, MeasureMode.Undefined, 0f, MeasureMode.Undefined).y;
+            var height = textLabel.MeasureTextSize(lineSample, 0f, MeasureMode.Undefined, 0f, MeasureMode.Undefined).y;
             if (float.IsNaN(height) || height <= 0f)
             {
                 return;
             }
 
+            static float OrZero(float value) => float.IsNaN(value) ? 0f : value;
+
             var box = textLabel.resolvedStyle;
-            var chrome = Sum(box.paddingTop, box.paddingBottom, box.borderTopWidth, box.borderBottomWidth);
+            var chrome = OrZero(box.paddingTop) + OrZero(box.paddingBottom) + OrZero(box.borderTopWidth) + OrZero(box.borderBottomWidth);
             textLabel.style.maxHeight = Mathf.Ceil(height + chrome) + 1f;
-        }
-
-        private static float Sum(params float[] values)
-        {
-            var total = 0f;
-            foreach (var value in values)
-            {
-                total += float.IsNaN(value) ? 0f : value;
-            }
-
-            return total;
         }
     }
 }

@@ -27,26 +27,15 @@ namespace UnityUIToolkit.Extensions
     }
 
     /// <summary>
-    /// Storage use (FS10_2): a title and a free-space note, a stacked bar with one segment per item and then "Other",
+    /// Storage use: a title and a free-space note, a stacked bar with one segment per item and then "Other",
     /// a legend with sizes, and an optional free-up action.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>title-text</c> (such as "412 MB used by this app"), <c>detail</c> (such as "6.1 GB free"),
-    /// <c>other-label</c> (default "Other"), <c>free-up-text</c> (empty hides the action). Methods:
-    /// <see cref="SetSegments"/> (items, the "Other" bytes and the bar's full scale), <see cref="FormatBytes"/>.
-    /// <see cref="SizeFormatter"/> formats the legend's sizes; set it to the app's own formatter so the legend
-    /// matches the title (the default, <see cref="FormatBytes"/>, uses decimal units).
-    /// Event: <see cref="FreeUpRequested"/>.</para>
-    /// <para>The bar's full width is <c>scaleBytes</c>, such as the space an app may use; 0 makes the segments fill it.
-    /// Segment colours cycle through four classes; "Other" is always the muted one.</para>
-    /// <para>USS classes: <c>storageBar</c> (root), <c>storageBar__header</c>, <c>storageBar__title</c>,
-    /// <c>storageBar__detail</c>, <c>storageBar__track</c>, <c>storageBar__segment</c>, <c>storageBar__legend</c>,
-    /// <c>storageBar__legendItem</c>, <c>storageBar__dot</c>, <c>storageBar__legendLabel</c>, <c>storageBar__freeUp</c>
-    /// (a ghost <see cref="PillButton"/>). Segment and dot modifiers: <c>storageBar__segment--0</c> to <c>--3</c> and
-    /// <c>--other</c> (the same suffixes on <c>storageBar__dot</c>).</para>
-    /// <para>Tokens read: <c>--surface-fg</c>, <c>--surface-muted</c>, <c>--surface-skeleton</c>, <c>--c-navy-2</c>,
-    /// <c>--c-primary</c>, <c>--c-accent</c>, <c>--c-fg-muted</c>, <c>--space-1..4</c>, <c>--text-micro</c>,
-    /// <c>--text-caption</c>, <c>--font-display</c>.</para>
+    /// <para><see cref="SizeFormatter"/> formats the legend's sizes. Set it to the app's own formatter so the legend
+    /// matches the title. The default, <see cref="FormatBytes"/>, uses decimal units.
+    /// An empty <c>free-up-text</c> hides the action.</para>
+    /// <para>The bar's full width is <c>scaleBytes</c>, such as the space an app may use. 0 makes the segments fill it.
+    /// Segment colours cycle through four classes. "Other" is always the muted one.</para>
     /// </remarks>
     [UxmlElement]
     public partial class StorageBar : VisualElement
@@ -115,8 +104,7 @@ namespace UnityUIToolkit.Extensions
             get => detail.text;
             set
             {
-                detail.text = value ?? string.Empty;
-                detail.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                detail.SetTextOrHide(value);
             }
         }
 
@@ -138,7 +126,7 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 freeUp.Text = value ?? string.Empty;
-                freeUp.style.display = string.IsNullOrEmpty(value) ? DisplayStyle.None : DisplayStyle.Flex;
+                freeUp.SetDisplayed(!string.IsNullOrEmpty(value));
             }
         }
 
@@ -226,8 +214,7 @@ namespace UnityUIToolkit.Extensions
 
         private void AddPart(string label, long bytes, long scale, string suffix)
         {
-            var part = UIToolkitExtensions.CreateVisualElement(track, SegmentClass, SegmentClass + suffix);
-            part.pickingMode = PickingMode.Ignore;
+            var part = UIToolkitExtensions.CreateVisualElement(track, SegmentClass, SegmentClass + suffix).IgnorePicking();
             part.style.width = Length.Percent(scale > 0 ? Mathf.Clamp01(bytes / (float)scale) * 100f : 0f);
 
             var item = UIToolkitExtensions.CreateVisualElement(legend, LegendItemClass);

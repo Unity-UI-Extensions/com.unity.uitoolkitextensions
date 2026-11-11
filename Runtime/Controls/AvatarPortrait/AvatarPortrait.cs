@@ -28,13 +28,7 @@ namespace UnityUIToolkit.Extensions
     /// A round portrait: an image when there is one, otherwise the initials of <see cref="DisplayName"/>.
     /// </summary>
     /// <remarks>
-    /// <para>Props: <c>display-name</c> (initials are derived from it), <c>initials</c> (overrides the derived ones),
-    /// <c>size</c>, <c>show-ring</c>. Method: <see cref="SetImage"/>.</para>
-    /// <para>USS classes: <c>avatarPortrait</c> (root), <c>avatarPortrait__image</c>, <c>avatarPortrait__initials</c>.</para>
-    /// <para>Modifier classes: <c>avatarPortrait--small</c>, <c>avatarPortrait--medium</c>, <c>avatarPortrait--large</c>, <c>avatarPortrait--hasImage</c>,
-    /// <c>avatarPortrait--ring</c>.</para>
-    /// <para>Tokens read: <c>--surface-tile</c>, <c>--surface-accent</c>, <c>--c-primary</c>, <c>--radius-pill</c>,
-    /// <c>--text-label</c>, <c>--text-body</c>, <c>--text-subtitle</c>, <c>--font-body-semibold</c>.</para>
+    /// <para>The initials come from <c>display-name</c>. The <c>initials</c> value overrides them.</para>
     /// </remarks>
     [UxmlElement]
     public partial class AvatarPortrait : VisualElement
@@ -106,10 +100,8 @@ namespace UnityUIToolkit.Extensions
             this.UseThemeTokens();
             AddToClassList(RootClass);
 
-            initialsLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, InitialsClass);
-            initialsLabel.pickingMode = PickingMode.Ignore;
-            image = UIToolkitExtensions.CreateVisualElement(this, ImageClass);
-            image.pickingMode = PickingMode.Ignore;
+            initialsLabel = UIToolkitExtensions.CreateVisualElement<Label>(this, InitialsClass).IgnorePicking();
+            image = UIToolkitExtensions.CreateVisualElement(this, ImageClass).IgnorePicking();
 
             Size = AvatarSize.Medium;
             ShowRing = true;
@@ -128,10 +120,9 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetImage(Background portrait)
         {
-            var has = portrait.texture != null || portrait.sprite != null || portrait.vectorImage != null || portrait.renderTexture != null;
-            image.style.backgroundImage = has ? new StyleBackground(portrait) : new StyleBackground(StyleKeyword.None);
-            image.style.display = has ? DisplayStyle.Flex : DisplayStyle.None;
-            initialsLabel.style.display = has ? DisplayStyle.None : DisplayStyle.Flex;
+            var has = image.SetImageOrNone(portrait);
+            image.SetDisplayed(has);
+            initialsLabel.SetDisplayed(!has);
             EnableInClassList(HasImageClass, has);
         }
 

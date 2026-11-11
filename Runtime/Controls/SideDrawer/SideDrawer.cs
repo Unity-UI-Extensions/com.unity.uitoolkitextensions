@@ -27,23 +27,12 @@ namespace UnityUIToolkit.Extensions
 
     /// <summary>
     /// A side drawer anchored left or right: a scrim, an edge swipe to open, a drag with velocity to close,
-    /// titled sections, and a permanent variant for wide layouts. Replaces BaseSidePanel's panel.
+    /// titled sections, and a permanent variant for wide layouts.
     /// </summary>
     /// <remarks>
     /// <para>The drawer fills its parent as an overlay layer; only the panel, the visible scrim and the edge strip
     /// take input. Children added to the drawer go into the panel's scrolling content; <see cref="AddSection"/>
     /// adds a titled group.</para>
-    /// <para>Props: <c>anchor</c>, <c>variant</c>, <c>is-open</c>, <c>swipe-area-width</c>, <c>drawer-width</c>,
-    /// <c>top-inset</c>, <c>bottom-inset</c>. Methods: <see cref="Open"/>, <see cref="Close"/>, <see cref="Toggle"/>,
-    /// <see cref="HandleBack"/>. Events: <see cref="Opened"/>, <see cref="Closed"/>.</para>
-    /// <para>USS classes: <c>sideDrawer</c> (root), <c>sideDrawer__scrim</c>, <c>sideDrawer__edge</c>,
-    /// <c>sideDrawer__panel</c>, <c>sideDrawer__content</c>, <c>sideDrawer__section</c>,
-    /// <c>sideDrawer__sectionTitle</c>.</para>
-    /// <para>Modifier classes: <c>sideDrawer--open</c>, <c>sideDrawer--left</c>, <c>sideDrawer--right</c>,
-    /// <c>sideDrawer--permanent</c>, <c>sideDrawer--dragging</c>.</para>
-    /// <para>Tokens read: <c>--surface-bg</c>, <c>--surface-border</c>, <c>--surface-muted</c>, <c>--c-scrim</c>,
-    /// <c>--radius-sheet</c>, <c>--space-2..4</c>, <c>--text-caption</c>, <c>--font-body-semibold</c>,
-    /// <c>--motion-base</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class SideDrawer : VisualElement
@@ -69,6 +58,7 @@ namespace UnityUIToolkit.Extensions
         private const float DragSlop = 8f;
         private const float ReleaseHoldSeconds = 0.1f;
 
+        private readonly Action syncDraggingClass;
         private readonly VisualElement scrim;
         private readonly VisualElement edge;
         private readonly VisualElement drawerPanel;
@@ -176,6 +166,7 @@ namespace UnityUIToolkit.Extensions
             this.UseThemeTokens();
             AddToClassList(RootClass);
             pickingMode = PickingMode.Ignore;
+            syncDraggingClass = () => EnableInClassList(DraggingClass, isDragging);
 
             scrim = UIToolkitExtensions.CreateVisualElement(ScrimClass);
             scrim.RegisterCallback<ClickEvent>(OnScrimClicked);
@@ -210,9 +201,6 @@ namespace UnityUIToolkit.Extensions
             ApplyLayout(animate: false);
         }
 
-        /// <summary>
-        /// Adds a titled group to the drawer's content and returns its container.
-        /// </summary>
         public VisualElement AddSection(string title)
         {
             var section = UIToolkitExtensions.CreateVisualElement(SectionClass);
@@ -233,9 +221,9 @@ namespace UnityUIToolkit.Extensions
         public void Toggle() => SetOpen(!isOpen, animate: true, notify: true);
 
         /// <summary>
-        /// The back-button rule: closes an open temporary drawer.
+        /// Closes an open temporary drawer.
         /// </summary>
-        /// <returns>False when there was nothing to close, so the caller can handle back itself.</returns>
+        /// <returns>False when nothing was open, so the caller can handle back itself.</returns>
         public bool HandleBack()
         {
             if (variant == DrawerVariant.Permanent || !isOpen)
@@ -292,13 +280,11 @@ namespace UnityUIToolkit.Extensions
             SetOpenness(open ? 1f : 0f);
             if (!animate)
             {
-                schedule.Execute(() => EnableInClassList(DraggingClass, isDragging));
+                schedule.Execute(syncDraggingClass);
             }
         }
 
-        /// <summary>
-        /// Places the panel between closed (0) and open (1).
-        /// </summary>
+        // Places the panel between closed (0) and open (1).
         private void SetOpenness(float value)
         {
             openness = Mathf.Clamp01(value);
@@ -411,7 +397,7 @@ namespace UnityUIToolkit.Extensions
             SetOpenness(dragStartOpenness + (delta * direction / PanelWidth()));
         }
 
-        internal void DragEnd(float time)
+        private void ReleaseDragPointer()
         {
             if (dragPointerId != PointerId.invalidPointerId && this.HasPointerCapture(dragPointerId))
             {
@@ -419,6 +405,11 @@ namespace UnityUIToolkit.Extensions
             }
 
             dragPointerId = PointerId.invalidPointerId;
+        }
+
+        internal void DragEnd(float time)
+        {
+            ReleaseDragPointer();
             if (!isDragging)
             {
                 return;
@@ -439,12 +430,7 @@ namespace UnityUIToolkit.Extensions
 
         private void CancelDrag()
         {
-            if (dragPointerId != PointerId.invalidPointerId && this.HasPointerCapture(dragPointerId))
-            {
-                this.ReleasePointer(dragPointerId);
-            }
-
-            dragPointerId = PointerId.invalidPointerId;
+            ReleaseDragPointer();
             if (isDragging)
             {
                 isDragging = false;

@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityUIToolkit.Extensions
@@ -42,26 +41,13 @@ namespace UnityUIToolkit.Extensions
     }
 
     /// <summary>
-    /// The notification history (FS10_6): one card per section ("Today", "Earlier"), rows with an icon tile, a title,
+    /// The notification history: one card per section ("Today", "Earlier"), rows with an icon tile, a title,
     /// a detail line and an unread dot, and a "Mark all read" link in the first section's header.
     /// </summary>
     /// <remarks>
-    /// <para>Methods: <see cref="SetItems"/>, <see cref="MarkRead"/>, <see cref="MarkAllRead"/>,
-    /// <see cref="RowElement"/>. Events: <see cref="ItemTapped"/> (id), <see cref="UnreadCountChanged"/>,
-    /// <see cref="AllMarkedRead"/>. Props: <c>mark-all-text</c> (default "Mark all read"; empty hides the link),
-    /// <c>mark-read-on-tap</c> (default true), <c>empty-title</c>, <c>empty-body</c> (an <see cref="EmptyState"/>
-    /// when there are no items). The link shows only while something is unread.</para>
+    /// <para><c>mark-all-text</c> defaults to "Mark all read"; empty hides the link. The link shows only while something is
+    /// unread. <c>mark-read-on-tap</c> defaults to true. With no items, an <see cref="EmptyState"/> shows.</para>
     /// <para>The centre does not scroll; host it in a <see cref="ScrollView"/> or a sheet.</para>
-    /// <para>USS classes: <c>notificationCentre</c> (root), <c>notificationCentre__section</c> (a card),
-    /// <c>notificationCentre__header</c>, <c>notificationCentre__heading</c>, <c>notificationCentre__markAll</c>,
-    /// <c>notificationCentre__row</c>, <c>notificationCentre__tile</c>, <c>notificationCentre__icon</c>,
-    /// <c>notificationCentre__texts</c>, <c>notificationCentre__title</c>, <c>notificationCentre__detail</c>,
-    /// <c>notificationCentre__dot</c>, <c>notificationCentre__empty</c>. Row modifiers: <c>notificationCentre__row--unread</c>,
-    /// <c>notificationCentre__row--last</c>.</para>
-    /// <para>Tokens read: <c>--surface-raised</c>, <c>--surface-border</c>, <c>--surface-fg</c>, <c>--surface-muted</c>,
-    /// <c>--surface-accent</c>, <c>--surface-tile</c>, <c>--surface-pressed</c>, <c>--c-primary</c>,
-    /// <c>--radius-pill</c>, <c>--space-1..4</c>, <c>--text-micro</c>, <c>--text-caption</c>, <c>--text-label</c>,
-    /// <c>--font-body</c>, <c>--font-body-medium</c>, <c>--font-body-semibold</c>.</para>
     /// </remarks>
     [UxmlElement]
     public partial class NotificationCentre : VisualElement
@@ -100,7 +86,22 @@ namespace UnityUIToolkit.Extensions
 
         public IReadOnlyList<NotificationEntry> Items => items;
 
-        public int UnreadCount => items.FindAll(i => i.Unread).Count;
+        public int UnreadCount
+        {
+            get
+            {
+                var count = 0;
+                for (var i = 0; i < items.Count; i++)
+                {
+                    if (items[i].Unread)
+                    {
+                        count++;
+                    }
+                }
+
+                return count;
+            }
+        }
 
         [UxmlAttribute("mark-all-text")]
         public string MarkAllText
@@ -177,7 +178,7 @@ namespace UnityUIToolkit.Extensions
                 section[section.childCount - 1].AddToClassList(LastRowClass);
             }
 
-            empty.style.display = items.Count == 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            empty.SetDisplayed(items.Count == 0);
             UpdateMarkAll();
             if (before != UnreadCount)
             {
@@ -235,12 +236,7 @@ namespace UnityUIToolkit.Extensions
                 markAll = UIToolkitExtensions.CreateVisualElement<Label>(header, MarkAllClass);
                 markAll.focusable = true;
                 markAll.tabIndex = 0;
-                markAll.RegisterCallback<ClickEvent>(_ => OnMarkAll());
-                markAll.RegisterCallback<NavigationSubmitEvent>(evt =>
-                {
-                    OnMarkAll();
-                    evt.StopPropagation();
-                });
+                markAll.RegisterActivate(OnMarkAll);
             }
 
             return section;
@@ -253,26 +249,17 @@ namespace UnityUIToolkit.Extensions
             row.tabIndex = 0;
             row.EnableInClassList(UnreadRowClass, item.Unread);
             var id = item.Id;
-            row.RegisterCallback<ClickEvent>(_ => OnRowTapped(id));
-            row.RegisterCallback<NavigationSubmitEvent>(evt =>
-            {
-                OnRowTapped(id);
-                evt.StopPropagation();
-            });
+            row.RegisterActivate(() => OnRowTapped(id));
 
-            var tile = UIToolkitExtensions.CreateVisualElement(row, TileClass);
-            tile.pickingMode = PickingMode.Ignore;
-            var icon = UIToolkitExtensions.CreateVisualElement(tile, IconClass);
-            icon.pickingMode = PickingMode.Ignore;
+            var tile = UIToolkitExtensions.CreateVisualElement(row, TileClass).IgnorePicking();
+            var icon = UIToolkitExtensions.CreateVisualElement(tile, IconClass).IgnorePicking();
             icon.style.backgroundImage = new StyleBackground(item.Icon);
 
-            var texts = UIToolkitExtensions.CreateVisualElement(row, TextsClass);
-            texts.pickingMode = PickingMode.Ignore;
+            var texts = UIToolkitExtensions.CreateVisualElement(row, TextsClass).IgnorePicking();
             var title = UIToolkitExtensions.CreateVisualElement<Label>(texts, TitleClass);
             title.text = item.Title ?? string.Empty;
             var detail = UIToolkitExtensions.CreateVisualElement<Label>(texts, DetailClass);
-            detail.text = item.Detail ?? string.Empty;
-            detail.style.display = string.IsNullOrEmpty(item.Detail) ? DisplayStyle.None : DisplayStyle.Flex;
+            detail.SetTextOrHide(item.Detail);
 
             UIToolkitExtensions.CreateVisualElement(row, DotClass).pickingMode = PickingMode.Ignore;
             return row;
@@ -302,7 +289,7 @@ namespace UnityUIToolkit.Extensions
             }
 
             markAll.text = markAllText;
-            markAll.style.display = !string.IsNullOrEmpty(markAllText) && UnreadCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            markAll.SetDisplayed(!string.IsNullOrEmpty(markAllText) && UnreadCount > 0);
         }
     }
 }

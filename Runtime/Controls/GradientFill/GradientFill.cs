@@ -168,21 +168,7 @@ namespace UnityUIToolkit.Extensions
 
         private void ReleaseTexture()
         {
-            if (texture == null)
-            {
-                return;
-            }
-
-            if (Application.isPlaying)
-            {
-                Object.Destroy(texture);
-            }
-            else
-            {
-                Object.DestroyImmediate(texture);
-            }
-
-            texture = null;
+            ProceduralTextureUtility.Release(ref texture);
         }
     }
 }
