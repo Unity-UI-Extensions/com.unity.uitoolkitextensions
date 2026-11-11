@@ -80,16 +80,23 @@ namespace UnityUIToolkit.Extensions
     /// <remarks>
     /// <para>Rows are recycled by a <see cref="ListView"/>, so large catalogues stay cheap.</para>
     /// <para>Props: <c>columns</c> (0 for automatic), <c>min-tile-width</c>, <c>thumbnail-aspect</c>, <c>selection-mode</c>, <c>is-loading</c>,
-    /// <c>empty-title</c>, <c>empty-body</c>, <c>empty-action-text</c>. Methods: <see cref="SetItems"/>,
-    /// <see cref="RefreshItem"/>, <see cref="SetSelection"/>, <see cref="ClearSelection"/>.
+    /// <c>empty-title</c>, <c>empty-body</c>, <c>empty-action-text</c>, <c>load-more-threshold</c>. Methods: <see cref="SetItems"/>,
+    /// <see cref="RefreshItem"/>, <see cref="SetSelection"/>, <see cref="ClearSelection"/>, <see cref="EnableLoadMore"/>,
+    /// <see cref="DisableLoadMore"/>, <see cref="BeginLoadMore"/>, <see cref="EndLoadMore"/>.
     /// Events: <see cref="ItemTapped"/>, <see cref="SelectionChanged"/>, <see cref="DragStarted"/>,
-    /// <see cref="EmptyActionClicked"/>.</para>
+    /// <see cref="EmptyActionClicked"/>, <see cref="LoadMoreRequested"/>.</para>
     /// <para>Drag-out: hold a tile for <see cref="LongPressMs"/>, then move; <see cref="DragStarted"/> carries the item
     /// and the pointer position, and the owner takes over (for example to place the item in the world).</para>
+    /// <para>Paging: after <see cref="EnableLoadMore"/>, <see cref="LoadMoreRequested"/> is raised when the end of the items
+    /// comes within <see cref="LoadMoreThreshold"/> of the bottom of the view, including when every item fits without
+    /// scrolling. Answer it by fetching the next page between <see cref="BeginLoadMore"/> and <see cref="EndLoadMore"/>,
+    /// passing all items so far to <see cref="SetItems"/>; the scroll offset and the rows on screen are kept. Call
+    /// <see cref="DisableLoadMore"/> when there are no more.</para>
     /// <para>USS classes: <c>contentGrid</c> (root), <c>contentGrid__list</c>, <c>contentGrid__row</c>,
     /// <c>contentGrid__tile</c>, <c>contentGrid__thumb</c>, <c>contentGrid__badge</c>, <c>contentGrid__check</c>,
     /// <c>contentGrid__name</c>, <c>contentGrid__meta</c>, <c>contentGrid__skeleton</c>, <c>contentGrid__empty</c>.</para>
-    /// <para>Modifier classes: <c>contentGrid--loading</c>, <c>contentGrid--empty</c>; on tiles
+    /// <para>Modifier classes: <c>contentGrid--loading</c>, <c>contentGrid--empty</c>, <c>contentGrid--loading-more</c>
+    /// (between <see cref="BeginLoadMore"/> and <see cref="EndLoadMore"/>); on tiles
     /// <c>contentGrid__tile--selected</c>, <c>contentGrid__tile--armed</c> (long-press reached),
     /// <c>contentGrid__tile--hidden</c> (padding cell in the last row), <c>contentGrid__tile--disabled</c> (the item's
     /// <see cref="ContentGridItem.IsEnabled"/> is false: thumbnail, badge and text at 45% opacity).</para>
@@ -118,6 +125,7 @@ namespace UnityUIToolkit.Extensions
         public const string ArmedClass = "contentGrid__tile--armed";
         public const string HiddenTileClass = "contentGrid__tile--hidden";
         public const string DisabledTileClass = "contentGrid__tile--disabled";
+        public const string LoadingMoreClass = "contentGrid--loading-more";
 
         /// <summary>
         /// Hold time before a tile can be dragged out.
@@ -138,6 +146,7 @@ namespace UnityUIToolkit.Extensions
         private static readonly ContentGridItem PaddingItem = new();
 
         private readonly ListView list;
+        private readonly ScrollView scrollView;
         private readonly SkeletonTile skeleton;
         private readonly EmptyState empty;
         private readonly List<ContentGridItem> items = new();
@@ -153,8 +162,27 @@ namespace UnityUIToolkit.Extensions
         private bool rowHeightScheduled;
         // Row height changes since the height last settled or the width, columns, thumbnail aspect or meta line changed.
         private int rowHeightChanges;
+        // Row height checks in a row that found nothing to change. Two span a layout pass, so the height has settled and the
+        // content can be measured for paging.
+        private int rowHeightQuietChecks;
         // Whether tiles keep the meta line: true while any item has one.
         private bool showMetaLine;
+
+        // Paging (see EnableLoadMore).
+        private bool loadMoreEnabled;
+        // Between BeginLoadMore and EndLoadMore.
+        private bool loadMoreInFlight;
+        // A request was raised and not yet answered by a new item count or EndLoadMore.
+        private bool loadMoreOutstanding;
+        // The item count when the last request was raised.
+        private int loadMoreRequestCount = -1;
+        // The item count at which a request ended with nothing added, or -1. No request at that count until the view leaves the
+        // end of the items and comes back.
+        private int loadMoreStalledCount = -1;
+        private bool loadMoreLeftEnd;
+        private bool loadMoreCheckPending;
+        private bool loadMoreCheckScheduled;
+        private float loadMoreThreshold = 0.25f;
         private int columns = 2;
         private float minTileWidth = 150f;
         private float thumbnailAspect = 1f;
@@ -184,6 +212,15 @@ namespace UnityUIToolkit.Extensions
 
         public event Action EmptyActionClicked;
 
+        /// <summary>
+        /// Raised while paging is on (<see cref="EnableLoadMore"/>) when the end of the items comes within
+        /// <see cref="LoadMoreThreshold"/> of the bottom of the view, including when every item fits without scrolling. Raised
+        /// once per page: not again until the item count changes or <see cref="EndLoadMore"/> is called, and never while
+        /// <see cref="IsLoading"/>, between <see cref="BeginLoadMore"/> and <see cref="EndLoadMore"/>, or before the row height
+        /// has settled.
+        /// </summary>
+        public event Action LoadMoreRequested;
+
         public IReadOnlyList<ContentGridItem> Items => items;
 
         /// <summary>
@@ -192,6 +229,31 @@ namespace UnityUIToolkit.Extensions
         public int ColumnCount => columns;
 
         public ListView ListView => list;
+
+        /// <summary>
+        /// True between <see cref="EnableLoadMore"/> and <see cref="DisableLoadMore"/>.
+        /// </summary>
+        public bool IsLoadMoreEnabled => loadMoreEnabled;
+
+        /// <summary>
+        /// True between <see cref="BeginLoadMore"/> and <see cref="EndLoadMore"/>.
+        /// </summary>
+        public bool IsLoadingMore => loadMoreInFlight;
+
+        /// <summary>
+        /// How near the end of the items comes to the bottom of the view before <see cref="LoadMoreRequested"/> is raised, as a
+        /// fraction of the view's height. The default, 0.25, asks when less than a quarter of a view is left to scroll.
+        /// </summary>
+        [UxmlAttribute("load-more-threshold")]
+        public float LoadMoreThreshold
+        {
+            get => loadMoreThreshold;
+            set
+            {
+                loadMoreThreshold = Mathf.Max(0f, value);
+                RequestLoadMoreCheck();
+            }
+        }
 
         public IReadOnlyList<string> SelectedIds
         {
@@ -249,6 +311,8 @@ namespace UnityUIToolkit.Extensions
                 rowHeightChanges = 0;
                 skeleton.ThumbnailAspect = thumbnailAspect;
                 list.Query(className: ThumbClass).ForEach(thumb => thumb.style.height = thumb.layout.width / thumbnailAspect);
+                MarkRowsChanged();
+                RequestLoadMoreCheck();
             }
         }
 
@@ -277,6 +341,9 @@ namespace UnityUIToolkit.Extensions
             {
                 isLoading = value;
                 UpdateState();
+                // The list shows or hides, so the rows settle again before paging measures them.
+                MarkRowsChanged();
+                RequestLoadMoreCheck();
             }
         }
 
@@ -324,6 +391,11 @@ namespace UnityUIToolkit.Extensions
             list.AddToClassList(ListClass);
             hierarchy.Add(list);
 
+            // Paging: scrolling, or the view resizing (a sheet changing detent), can bring the end of the items into reach.
+            scrollView = list.Q<ScrollView>();
+            scrollView.verticalScroller.valueChanged += _ => RequestLoadMoreCheck();
+            scrollView.contentViewport.RegisterCallback<GeometryChangedEvent>(_ => RequestLoadMoreCheck());
+
             skeleton = new SkeletonTile(SkeletonShape.Tile, 4);
             skeleton.AddToClassList(SkeletonClass);
             hierarchy.Add(skeleton);
@@ -347,6 +419,7 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public void SetItems(IReadOnlyList<ContentGridItem> newItems)
         {
+            var previousCount = items.Count;
             items.Clear();
             if (newItems != null)
             {
@@ -366,6 +439,15 @@ namespace UnityUIToolkit.Extensions
             UpdateMetaLine();
             RebuildRows();
             UpdateState();
+            if (items.Count != previousCount)
+            {
+                // A new item count answers a request for more, and ends any wait after a page that added nothing.
+                loadMoreOutstanding = false;
+                loadMoreStalledCount = -1;
+            }
+
+            MarkRowsChanged();
+            RequestLoadMoreCheck();
             if (removed)
             {
                 SelectionChanged?.Invoke(SelectedIds);
@@ -426,6 +508,60 @@ namespace UnityUIToolkit.Extensions
         public void ClearSelection() => SetSelection(null);
 
         /// <summary>
+        /// Turns paging on, so <see cref="LoadMoreRequested"/> is raised when more items are wanted, at once if they already
+        /// fit. Calling it again starts over, for example for a new search, or to retry after a page that added nothing.
+        /// </summary>
+        public void EnableLoadMore()
+        {
+            loadMoreEnabled = true;
+            loadMoreOutstanding = false;
+            loadMoreStalledCount = -1;
+            RequestLoadMoreCheck();
+        }
+
+        /// <summary>
+        /// Turns paging off, for example when the server has no more items. Ends any <see cref="BeginLoadMore"/>.
+        /// </summary>
+        public void DisableLoadMore()
+        {
+            loadMoreEnabled = false;
+            loadMoreOutstanding = false;
+            loadMoreStalledCount = -1;
+            loadMoreCheckPending = false;
+            SetLoadingMore(false);
+        }
+
+        /// <summary>
+        /// Marks a fetch as started: no request is raised until <see cref="EndLoadMore"/>, and the grid has
+        /// <see cref="LoadingMoreClass"/>.
+        /// </summary>
+        public void BeginLoadMore() => SetLoadingMore(true);
+
+        /// <summary>
+        /// Marks a fetch as finished, after its items have been passed to <see cref="SetItems"/>. The grid asks again if the
+        /// items still do not reach past the threshold. After a page that added nothing it waits until the view leaves the end
+        /// of the items and comes back, so an empty page cannot start a loop.
+        /// </summary>
+        public void EndLoadMore()
+        {
+            if (loadMoreOutstanding && items.Count == loadMoreRequestCount)
+            {
+                loadMoreStalledCount = items.Count;
+                loadMoreLeftEnd = false;
+            }
+
+            loadMoreOutstanding = false;
+            SetLoadingMore(false);
+            RequestLoadMoreCheck();
+        }
+
+        private void SetLoadingMore(bool loading)
+        {
+            loadMoreInFlight = loading;
+            EnableInClassList(LoadingMoreClass, loading);
+        }
+
+        /// <summary>
         /// The tile element showing an item, or null when it is scrolled out of view.
         /// </summary>
         public VisualElement TileFor(string id)
@@ -449,6 +585,7 @@ namespace UnityUIToolkit.Extensions
             showMetaLine = show;
             // The tiles change height, so the rows may shrink as well as grow.
             rowHeightChanges = 0;
+            MarkRowsChanged();
             return true;
         }
 
@@ -463,6 +600,8 @@ namespace UnityUIToolkit.Extensions
                 measuredThumbWidth = float.NaN;
                 rowHeightChanges = 0;
                 list.RefreshItems();
+                MarkRowsChanged();
+                RequestLoadMoreCheck();
             }
 
             var next = fixedColumns;
@@ -483,6 +622,8 @@ namespace UnityUIToolkit.Extensions
             measuredThumbWidth = float.NaN;
             rowHeightChanges = 0;
             RebuildRows(rebuild: true);
+            MarkRowsChanged();
+            RequestLoadMoreCheck();
         }
 
         /// <summary>
@@ -551,7 +692,8 @@ namespace UnityUIToolkit.Extensions
         /// Sets the list's row height to that of its tallest tile now showing an item, in whole device pixels. Every tile is bound
         /// with the same lines, so the tiles agree; the tallest is taken in case one does not, such as a name in a taller fallback
         /// font. The height is read from the tiles as they are, not from whichever event came last, so it cannot flip between two
-        /// tiles. Each change is checked again after the next layout pass: unchanged there, the height has settled. After
+        /// tiles. Each change is checked again after the next layout pass, and the height has settled once two checks in a row
+        /// find nothing to change; only then does paging measure the content. After
         /// <see cref="RowHeightChangeBudget"/> changes without settling it only grows, so no feedback, such as a scroller that
         /// appears and narrows the tiles, can become a loop.
         /// </summary>
@@ -573,20 +715,34 @@ namespace UnityUIToolkit.Extensions
             var pixel = 1f / pixelsPerPoint;
             height = Mathf.Ceil((height * pixelsPerPoint) - 0.01f) * pixel;
             var change = height - list.fixedItemHeight;
-            if (Mathf.Abs(change) <= pixel + 0.001f)
+            var unchanged = Mathf.Abs(change) <= pixel + 0.001f;
+            if (unchanged)
             {
                 // Settled: the rows fit their tiles, so a later change of content or style may shrink them again.
                 rowHeightChanges = 0;
-                return;
             }
 
-            if (change < 0f && rowHeightChanges >= RowHeightChangeBudget)
+            // Changed too often without settling: from here it only grows, so tiles are never cut off and no two heights can
+            // take turns.
+            var held = change < 0f && rowHeightChanges >= RowHeightChangeBudget;
+            if (unchanged || held)
             {
-                // Changed too often without settling: from here it only grows, so tiles are never cut off and no two heights
-                // can take turns.
+                // Two such checks in a row span a layout pass, so the height has settled and paging can measure the content.
+                if (++rowHeightQuietChecks < 2)
+                {
+                    ScheduleRowHeightCheck();
+                }
+                else if (loadMoreCheckPending)
+                {
+                    CheckLoadMore();
+                }
+
                 return;
             }
 
+            rowHeightQuietChecks = 0;
+            // The content height changes with the rows, so paging measures it again once they settle.
+            loadMoreCheckPending = true;
             rowHeightChanges++;
             list.fixedItemHeight = height;
             // The setter refreshes the list, which lays out the content for the new height but leaves the rows already made at
@@ -594,6 +750,110 @@ namespace UnityUIToolkit.Extensions
             // and cancelled any press on them.
             list.Query(className: RowClass).ForEach(row => row.style.height = height);
             ScheduleRowHeightCheck();
+        }
+
+        /// <summary>
+        /// Something that can change the rows' height happened, such as new items or a new width: the height has to be checked
+        /// again, twice without a change, before it counts as settled.
+        /// </summary>
+        private void MarkRowsChanged()
+        {
+            rowHeightQuietChecks = 0;
+            ScheduleRowHeightCheck();
+        }
+
+        /// <summary>
+        /// Asks for the content to be measured for paging: on the next update if the row height has settled, otherwise once it
+        /// has, so a row height still being measured cannot make the content look short and ask early or twice.
+        /// </summary>
+        private void RequestLoadMoreCheck()
+        {
+            if (!loadMoreEnabled)
+            {
+                return;
+            }
+
+            loadMoreCheckPending = true;
+            if (rowHeightQuietChecks < 2)
+            {
+                ScheduleRowHeightCheck();
+            }
+            else if (!loadMoreCheckScheduled)
+            {
+                // Not inside the event that asked (a scroll, say), so a host answering at once does not change the list mid-event.
+                loadMoreCheckScheduled = true;
+                list.schedule.Execute(OnLoadMoreCheckDue);
+            }
+        }
+
+        private void OnLoadMoreCheckDue()
+        {
+            loadMoreCheckScheduled = false;
+            if (rowHeightQuietChecks < 2)
+            {
+                // The rows changed since this was asked for; the settled row height check runs it instead.
+                ScheduleRowHeightCheck();
+                return;
+            }
+
+            CheckLoadMore();
+        }
+
+        /// <summary>
+        /// Raises <see cref="LoadMoreRequested"/> when paging is on, nothing is outstanding and the end of the items is within
+        /// <see cref="LoadMoreThreshold"/> of the bottom of the view.
+        /// </summary>
+        private void CheckLoadMore()
+        {
+            loadMoreCheckPending = false;
+            if (!loadMoreEnabled || loadMoreInFlight || loadMoreOutstanding || isLoading || items.Count == 0)
+            {
+                return;
+            }
+
+            var nearEnd = IsNearEnd();
+            if (loadMoreStalledCount == items.Count)
+            {
+                // The last request added nothing. Ask again only once the view has left the end and come back: a page that adds
+                // nothing cannot start a loop, and scrolling back to the end still retries.
+                if (!nearEnd)
+                {
+                    loadMoreLeftEnd = true;
+                    return;
+                }
+
+                if (!loadMoreLeftEnd)
+                {
+                    return;
+                }
+            }
+
+            if (!nearEnd)
+            {
+                return;
+            }
+
+            loadMoreOutstanding = true;
+            loadMoreRequestCount = items.Count;
+            loadMoreStalledCount = -1;
+            LoadMoreRequested?.Invoke();
+        }
+
+        /// <summary>
+        /// Whether the end of the items is within <see cref="LoadMoreThreshold"/> of the bottom of the view; true when every item
+        /// fits. The content height is the rows at the list's row height, not a laid-out size, so it is current as soon as the
+        /// items or the row height change.
+        /// </summary>
+        private bool IsNearEnd()
+        {
+            var viewport = scrollView.contentViewport.layout.height;
+            if (float.IsNaN(viewport) || viewport <= 0f)
+            {
+                return false;
+            }
+
+            var remaining = (rows.Count * list.fixedItemHeight) - scrollView.scrollOffset.y - viewport;
+            return remaining <= viewport * loadMoreThreshold;
         }
 
         /// <summary>
@@ -630,7 +890,14 @@ namespace UnityUIToolkit.Extensions
             }
 
             measuredThumbWidth = width;
-            thumb.style.height = width / thumbnailAspect;
+            var height = width / thumbnailAspect;
+            if (Mathf.Abs(thumb.layout.height - height) > 0.5f)
+            {
+                // The tile takes a new height on the next layout pass, so the rows have not settled yet.
+                MarkRowsChanged();
+            }
+
+            thumb.style.height = height;
         }
 
         private void UpdateState()

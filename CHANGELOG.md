@@ -37,6 +37,7 @@ A theming contract and a set of app-shell, browsing and AR guidance components, 
 - **OrnamentBar** - a floating action bar that sizes to its items, bottom centre in portrait and on the right edge in landscape, with one primary item.
 - **ScrollingTabs** - dynamic categories as tabs or chips, with counts, an optional search tab, an animated indicator and edge fades.
 - **ContentGrid** - a virtualised tile grid with a thumbnail aspect, selection modes, a long-press drag-out source, and loading and empty states.
+- **ContentGrid paging** - `EnableLoadMore`, `DisableLoadMore`, `BeginLoadMore`, `EndLoadMore` and `LoadMoreRequested`, as on ElasticListView. The grid asks for the next page when the end of its items comes within `LoadMoreThreshold` of the bottom of the view (a fraction of the view's height, 0.25 by default, UXML `load-more-threshold`). It also asks when every item fits without scrolling, after items, width, columns or the view's size change, and only once the row height has settled. It asks once per page, never while `IsLoading`, and a page that adds nothing does not start a loop. `IsLoadMoreEnabled`, `IsLoadingMore` and the `contentGrid--loading-more` class report the state. The sample pages its items in.
 - **SectionList** - data-bound expandable sections with counts and rows, built on `CollapsibleSection` and `SettingsRow`.
 - **SearchField** - a search box on `RoundedInputField` with a debounced query, submit, clear and a result count.
 - **SettingsRow** - icon, title, subtitle and a trailing chevron, value, switch or custom slot.

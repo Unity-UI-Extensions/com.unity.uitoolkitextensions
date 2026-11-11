@@ -36,6 +36,23 @@ namespace UnityUIToolkit.Extensions.Tests
         }
 
         /// <summary>
+        /// A grid for paging tests: 2 columns at 390 wide, with the scroller hidden as a host app hides it, so the tiles and the
+        /// row height stay the same whether or not the content scrolls.
+        /// </summary>
+        private IEnumerator MountPagingGrid(ContentGrid grid, float height)
+        {
+            grid.MinTileWidth = 150f;
+            grid.style.flexShrink = 0f;
+            grid.ListView.Q<ScrollView>().verticalScrollerVisibility = ScrollerVisibility.Hidden;
+            yield return MountGrid(grid, 390f, height);
+            yield return WaitFrames(4);
+        }
+
+        private static float ContentHeight(ContentGrid grid) => grid.ListView.itemsSource.Count * grid.ListView.fixedItemHeight;
+
+        private static float ViewportHeight(ContentGrid grid) => grid.ListView.Q<ScrollView>().contentViewport.layout.height;
+
+        /// <summary>
         /// The tiles showing an item, in rows the list is showing.
         /// </summary>
         private static List<VisualElement> BoundTiles(ContentGrid grid) =>
@@ -508,6 +525,188 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.IsFalse(grid.TileFor("id1").ClassListContains(ContentGrid.DisabledTileClass));
             Click(grid.TileFor("id1"));
             Assert.That(tapped, Is.EqualTo(new[] { "id1" }), "taps again once enabled");
+        }
+
+        [UnityTest]
+        public IEnumerator LoadMore_EveryRowFits_AsksOnceAfterTheRowsSettle_OnlyWhenOn()
+        {
+            // A first page that fits never moves the scroller, so a host listening to it never asked for page 2.
+            var off = new ContentGrid();
+            var offRequests = 0;
+            off.LoadMoreRequested += () => offRequests++;
+            off.SetItems(Items(11));
+            yield return MountPagingGrid(off, 1700f);
+            Assert.That(ContentHeight(off), Is.LessThan(ViewportHeight(off)), "every row fits");
+            yield return WaitFrames(10);
+            Assert.That(offRequests, Is.Zero, "paging is off until EnableLoadMore");
+            Root.Remove(off);
+
+            var grid = new ContentGrid();
+            var requests = 0;
+            var rowHeightAtRequest = 0f;
+            grid.LoadMoreRequested += () =>
+            {
+                requests++;
+                rowHeightAtRequest = grid.ListView.fixedItemHeight;
+            };
+            grid.SetItems(Items(11));
+            grid.EnableLoadMore();
+            yield return MountPagingGrid(grid, 1700f);
+            yield return WaitFrames(20);
+            Assert.That(requests, Is.EqualTo(1), "one request, however many frames pass");
+            Assert.That(rowHeightAtRequest, Is.EqualTo(grid.ListView.fixedItemHeight), "asked only once the row height had settled");
+            Assert.That(grid.TileFor("id0").layout.height, Is.EqualTo(rowHeightAtRequest).Within(1f));
+        }
+
+        [UnityTest]
+        public IEnumerator LoadMore_APageThatStillFits_AsksAgain_AnEmptyPageOrOff_DoesNot()
+        {
+            var grid = new ContentGrid();
+            var requests = 0;
+            grid.LoadMoreRequested += () =>
+            {
+                requests++;
+                grid.BeginLoadMore();
+            };
+            grid.SetItems(Items(4));
+            grid.EnableLoadMore();
+            yield return MountPagingGrid(grid, 1700f);
+            yield return WaitFrames(6);
+            Assert.That(requests, Is.EqualTo(1));
+            Assert.IsTrue(grid.IsLoadingMore);
+            Assert.IsTrue(grid.ClassListContains(ContentGrid.LoadingMoreClass));
+
+            grid.SetItems(Items(8));
+            grid.EndLoadMore();
+            yield return WaitFrames(10);
+            Assert.That(requests, Is.EqualTo(2), "a page that still fits asks for the next");
+
+            // The server sends a page with nothing in it.
+            grid.SetItems(Items(8));
+            grid.EndLoadMore();
+            Assert.IsFalse(grid.ClassListContains(ContentGrid.LoadingMoreClass));
+            yield return WaitFrames(20);
+            Assert.That(requests, Is.EqualTo(2), "a page that adds nothing does not start a loop");
+
+            grid.EnableLoadMore();
+            yield return WaitFrames(10);
+            Assert.That(requests, Is.EqualTo(3), "EnableLoadMore starts over, as a retry");
+
+            grid.DisableLoadMore();
+            Assert.IsFalse(grid.IsLoadingMore, "turning paging off ends the fetch");
+            grid.SetItems(Items(10));
+            yield return WaitFrames(20);
+            Assert.That(requests, Is.EqualTo(3), "paging off");
+        }
+
+        [UnityTest]
+        public IEnumerator LoadMore_Overflowing_AsksNearTheEndOnly_OncePerPage()
+        {
+            var grid = new ContentGrid();
+            var requests = 0;
+            grid.LoadMoreRequested += () => requests++;
+            grid.SetItems(Items(20));
+            grid.EnableLoadMore();
+            yield return MountPagingGrid(grid, 600f);
+            yield return WaitFrames(6);
+
+            var viewport = ViewportHeight(grid);
+            var end = ContentHeight(grid) - viewport;
+            Assert.That(end, Is.GreaterThan(viewport), "the content runs well past one view");
+            Assert.That(requests, Is.Zero, "nothing at the top");
+
+            var scroll = grid.ListView.Q<ScrollView>();
+            scroll.scrollOffset = new Vector2(0f, end - (viewport * 0.5f));
+            yield return WaitFrames(4);
+            Assert.That(requests, Is.Zero, "half a view from the end is outside the default quarter");
+
+            scroll.scrollOffset = new Vector2(0f, end - (viewport * 0.1f));
+            yield return WaitFrames(4);
+            Assert.That(requests, Is.EqualTo(1), "within a quarter of a view of the end");
+
+            scroll.scrollOffset = new Vector2(0f, end);
+            yield return WaitFrames(4);
+            Assert.That(requests, Is.EqualTo(1), "none while one is outstanding");
+
+            var offset = scroll.scrollOffset.y;
+            var tile = grid.TileFor("id17");
+            grid.SetItems(Items(40));
+            yield return WaitFrames(6);
+            Assert.That(scroll.scrollOffset.y, Is.EqualTo(offset).Within(0.5f), "the page keeps the scroll offset");
+            Assert.That(grid.TileFor("id17"), Is.SameAs(tile), "and the rows on screen");
+            Assert.That(requests, Is.EqualTo(1), "the new end is out of reach");
+        }
+
+        [UnityTest]
+        public IEnumerator LoadMore_FollowsTheFit_AsTheViewResizes()
+        {
+            // As a sheet that changes detent: the view grows until the rows fit, then shrinks back.
+            var grid = new ContentGrid { LoadMoreThreshold = 0f };
+            var requests = 0;
+            grid.LoadMoreRequested += () => requests++;
+            grid.SetItems(Items(8));
+            grid.EnableLoadMore();
+            yield return MountPagingGrid(grid, 600f);
+            var row = grid.ListView.fixedItemHeight;
+            yield return WaitFrames(6);
+            Assert.That(ContentHeight(grid), Is.GreaterThan(ViewportHeight(grid)), "4 rows overflow the view");
+            Assert.That(requests, Is.Zero);
+
+            grid.style.height = row * 4.5f;
+            yield return WaitFrames(8);
+            Assert.That(requests, Is.EqualTo(1), "the rows fit, so the grid asks");
+
+            grid.SetItems(Items(12));
+            yield return WaitFrames(8);
+            Assert.That(requests, Is.EqualTo(1), "the new page overflows the view");
+
+            grid.style.height = 600f;
+            yield return WaitFrames(8);
+            Assert.That(requests, Is.EqualTo(1));
+
+            grid.style.height = row * 6.5f;
+            yield return WaitFrames(8);
+            Assert.That(requests, Is.EqualTo(2), "the 6 rows fit, so the grid asks again");
+        }
+
+        [UnityTest]
+        public IEnumerator LoadMore_NeverWhileLoading()
+        {
+            var grid = new ContentGrid { IsLoading = true };
+            var requests = 0;
+            grid.LoadMoreRequested += () => requests++;
+            grid.SetItems(Items(4));
+            grid.EnableLoadMore();
+            yield return MountPagingGrid(grid, 1700f);
+            yield return WaitFrames(20);
+            Assert.That(requests, Is.Zero, "skeleton tiles never ask");
+
+            grid.IsLoading = false;
+            yield return WaitFrames(10);
+            Assert.That(requests, Is.EqualTo(1), "the grid asks once the items show");
+        }
+
+        [UnityTest]
+        public IEnumerator Tap_HeldWhileAPageArrives_RaisesItemTapped()
+        {
+            var grid = new ContentGrid();
+            var tapped = new List<string>();
+            grid.ItemTapped += item => tapped.Add(item.Id);
+            grid.LoadMoreRequested += grid.BeginLoadMore;
+            grid.SetItems(Items(4));
+            grid.EnableLoadMore();
+            yield return MountPagingGrid(grid, 1700f);
+            yield return WaitFrames(6);
+            Assert.IsTrue(grid.IsLoadingMore, "the 4 items fit, so the grid asked for a page");
+
+            var position = grid.TileFor("id1").worldBound.center;
+            SendPointer<PointerDownEvent>(grid.TileFor("id1"), position);
+            yield return null;
+            grid.SetItems(Items(8));
+            grid.EndLoadMore();
+            yield return WaitFrames(2);
+            SendPointer<PointerUpEvent>(grid.TileFor("id1"), position);
+            Assert.That(tapped, Is.EqualTo(new[] { "id1" }));
         }
 
         private static void SendPointer<T>(VisualElement target, Vector2 position) where T : PointerEventBase<T>, new()
