@@ -11,6 +11,7 @@ A theming contract and a set of app-shell, browsing and AR guidance components, 
 ### Changed
 
 - ContentGrid places rows at one measured height (`FixedHeight` virtualisation) instead of `DynamicHeight`, so scrolling back towards the start no longer jumps as rows scroll in; tiles size their thumbnails when bound, and a change of items refreshes the list rather than rebuilding it.
+- ContentGrid tiles keep the meta line while any item has a `Meta`, blank where an item has none, so all tiles are one height. When no item has one, every tile leaves the line out, as before.
 - ModalDialog gains an optional third, link-style action under the main buttons: `DialogOptions.TertiaryText`, the `tertiary-text` UXML attribute, `TertiaryButton`, and `DialogAction.Tertiary` in the result. Null keeps the two-action layout.
 - BottomSheet leaves header controls and nested scroll views in charge of their pointers, capturing plain-header and handle drags only after the movement threshold.
 - ContentGrid suppresses recycled-row hover/selection backgrounds and ignores the click at the end of a scroll gesture; selection remains per tile.
@@ -84,6 +85,7 @@ A theming contract and a set of app-shell, browsing and AR guidance components, 
 - `DropDownControl.meta` and `ImageCropOverlayControl.meta` contained their content twice, which Unity reported on import.
 - The Editor assembly is now Editor-only, so player builds no longer try to compile it.
 - A custom-coloured `PillButton` lost its gradient after being removed from and re-added to a panel.
+- ContentGrid no longer rebuilds its rows every frame when its tiles measure different heights. A padding cell in a short last row, or an item with no `Meta` (common while details load), measured shorter than its neighbours. Each height in turn rebuilt the list, so the rows jumped and no tile received a tap. Every tile now has the same lines, blank where an item has no text, and padding cells never set the row height. The row height comes from the tallest tile, in whole device pixels, and existing rows are resized in place instead of rebuilt. If the height changes a few times without settling, it then only grows, so no feedback between tiles and rows can loop. `TileFor(null)` no longer returns a padding cell.
 
 ## Release 1.0.0 - Launch - 2026/09
 

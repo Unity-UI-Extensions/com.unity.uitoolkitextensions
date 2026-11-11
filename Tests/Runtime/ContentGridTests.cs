@@ -23,6 +23,64 @@ namespace UnityUIToolkit.Extensions.Tests
             yield return Mount(grid, 4);
         }
 
+        /// <summary>
+        /// A grid tall enough that every row of 11 items in 2 columns is in view, so the list makes every row when it builds,
+        /// including the last row and its padding cell. It must not shrink to the 844 document root, or the last row is never made.
+        /// Taps in these tests go to the top row, which is on screen whatever the screen size.
+        /// </summary>
+        private IEnumerator MountTallGrid(ContentGrid grid, int settleFrames = 4)
+        {
+            grid.style.flexShrink = 0f;
+            yield return MountGrid(grid, 390f, 1200f);
+            yield return WaitFrames(settleFrames);
+        }
+
+        /// <summary>
+        /// The tiles showing an item, in rows the list is showing.
+        /// </summary>
+        private static List<VisualElement> BoundTiles(ContentGrid grid) =>
+            grid.ListView.Query(className: ContentGrid.TileClass).Where(t => t.userData is ContentGridItem && t.parent.resolvedStyle.display != DisplayStyle.None).ToList();
+
+        /// <summary>
+        /// A tap as a finger or mouse makes one: pointer down then up at the tile's centre, so UI Toolkit synthesises the click.
+        /// </summary>
+        private static void Tap(VisualElement tile)
+        {
+            var centre = tile.worldBound.center;
+            SendPointer<PointerDownEvent>(tile, centre);
+            SendPointer<PointerUpEvent>(tile, centre);
+        }
+
+        /// <summary>
+        /// Holds a pointer on a tile for some frames before releasing it. The release goes to whatever tile shows the item by
+        /// then, as a finger's would.
+        /// </summary>
+        private static IEnumerator Press(ContentGrid grid, string id, int frames = 3)
+        {
+            var position = grid.TileFor(id).worldBound.center;
+            SendPointer<PointerDownEvent>(grid.TileFor(id), position);
+            yield return WaitFrames(frames);
+            SendPointer<PointerUpEvent>(grid.TileFor(id) ?? grid, position);
+        }
+
+        /// <summary>
+        /// Fails if, over some frames, the row height changes or the tile showing an item is made again. That is what a list
+        /// rebuilding itself under the pointer looks like.
+        /// </summary>
+        private static IEnumerator AssertRowsStay(ContentGrid grid, string id, int frames = 20)
+        {
+            var tile = grid.TileFor(id);
+            Assert.That(tile, Is.Not.Null, id);
+            var height = grid.ListView.fixedItemHeight;
+            for (var frame = 1; frame <= frames; frame++)
+            {
+                yield return null;
+                Assert.That(grid.ListView.fixedItemHeight, Is.EqualTo(height), $"frame {frame}: the row height changed");
+                Assert.That(grid.TileFor(id), Is.SameAs(tile), $"frame {frame}: the tile for {id} was made again");
+                Assert.That(tile.panel, Is.Not.Null, $"frame {frame}: the tile for {id} left the panel");
+            }
+        }
+
         [UnityTest]
         public IEnumerator AutoColumns_FollowWidth_AndTilesBind()
         {
@@ -122,29 +180,166 @@ namespace UnityUIToolkit.Extensions.Tests
         }
 
         [UnityTest]
-        public IEnumerator Tap_RaisesItemTapped_AndSelectionModes()
+        public IEnumerator OddItemCount_AllRowsVisible_RowHeightSettles()
+        {
+            // 11 items in 2 columns leave a padding cell in the last row, and with every row in view the list makes it when it
+            // builds. It was made with empty labels, so it measured two lines shorter than the tiles. Each height in turn rebuilt
+            // the list, so the rows jumped between the two every frame or two and no tile ever received a tap.
+            var grid = new ContentGrid { MinTileWidth = 150f };
+            grid.SetItems(Items(11));
+            yield return MountTallGrid(grid);
+
+            Assert.That(grid.ColumnCount, Is.EqualTo(2));
+            Assert.That(grid.ListView.fixedItemHeight, Is.EqualTo(grid.TileFor("id0").layout.height).Within(1f), "the row height is a tile's own");
+            yield return AssertRowsStay(grid, "id0");
+        }
+
+        [UnityTest]
+        public IEnumerator OddItemCount_PaddingCell_MeasuresLikeATile_AndIsInert()
+        {
+            var grid = new ContentGrid { MinTileWidth = 150f, SelectionMode = GridSelectionMode.Multiple };
+            grid.SetItems(Items(11));
+            var tapped = new List<string>();
+            grid.ItemTapped += item => tapped.Add(item.Id);
+            yield return MountTallGrid(grid);
+
+            var padding = grid.ListView.Query(className: ContentGrid.TileClass).Where(t => t.ClassListContains(ContentGrid.HiddenTileClass)).First();
+            Assert.That(padding, Is.Not.Null, "11 items in 2 columns leave one padding cell");
+            Assert.That(padding.layout.height, Is.EqualTo(grid.TileFor("id0").layout.height).Within(1f), "it measures like a tile");
+            Assert.That(padding.userData, Is.Null, "no item behind it");
+            Assert.That(grid.TileFor(null), Is.Null, "TileFor never returns it");
+
+            // Sent straight to it: the last row is below the screen, so a pointer could not reach it here.
+            Click(padding);
+            Assert.That(tapped, Is.Empty, "not tappable");
+            Assert.That(grid.SelectedIds, Is.Empty, "not selectable");
+        }
+
+        [UnityTest]
+        public IEnumerator Tap_HeldForFrames_RaisesItemTapped_WithOddCount()
+        {
+            // UI Toolkit sends a click only when the pointer comes up over the element it went down on. A list rebuilt between
+            // the two swallowed the tap. Click() sends the click straight to the element, so it never showed this.
+            var grid = new ContentGrid { MinTileWidth = 150f };
+            grid.SetItems(Items(11));
+            var tapped = new List<string>();
+            grid.ItemTapped += item => tapped.Add(item.Id);
+            yield return MountTallGrid(grid);
+
+            yield return Press(grid, "id1");
+            Assert.That(tapped, Is.EqualTo(new[] { "id1" }));
+        }
+
+        [UnityTest]
+        public IEnumerator ItemsWithoutMeta_ShareTheRowHeight_WhileDetailsLoad()
+        {
+            // While an app is still fetching details, some items have no meta line yet. A tile without one measured a line
+            // shorter than its neighbours, and the rows rebuilt between the two heights until every item had its meta.
+            var grid = new ContentGrid { MinTileWidth = 150f };
+            var items = Items(10);
+            for (var i = 0; i < items.Count; i += 2)
+            {
+                items[i].Meta = null;
+            }
+
+            grid.SetItems(items);
+            yield return MountTallGrid(grid);
+
+            yield return AssertRowsStay(grid, "id1");
+            var heights = BoundTiles(grid).Select(t => t.layout.height).ToList();
+            Assert.That(heights.Max() - heights.Min(), Is.LessThan(1f), $"tile heights {string.Join(", ", heights)}");
+
+            var blankMeta = grid.TileFor("id0").Q<Label>(className: ContentGrid.MetaClass);
+            Assert.That(blankMeta.resolvedStyle.visibility, Is.EqualTo(Visibility.Hidden), "a blank line shows nothing");
+
+            // A detail arrives: its tile is bound again in place.
+            var tile = grid.TileFor("id1");
+            items[0].Meta = "12 MB";
+            grid.RefreshItem("id0");
+            yield return WaitFrames(2);
+            Assert.That(blankMeta.text, Is.EqualTo("12 MB"));
+            Assert.That(blankMeta.resolvedStyle.visibility, Is.EqualTo(Visibility.Visible));
+            Assert.That(grid.TileFor("id1"), Is.SameAs(tile));
+            yield return AssertRowsStay(grid, "id1");
+        }
+
+        [UnityTest]
+        public IEnumerator NoItemHasMeta_TilesLeaveTheLineOut_UntilOneDoes()
+        {
+            var grid = new ContentGrid { Columns = 2 };
+            var items = Items(4);
+            items.ForEach(i => i.Meta = null);
+            grid.SetItems(items);
+            yield return MountGrid(grid);
+            yield return WaitFrames(2);
+
+            var tile = grid.TileFor("id0");
+            var meta = tile.Q<Label>(className: ContentGrid.MetaClass);
+            Assert.That(meta.resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "no item has a meta line, so no tile keeps one");
+            var shortRow = grid.ListView.fixedItemHeight;
+
+            items[1].Meta = "3 MB";
+            grid.RefreshItem("id1");
+            yield return WaitFrames(4);
+            Assert.That(meta.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex), "every tile keeps the line once one item has it");
+            Assert.That(grid.ListView.fixedItemHeight, Is.GreaterThan(shortRow + 1f));
+            Assert.That(grid.ListView.fixedItemHeight, Is.EqualTo(tile.layout.height).Within(1f));
+            Assert.That(grid.TileFor("id0"), Is.SameAs(tile), "the rows are resized in place, not made again");
+
+            items[1].Meta = null;
+            grid.RefreshItem("id1");
+            yield return WaitFrames(4);
+            Assert.That(meta.resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
+            Assert.That(grid.ListView.fixedItemHeight, Is.EqualTo(shortRow).Within(1f), "and shrink back when it goes");
+        }
+
+        [UnityTest]
+        public IEnumerator ItemsArrivingWhileLoading_RowHeightSettles_AndTapsLand()
+        {
+            // An app starting up: the grid mounts loading, then items arrive a few at a time, through odd counts, with every
+            // row in view.
+            var grid = new ContentGrid { MinTileWidth = 150f, IsLoading = true };
+            var tapped = new List<string>();
+            grid.ItemTapped += item => tapped.Add(item.Id);
+            yield return MountTallGrid(grid, 0);
+
+            for (var count = 1; count <= 11; count += 2)
+            {
+                grid.SetItems(Items(count));
+                grid.IsLoading = false;
+                yield return WaitFrames(2);
+            }
+
+            yield return WaitFrames(4);
+            yield return AssertRowsStay(grid, "id0");
+            yield return Press(grid, "id1");
+            Assert.That(tapped, Is.EqualTo(new[] { "id1" }));
+        }
+
+        [UnityTest]
+        public IEnumerator Tap_RaisesItemTapped_AndSelectionModes([Values(6, 7)] int count)
         {
             var grid = new ContentGrid { Columns = 3 };
-            grid.SetItems(Items(6));
+            grid.SetItems(Items(count));
             var tapped = new List<string>();
             var selections = new List<string>();
             grid.ItemTapped += item => tapped.Add(item.Id);
             grid.SelectionChanged += ids => selections.Add(string.Join(",", ids));
             yield return MountGrid(grid);
 
-            Click(grid.TileFor("id1"));
+            Tap(grid.TileFor("id1"));
             Assert.That(tapped, Is.EqualTo(new[] { "id1" }));
             Assert.That(selections, Is.Empty, "no selection in None mode");
 
             grid.SelectionMode = GridSelectionMode.Multiple;
-            Click(grid.TileFor("id4"));
-            Click(grid.TileFor("id0"));
-            Click(grid.TileFor("id4"));
+            Tap(grid.TileFor("id4"));
+            Tap(grid.TileFor("id0"));
+            Tap(grid.TileFor("id4"));
             Assert.That(selections, Is.EqualTo(new[] { "id4", "id0,id4", "id0" }));
             Assert.IsTrue(grid.TileFor("id0").ClassListContains(ContentGrid.SelectedClass));
 
             grid.SelectionMode = GridSelectionMode.Single;
-            Click(grid.TileFor("id5"));
+            Tap(grid.TileFor("id5"));
             yield return WaitFrames(2);
             Assert.That(grid.SelectedIds, Is.EqualTo(new[] { "id5" }));
             Assert.IsFalse(grid.TileFor("id0").ClassListContains(ContentGrid.SelectedClass));
@@ -233,10 +428,10 @@ namespace UnityUIToolkit.Extensions.Tests
         }
 
         [UnityTest]
-        public IEnumerator Scrolling_DoesNotTapOrSelectATile_AndNextTapStillWorks()
+        public IEnumerator Scrolling_DoesNotTapOrSelectATile_AndNextTapStillWorks([Values(4, 5)] int count)
         {
             var grid = new ContentGrid { Columns = 2, SelectionMode = GridSelectionMode.Single };
-            grid.SetItems(Items(4));
+            grid.SetItems(Items(count));
             var tapped = new List<string>();
             grid.ItemTapped += item => tapped.Add(item.Id);
             yield return MountGrid(grid);

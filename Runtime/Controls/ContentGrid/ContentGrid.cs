@@ -34,7 +34,8 @@ namespace UnityUIToolkit.Extensions
         public string Name;
 
         /// <summary>
-        /// A secondary line, such as size or distance.
+        /// A secondary line, such as size or distance. While any item in the grid has one, every tile keeps the line, blank
+        /// where it is empty, so all tiles stay one height; when no item has one, every tile leaves it out.
         /// </summary>
         public string Meta;
 
@@ -125,6 +126,17 @@ namespace UnityUIToolkit.Extensions
 
         private const float DragSlop = 10f;
 
+        // Hidden text that holds a blank line open (see SetLine). A capital and a descender, so it is never shorter than a line
+        // of real text.
+        private const string BlankLine = "Ag";
+
+        // The row height may change this often without settling. After that it only grows until it settles or the width,
+        // columns, thumbnail aspect or meta line change, so no disagreement between tiles can turn into a loop (see ApplyRowHeight).
+        private const int RowHeightChangeBudget = 4;
+
+        // What a padding cell is bound to, so it has the same lines as a tile and measures like one.
+        private static readonly ContentGridItem PaddingItem = new();
+
         private readonly ListView list;
         private readonly SkeletonTile skeleton;
         private readonly EmptyState empty;
@@ -137,8 +149,12 @@ namespace UnityUIToolkit.Extensions
         // The width every thumbnail has at the bound width, once one has been laid out, so a row is the right height on its first
         // layout rather than one pass later. NaN until measured, and again after the width or the columns change.
         private float measuredThumbWidth = float.NaN;
-        // A row height measured this frame and waiting to be applied to the list.
-        private float pendingRowHeight = float.NaN;
+        // A tile laid out, or the row height changed, and the height is due a check after the layout pass.
+        private bool rowHeightScheduled;
+        // Row height changes since the height last settled or the width, columns, thumbnail aspect or meta line changed.
+        private int rowHeightChanges;
+        // Whether tiles keep the meta line: true while any item has one.
+        private bool showMetaLine;
         private int columns = 2;
         private float minTileWidth = 150f;
         private float thumbnailAspect = 1f;
@@ -229,6 +245,8 @@ namespace UnityUIToolkit.Extensions
             set
             {
                 thumbnailAspect = value > 0.01f ? value : 1f;
+                // The tiles change height, so the rows may shrink as well as grow.
+                rowHeightChanges = 0;
                 skeleton.ThumbnailAspect = thumbnailAspect;
                 list.Query(className: ThumbClass).ForEach(thumb => thumb.style.height = thumb.layout.width / thumbnailAspect);
             }
@@ -345,6 +363,7 @@ namespace UnityUIToolkit.Extensions
             }
 
             var removed = selection.RemoveWhere(id => !ids.Contains(id)) > 0;
+            UpdateMetaLine();
             RebuildRows();
             UpdateState();
             if (removed)
@@ -366,7 +385,12 @@ namespace UnityUIToolkit.Extensions
 
             // A disabled item cannot stay selected.
             var deselected = !items[index].IsEnabled && selection.Remove(id);
-            if (columns > 0)
+            if (UpdateMetaLine())
+            {
+                // The first meta line arrived or the last one went, so every tile gains or loses the line.
+                list.RefreshItems();
+            }
+            else if (columns > 0)
             {
                 list.RefreshItem(index / columns);
             }
@@ -406,7 +430,26 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public VisualElement TileFor(string id)
         {
-            return list.Query(className: TileClass).Where(t => (t.userData as ContentGridItem)?.Id == id).First();
+            // A padding cell has no item, so it never matches, not even a null id.
+            return list.Query(className: TileClass).Where(t => t.userData is ContentGridItem item && item.Id == id).First();
+        }
+
+        /// <summary>
+        /// Tiles keep the meta line while any item has one, so every tile has the same lines and the same height. True when that
+        /// changed, and the tiles with it.
+        /// </summary>
+        private bool UpdateMetaLine()
+        {
+            var show = items.Exists(i => !string.IsNullOrWhiteSpace(i.Meta));
+            if (show == showMetaLine)
+            {
+                return false;
+            }
+
+            showMetaLine = show;
+            // The tiles change height, so the rows may shrink as well as grow.
+            rowHeightChanges = 0;
+            return true;
         }
 
         private void UpdateColumns()
@@ -416,8 +459,9 @@ namespace UnityUIToolkit.Extensions
             if (!float.IsNaN(rowWidth) && !Mathf.Approximately(rowWidth, boundWidth))
             {
                 boundWidth = rowWidth;
-                // The thumbnails take a new width, so the rows measure again.
+                // The thumbnails take a new width, so the rows measure again and may shrink as well as grow.
                 measuredThumbWidth = float.NaN;
+                rowHeightChanges = 0;
                 list.RefreshItems();
             }
 
@@ -437,6 +481,7 @@ namespace UnityUIToolkit.Extensions
             skeleton.Columns = columns;
             skeleton.Count = columns * 2;
             measuredThumbWidth = float.NaN;
+            rowHeightChanges = 0;
             RebuildRows(rebuild: true);
         }
 
@@ -475,32 +520,103 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// Every tile is the same height and a row is as tall as its tiles, so the first tile to lay out sets the list's fixed item
-        /// height, and a tile that lays out at a new height (after a width or column change) sets it again. The tiles are measured,
-        /// not the rows: the list forces each row to the fixed height, and the tiles are kept at their own height (ContentGrid.uss).
-        /// Applied after the layout pass, since the setter rebuilds the list, which must not happen inside a tile's own geometry event.
+        /// A row is as tall as its tiles, and every row is one height. The tiles are measured, not the rows: the list forces each
+        /// row to the fixed height, and the tiles keep their own height (ContentGrid.uss). A tile showing an item that lays out
+        /// asks for the height to be checked after the layout pass; a padding cell never does.
         /// </summary>
-        private void OnTileGeometryChanged(float height)
+        private void OnTileGeometryChanged(VisualElement tile)
         {
-            if (float.IsNaN(height) || height <= 0f || Mathf.Abs(height - list.fixedItemHeight) < 0.5f || Mathf.Approximately(pendingRowHeight, height))
+            if (tile.userData is ContentGridItem && !tile.ClassListContains(HiddenTileClass))
+            {
+                ScheduleRowHeightCheck();
+            }
+        }
+
+        /// <summary>
+        /// Checks the row height after the layout pass, once however many tiles lay out in it. Not inside a geometry event, since
+        /// changing the height there would lay the list out again mid-pass.
+        /// </summary>
+        private void ScheduleRowHeightCheck()
+        {
+            if (rowHeightScheduled)
             {
                 return;
             }
 
-            pendingRowHeight = height;
+            rowHeightScheduled = true;
             list.schedule.Execute(ApplyRowHeight);
         }
 
+        /// <summary>
+        /// Sets the list's row height to that of its tallest tile now showing an item, in whole device pixels. Every tile is bound
+        /// with the same lines, so the tiles agree; the tallest is taken in case one does not, such as a name in a taller fallback
+        /// font. The height is read from the tiles as they are, not from whichever event came last, so it cannot flip between two
+        /// tiles. Each change is checked again after the next layout pass: unchanged there, the height has settled. After
+        /// <see cref="RowHeightChangeBudget"/> changes without settling it only grows, so no feedback, such as a scroller that
+        /// appears and narrows the tiles, can become a loop.
+        /// </summary>
+        /// <remarks>Legacy: the last tile to report set the height and the list was rebuilt each time. A padding cell made with
+        /// empty labels, or a tile with no meta, measured shorter than its neighbours, so the list rebuilt between the two heights
+        /// every frame or two, and no tap landed on a tile that lived long enough to be clicked.</remarks>
         private void ApplyRowHeight()
         {
-            var height = pendingRowHeight;
-            pendingRowHeight = float.NaN;
-            if (!float.IsNaN(height) && Mathf.Abs(height - list.fixedItemHeight) >= 0.5f)
+            rowHeightScheduled = false;
+            var height = TallestTileHeight();
+            if (float.IsNaN(height))
             {
-                list.fixedItemHeight = height;
-                // The setter only refreshes, which leaves the rows already made at their old forced height; a rebuild makes them again.
-                list.Rebuild();
+                return;
             }
+
+            // Whole device pixels, so every row starts on a pixel and its tiles measure the same in every row. A difference of a
+            // pixel or less is left alone: rounding to the pixel grid alone can make one.
+            var pixelsPerPoint = list.scaledPixelsPerPoint > 0f ? list.scaledPixelsPerPoint : 1f;
+            var pixel = 1f / pixelsPerPoint;
+            height = Mathf.Ceil((height * pixelsPerPoint) - 0.01f) * pixel;
+            var change = height - list.fixedItemHeight;
+            if (Mathf.Abs(change) <= pixel + 0.001f)
+            {
+                // Settled: the rows fit their tiles, so a later change of content or style may shrink them again.
+                rowHeightChanges = 0;
+                return;
+            }
+
+            if (change < 0f && rowHeightChanges >= RowHeightChangeBudget)
+            {
+                // Changed too often without settling: from here it only grows, so tiles are never cut off and no two heights
+                // can take turns.
+                return;
+            }
+
+            rowHeightChanges++;
+            list.fixedItemHeight = height;
+            // The setter refreshes the list, which lays out the content for the new height but leaves the rows already made at
+            // the old one, so they are resized here, in place. Legacy: the list was rebuilt, which made every row and tile again
+            // and cancelled any press on them.
+            list.Query(className: RowClass).ForEach(row => row.style.height = height);
+            ScheduleRowHeightCheck();
+        }
+
+        /// <summary>
+        /// The height of the tallest laid-out tile showing an item in a row the list is showing; NaN when there is none.
+        /// </summary>
+        private float TallestTileHeight()
+        {
+            var tallest = float.NaN;
+            list.Query(className: TileClass).ForEach(tile =>
+            {
+                if (tile.userData is not ContentGridItem || tile.ClassListContains(HiddenTileClass) || tile.parent?.resolvedStyle.display == DisplayStyle.None)
+                {
+                    return;
+                }
+
+                var height = tile.layout.height;
+                if (!float.IsNaN(height) && height > 0f && (float.IsNaN(tallest) || height > tallest))
+                {
+                    tallest = height;
+                }
+            });
+
+            return tallest;
         }
 
         /// <summary>
@@ -564,6 +680,10 @@ namespace UnityUIToolkit.Extensions
 
                 if (index >= items.Count)
                 {
+                    // A padding cell in a short last row. It is bound like a tile with blank lines, so it measures like one, then
+                    // left without an item, so taps, presses, selection and TileFor pass it by. Legacy: it kept whatever text a
+                    // recycled tile had, or none when freshly made, and then measured two lines short.
+                    BindTile(tile, PaddingItem);
                     tile.userData = null;
                     tile.AddToClassList(HiddenTileClass);
                     continue;
@@ -577,7 +697,7 @@ namespace UnityUIToolkit.Extensions
         private VisualElement MakeTile()
         {
             var tile = UIToolkitExtensions.CreateVisualElement(TileClass);
-            tile.RegisterCallback<GeometryChangedEvent>(evt => OnTileGeometryChanged(evt.newRect.height));
+            tile.RegisterCallback<GeometryChangedEvent>(_ => OnTileGeometryChanged(tile));
             var thumb = UIToolkitExtensions.CreateVisualElement(tile, ThumbClass);
             thumb.pickingMode = PickingMode.Ignore;
             thumb.RegisterCallback<GeometryChangedEvent>(evt => OnThumbGeometryChanged(thumb, evt.newRect.width));
@@ -608,14 +728,27 @@ namespace UnityUIToolkit.Extensions
             badge.text = item.TypeLabel ?? string.Empty;
             badge.style.display = string.IsNullOrEmpty(item.TypeLabel) ? DisplayStyle.None : DisplayStyle.Flex;
 
-            tile.Q<Label>(className: NameClass).text = item.Name ?? string.Empty;
+            // Every tile has the same lines, blank where an item has no text, so every tile is the same height.
+            // Legacy: an empty name measured no height and an empty meta was hidden, so such a tile measured shorter.
+            SetLine(tile.Q<Label>(className: NameClass), item.Name);
             var meta = tile.Q<Label>(className: MetaClass);
-            meta.text = item.Meta ?? string.Empty;
-            meta.style.display = string.IsNullOrEmpty(item.Meta) ? DisplayStyle.None : DisplayStyle.Flex;
+            SetLine(meta, item.Meta);
+            meta.style.display = showMetaLine ? DisplayStyle.Flex : DisplayStyle.None;
 
             tile.EnableInClassList(SelectedClass, selection.Contains(item.Id));
             tile.EnableInClassList(DisabledTileClass, !item.IsEnabled);
             tile.RemoveFromClassList(ArmedClass);
+        }
+
+        /// <summary>
+        /// Shows a line of text, or a blank line of the same height. A label with no text, or only spaces, measures no height, so
+        /// a blank line holds hidden placeholder text instead.
+        /// </summary>
+        private static void SetLine(Label label, string text)
+        {
+            var blank = string.IsNullOrWhiteSpace(text);
+            label.text = blank ? BlankLine : text;
+            label.style.visibility = blank ? new StyleEnum<Visibility>(Visibility.Hidden) : new StyleEnum<Visibility>(StyleKeyword.Null);
         }
 
         private void OnTileClicked(VisualElement tile)
