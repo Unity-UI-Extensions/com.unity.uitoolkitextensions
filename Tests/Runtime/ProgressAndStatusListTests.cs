@@ -38,13 +38,13 @@ namespace UnityUIToolkit.Extensions.Tests
             var ring = new ProgressRing { Value = 0.5f };
             yield return Mount(ring);
 
-            Assert.That(ring.FillColor.r, Is.EqualTo(0x7F / 255f).Within(0.01f), "--surface-accent");
+            Assert.That(ring.FillColor.r, Is.EqualTo(0xA5 / 255f).Within(0.01f), "--surface-accent");
             Assert.That(ring.TrackColor.r, Is.EqualTo(0x3F / 255f).Within(0.01f), "--surface-border");
 
             ring.Value = 1f;
             yield return WaitFrames(2);
             Assert.IsTrue(ring.ClassListContains(ProgressRing.CompleteClass));
-            Assert.That(ring.FillColor.g, Is.EqualTo(0x8B / 255f).Within(0.01f), "--c-success");
+            Assert.That(ring.FillColor.g, Is.EqualTo(0xC5 / 255f).Within(0.01f), "--c-success");
         }
 
         [UnityTest]
@@ -55,7 +55,7 @@ namespace UnityUIToolkit.Extensions.Tests
             yield return Mount(ring);
 
             Assert.IsFalse(ring.ClassListContains(ProgressRing.CompleteClass));
-            Assert.That(ring.FillColor.r, Is.EqualTo(0x7F / 255f).Within(0.01f), "--surface-accent");
+            Assert.That(ring.FillColor.r, Is.EqualTo(0xA5 / 255f).Within(0.01f), "--surface-accent");
 
             ring.ShowComplete = true;
             yield return WaitFrames(2);
@@ -121,7 +121,7 @@ namespace UnityUIToolkit.Extensions.Tests
 
             Assert.IsTrue(list.ClassListContains(StatusList.FailedClass));
             var detail = list.StepElement("locate").Q<Label>(className: StatusList.DetailClass);
-            Assert.That(detail.resolvedStyle.color.r, Is.EqualTo(0x8A / 255f).Within(0.01f), "--c-danger");
+            Assert.That(detail.resolvedStyle.color.r, Is.EqualTo(0xDC / 255f).Within(0.01f), "--c-danger");
             Assert.That(list.Progress, Is.EqualTo(0.8f));
 
             list.Progress = -1f;

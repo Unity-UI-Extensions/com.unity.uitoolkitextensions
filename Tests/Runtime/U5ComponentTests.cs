@@ -45,7 +45,7 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.That(small.layout.width, Is.EqualTo(40f));
             Assert.That(large.layout.width, Is.EqualTo(56f));
             Assert.That(small.Initials, Is.EqualTo("MO"));
-            Assert.That(small.resolvedStyle.borderTopColor.r, Is.EqualTo(0x3D / 255f).Within(0.01f), "--c-primary ring");
+            Assert.That(small.resolvedStyle.borderTopColor.r, Is.EqualTo(0x4F / 255f).Within(0.01f), "--c-primary ring");
 
             small.SetImage(Background.FromTexture2D(Texture2D.whiteTexture));
             yield return WaitFrames(2);
@@ -110,7 +110,7 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.That(bar.Q<Label>(className: CaptionBar.SpeakerClass).text, Is.EqualTo("MARA"));
             Assert.That(bar.Text, Is.EqualTo("Welcome to the gallery."));
             Assert.That(bar.resolvedStyle.borderLeftWidth, Is.EqualTo(3f));
-            Assert.That(bar.resolvedStyle.borderLeftColor.r, Is.EqualTo(0x3D / 255f).Within(0.01f), "--c-primary edge");
+            Assert.That(bar.resolvedStyle.borderLeftColor.r, Is.EqualTo(0x4F / 255f).Within(0.01f), "--c-primary edge");
 
             bar.SetCue(null, "Narration without a speaker.");
             Assert.IsTrue(bar.ClassListContains(CaptionBar.NoSpeakerClass));
@@ -297,7 +297,7 @@ namespace UnityUIToolkit.Extensions.Tests
             var transcript = panel.Q<Label>(className: SpeechInputPanel.TranscriptClass);
             Assert.That(transcript.text, Is.EqualTo("“What's going on over”"));
             Assert.IsTrue(panel.ClassListContains(SpeechInputPanel.PartialClass));
-            Assert.That(transcript.resolvedStyle.color.r, Is.EqualTo(0x9F / 255f).Within(0.01f), "partial is muted");
+            Assert.That(transcript.resolvedStyle.color.r, Is.EqualTo(0xA1 / 255f).Within(0.01f), "partial is muted");
 
             panel.SetTranscript("What's going on over here?", isFinal: true);
             panel.SetMatch("2 · What is going on here?");

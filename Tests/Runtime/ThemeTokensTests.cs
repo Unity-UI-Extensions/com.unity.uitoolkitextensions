@@ -13,8 +13,8 @@ namespace UnityUIToolkit.Extensions.Tests
         private const string ProbesPath = "Packages/com.unity.uitoolkitextensions/Tests/Runtime/TokenProbes.uss";
         private const string OverridesPath = "Packages/com.unity.uitoolkitextensions/Tests/Runtime/TokenOverrides.uss";
 
-        private static readonly Color DeepPanel = new(22f / 255f, 24f / 255f, 31f / 255f, 0.86f);
-        private static readonly Color PageGround = new(0xF4 / 255f, 0xF7 / 255f, 0xF8 / 255f, 1f);
+        private static readonly Color DeepPanel = new(24f / 255f, 24f / 255f, 27f / 255f, 0.86f);
+        private static readonly Color PageGround = new(0xF4 / 255f, 0xF4 / 255f, 0xF5 / 255f, 1f);
 
         private VisualElement container;
         private VisualElement surfaceProbe;

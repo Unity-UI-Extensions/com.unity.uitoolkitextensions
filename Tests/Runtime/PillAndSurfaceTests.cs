@@ -116,7 +116,7 @@ namespace UnityUIToolkit.Extensions.Tests
 
             var promptRow = prompts.ItemElement("a");
             Assert.That(promptRow.resolvedStyle.backgroundColor.a, Is.EqualTo(1f), "opaque prompt row");
-            Assert.That(promptRow.resolvedStyle.backgroundColor.r, Is.EqualTo(0x27 / 255f).Within(0.01f));
+            Assert.That(promptRow.resolvedStyle.backgroundColor.r, Is.EqualTo(0x20 / 255f).Within(0.01f), "--surface-input");
 
             var tile = row.Q(className: SettingsRow.IconTileClass);
             Assert.That(tile.resolvedStyle.backgroundColor.a, Is.EqualTo(1f), "opaque tile on light");

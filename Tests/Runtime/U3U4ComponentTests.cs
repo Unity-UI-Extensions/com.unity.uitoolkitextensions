@@ -268,8 +268,8 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.That(texture, Is.Not.Null, "GradientFill painted the danger fill");
             var start = texture.GetPixel(0, 0);
             var end = texture.GetPixel(texture.width - 1, 0);
-            Assert.That(start.r, Is.EqualTo(0x8A / 255f).Within(0.01f), "--grad-danger-start (--c-danger)");
-            Assert.That(start.g, Is.EqualTo(0x3A / 255f).Within(0.01f));
+            Assert.That(start.r, Is.EqualTo(0xDC / 255f).Within(0.01f), "--grad-danger-start (--c-danger)");
+            Assert.That(start.g, Is.EqualTo(0x26 / 255f).Within(0.01f));
             Assert.That(end.r, Is.EqualTo(0x5A / 255f).Within(0.01f), "--grad-danger-end");
             Assert.That(end.g, Is.EqualTo(0x22 / 255f).Within(0.01f));
             var label = button.Q<Label>(className: PillButton.LabelClass);
@@ -279,7 +279,7 @@ namespace UnityUIToolkit.Extensions.Tests
             button.SetEnabled(false);
             yield return WaitFrames(2);
             Assert.That(fill.resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "disabled is an outline");
-            Assert.That(label.resolvedStyle.color.r, Is.EqualTo(0x9F / 255f).Within(0.01f), "--surface-muted");
+            Assert.That(label.resolvedStyle.color.r, Is.EqualTo(0xA1 / 255f).Within(0.01f), "--surface-muted");
         }
 
         [UnityTest]
@@ -334,11 +334,11 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.That(topLeft.worldBound.y, Is.EqualTo(frame.y).Within(0.5f));
             Assert.That(bottomRight.worldBound.max.x, Is.EqualTo(frame.max.x).Within(0.5f));
             Assert.That(bottomRight.worldBound.max.y, Is.EqualTo(frame.max.y).Within(0.5f));
-            Assert.That(topLeft.resolvedStyle.borderTopColor.b, Is.EqualTo(0xD9 / 255f).Within(0.01f), "accent");
+            Assert.That(topLeft.resolvedStyle.borderTopColor.b, Is.EqualTo(0xFC / 255f).Within(0.01f), "accent");
 
             scan.Tone = ScanFrameTone.Success;
             yield return WaitFrames(3);
-            Assert.That(topLeft.resolvedStyle.borderTopColor.g, Is.EqualTo(0x8B / 255f).Within(0.01f), "success");
+            Assert.That(topLeft.resolvedStyle.borderTopColor.g, Is.EqualTo(0xC5 / 255f).Within(0.01f), "success");
 
             scan.Tone = ScanFrameTone.Warn;
             yield return WaitFrames(3);
@@ -400,35 +400,35 @@ namespace UnityUIToolkit.Extensions.Tests
         // ZXing.Net's encoder output for Link at level M (version 3, mask 6), the independent reference.
         private static readonly string[] ZxingReference =
         {
-            "#######.#####..###....#######",
-            "#.....#.#.#.....####..#.....#",
-            "#.###.#.#.##...##..#..#.###.#",
-            "#.###.#..#.#....##..#.#.###.#",
-            "#.###.#.#..#..####.#..#.###.#",
-            "#.....#.....#..##.#.#.#.....#",
+            "#######.##.#####..#.#.#######",
+            "#.....#.#.##.###.#.#..#.....#",
+            "#.###.#.#....##.....#.#.###.#",
+            "#.###.#..##...##.#.##.#.###.#",
+            "#.###.#.#.##.#.#.#.#..#.###.#",
+            "#.....#..##.###...#.#.#.....#",
             "#######.#.#.#.#.#.#.#.#######",
-            "...........#.#.##............",
-            "#..######....#...#...#..#.###",
-            "###.##...#...#..#.####.##.##.",
-            "...####.###..#.###...#..#.#..",
-            "##..#..##...##..##.##..###..#",
-            ".###..##..#.##.##...####....#",
-            "#....#..####.##.###...#######",
-            "..###.##...#.#..#..##...#.#.#",
-            "###.#...#..#...#...#......#.#",
-            "..##..#..#.##.#.....#..#.#...",
-            "#..#.#.....####.#####...#.##.",
-            "###...#####.#..##.##.#####..#",
-            "##..##....##..##..#..######..",
-            "##.#.###....####.#..########.",
-            "........#..#..#####.#...##...",
-            "#######.#.#.#.####.##.#.##...",
-            "#.....#.##..#.#####.#...#...#",
-            "#.###.#.###.####...#######.##",
-            "#.###.#.#....#.###..##.#....#",
-            "#.###.#..##..###..#.##.##.###",
-            "#.....#..###..#......#.####.#",
-            "#######.##...##...###.#.#....",
+            ".........##...#..............",
+            "#..######.##.#####.#.#..#.###",
+            "#.###..###..#.#...##.#.##.##.",
+            ".###..###.#...#..##..#..#.#..",
+            "#.#.#..#..##..##.#.##.#..#..#",
+            "#..#####.##..##.....#.##....#",
+            "....##.#...##....##.#.#######",
+            "..#..####..##.##...##..##.#.#",
+            "#..#...##..#.##.#.....#.#.#.#",
+            "#.#.#.#....#...#...##..#.#...",
+            "#..#.....###.....#.##...#.##.",
+            "##.########..##.####..####..#",
+            "####.#..#.##.#.##.#..#...##..",
+            "#######...####...#..########.",
+            "........#.##.#..###.#...##...",
+            "#######.#...##.###.##.#.##...",
+            "#.....#.#.##.#..#####...#..##",
+            "#.###.#.###.##.##..#######...",
+            "#.###.#.#.#...#.#.#....#...#.",
+            "#.###.#....####.#..#.#.##.###",
+            "#.....#..##.####.....#.####.#",
+            "#######.#...###..######.#....",
         };
 
         [Test]
@@ -489,10 +489,10 @@ namespace UnityUIToolkit.Extensions.Tests
             Color32 quiet = texture.GetPixel(0, top);
             Color32 finder = texture.GetPixel(4, top - 4);
             Assert.That(quiet, Is.EqualTo((Color32)Color.white));
-            Assert.That(finder.r, Is.EqualTo(0x14), "--c-navy-2 modules");
-            Assert.That(finder.g, Is.EqualTo(0x3B));
-            Assert.That(finder.b, Is.EqualTo(0x4B));
-            Assert.That(view.DarkColor.r, Is.EqualTo(0x14 / 255f).Within(0.01f));
+            Assert.That(finder.r, Is.EqualTo(0x34), "--c-navy-2 modules");
+            Assert.That(finder.g, Is.EqualTo(0x34));
+            Assert.That(finder.b, Is.EqualTo(0x3A));
+            Assert.That(view.DarkColor.r, Is.EqualTo(0x34 / 255f).Within(0.01f));
 
             var shared = view.CreateTexture(8);
             Assert.That(shared.width, Is.EqualTo(view.ModulesPerSide * 8));

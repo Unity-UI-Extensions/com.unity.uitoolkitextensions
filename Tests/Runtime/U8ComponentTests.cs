@@ -30,7 +30,7 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.That(bar.Track.layout.height, Is.EqualTo(10f));
             Assert.That(bar.Track.childCount, Is.EqualTo(3), "two items and Other");
             Assert.That(bar.Track[0].layout.width / bar.Track.layout.width, Is.EqualTo(230f / 600f).Within(0.01f));
-            Assert.That(bar.Track[2].resolvedStyle.backgroundColor.r, Is.EqualTo(0x9F / 255f).Within(0.01f), "Other is muted");
+            Assert.That(bar.Track[2].resolvedStyle.backgroundColor.r, Is.EqualTo(0xA1 / 255f).Within(0.01f), "Other is muted");
             var legend = bar.Query<Label>(className: StorageBar.LegendLabelClass).ToList();
             Assert.That(legend[0].text, Is.EqualTo("Sample Location 230 MB"));
             Assert.That(legend[2].text, Is.EqualTo("Other 62 MB"));
@@ -158,7 +158,7 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.That(lockedIcon.resolvedStyle.unityBackgroundImageTintColor, Is.EqualTo(Color.white), "not tinted muted");
             Assert.That(lockedIcon.layout.width, Is.EqualTo(64f - 3f).Within(1f));
 
-            Assert.That(onLight.Disc.resolvedStyle.borderTopColor.r, Is.EqualTo(0xDE / 255f).Within(0.01f), "the border colour on light");
+            Assert.That(onLight.Disc.resolvedStyle.borderTopColor.r, Is.EqualTo(0xD4 / 255f).Within(0.01f), "the border colour on light");
 
             badge.SetIcon(default);
             yield return WaitFrames(2);

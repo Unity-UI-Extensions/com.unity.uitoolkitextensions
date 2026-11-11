@@ -134,7 +134,7 @@ namespace UnityUIToolkit.Extensions.Tests
             prompts.SetFeedback("b", PromptFeedback.Correct);
             prompts.SetFeedback("a", PromptFeedback.Incorrect);
             yield return WaitFrames(2);
-            Assert.That(prompts.ItemElement("b").resolvedStyle.borderTopColor.g, Is.EqualTo(0x8B / 255f).Within(0.01f), "--c-success");
+            Assert.That(prompts.ItemElement("b").resolvedStyle.borderTopColor.g, Is.EqualTo(0xC5 / 255f).Within(0.01f), "--c-success");
             Assert.IsTrue(prompts.ItemElement("a").ClassListContains(PromptChoices.IncorrectClass));
             prompts.ClearFeedback();
             Assert.IsFalse(prompts.ItemElement("b").ClassListContains(PromptChoices.CorrectClass));

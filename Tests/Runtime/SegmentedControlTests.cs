@@ -199,9 +199,9 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.IsTrue(stepper.ClassListContains(ThemeTokens.ThemedClass));
 
             var overlay = Overlay(stepper).resolvedStyle.backgroundColor;
-            Assert.That(overlay.r, Is.EqualTo(0x3D / 255f).Within(0.01f), "overlay is --c-primary, not the QuadrantStepper default");
-            Assert.That(overlay.g, Is.EqualTo(0x83 / 255f).Within(0.01f));
-            Assert.That(overlay.b, Is.EqualTo(0x98 / 255f).Within(0.01f));
+            Assert.That(overlay.r, Is.EqualTo(0x4F / 255f).Within(0.01f), "overlay is --c-primary, not the QuadrantStepper default");
+            Assert.That(overlay.g, Is.EqualTo(0x6B / 255f).Within(0.01f));
+            Assert.That(overlay.b, Is.EqualTo(0xED / 255f).Within(0.01f));
             Assert.That(stepper.resolvedStyle.backgroundColor.r, Is.EqualTo(0x27 / 255f).Within(0.01f), "track is --surface-raised");
         }
 

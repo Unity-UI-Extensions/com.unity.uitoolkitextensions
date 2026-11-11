@@ -92,7 +92,7 @@ namespace UnityUIToolkit.Extensions.Tests
 
             Assert.IsTrue(tabs.ClassListContains(ScrollingTabs.ChipsVariantClass));
             Assert.That(tabs.Q(className: ScrollingTabs.IndicatorClass).resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
-            Assert.That(tabs.TabElement(0).resolvedStyle.backgroundColor.r, Is.EqualTo(0x3D / 255f).Within(0.01f), "--c-primary");
+            Assert.That(tabs.TabElement(0).resolvedStyle.backgroundColor.r, Is.EqualTo(0x4F / 255f).Within(0.01f), "--c-primary");
         }
 
         [UnityTest]

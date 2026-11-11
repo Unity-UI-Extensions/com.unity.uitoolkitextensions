@@ -86,6 +86,7 @@ A theming contract and a set of app-shell, browsing and AR guidance components, 
 - The Editor assembly is now Editor-only, so player builds no longer try to compile it.
 - A custom-coloured `PillButton` lost its gradient after being removed from and re-added to a panel.
 - ContentGrid no longer rebuilds its rows every frame when its tiles measure different heights. A padding cell in a short last row, or an item with no `Meta` (common while details load), measured shorter than its neighbours. Each height in turn rebuilt the list, so the rows jumped and no tile received a tap. Every tile now has the same lines, blank where an item has no text, and padding cells never set the row height. The row height comes from the tallest tile, in whole device pixels, and existing rows are resized in place instead of rebuilt. If the height changes a few times without settling, it then only grows, so no feedback between tiles and rows can loop. `TileFor(null)` no longer returns a padding cell.
+- 23 PlayMode tests expected theme colours and a QR reference matrix that no longer matched `ThemeTokens.uss` or the sample link. They now check the current token values, and the QR reference is regenerated with ZXing.Net 0.16.11 for the current link.
 
 ## Release 1.0.0 - Launch - 2026/09
 

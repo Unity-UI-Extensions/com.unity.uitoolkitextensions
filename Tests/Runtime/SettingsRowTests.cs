@@ -65,7 +65,7 @@ namespace UnityUIToolkit.Extensions.Tests
             var thumb = toggle.Q(className: Switch.ThumbClass);
             Assert.That(thumb.resolvedStyle.translate.x, Is.EqualTo(18f), "FS09_5 travel");
             var track = toggle.Q(className: Switch.TrackClass);
-            Assert.That(track.resolvedStyle.backgroundColor.r, Is.EqualTo(0x3D / 255f).Within(0.01f), "--c-primary when on");
+            Assert.That(track.resolvedStyle.backgroundColor.r, Is.EqualTo(0x4F / 255f).Within(0.01f), "--c-primary when on");
         }
 
         [UnityTest]
@@ -156,7 +156,7 @@ namespace UnityUIToolkit.Extensions.Tests
             row.SetSurface(ThemeSurface.Light);
             yield return Mount(row);
 
-            Assert.That(row.Q<Label>(className: SettingsRow.TitleClass).resolvedStyle.color.r, Is.EqualTo(0x14 / 255f).Within(0.01f), "--c-page-fg");
+            Assert.That(row.Q<Label>(className: SettingsRow.TitleClass).resolvedStyle.color.r, Is.EqualTo(0x27 / 255f).Within(0.01f), "--c-page-fg");
         }
     }
 }

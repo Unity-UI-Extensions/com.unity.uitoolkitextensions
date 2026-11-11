@@ -157,10 +157,10 @@ namespace UnityUIToolkit.Extensions.Tests
             yield return WaitFrames(2);
 
             var dot = label.Q(className: WorldAnchoredLabel.DotClass);
-            Assert.That(dot.resolvedStyle.backgroundColor.r, Is.EqualTo(0x7F / 255f).Within(0.01f), "--c-accent");
+            Assert.That(dot.resolvedStyle.backgroundColor.r, Is.EqualTo(0xA5 / 255f).Within(0.01f), "--c-accent");
             label.Tone = AnchoredLabelTone.Success;
             yield return WaitFrames(2);
-            Assert.That(dot.resolvedStyle.backgroundColor.g, Is.EqualTo(0x8B / 255f).Within(0.01f), "--c-success");
+            Assert.That(dot.resolvedStyle.backgroundColor.g, Is.EqualTo(0xC5 / 255f).Within(0.01f), "--c-success");
 
             Click(label);
             Assert.That(taps, Is.EqualTo(1));
@@ -467,8 +467,8 @@ namespace UnityUIToolkit.Extensions.Tests
             yield return WaitFrames(2);
 
             var disc = placed.Element.Q(className: ToastHost.IconClass);
-            Assert.That(disc.resolvedStyle.backgroundColor.g, Is.EqualTo(0x8B / 255f).Within(0.01f), "--c-success disc");
-            Assert.That(placed.Element.Q(className: ToastHost.IconImageClass).resolvedStyle.unityBackgroundImageTintColor.r, Is.EqualTo(0xF2 / 255f).Within(0.01f), "white glyph");
+            Assert.That(disc.resolvedStyle.backgroundColor.g, Is.EqualTo(0xC5 / 255f).Within(0.01f), "--c-success disc");
+            Assert.That(placed.Element.Q(className: ToastHost.IconImageClass).resolvedStyle.unityBackgroundImageTintColor.r, Is.EqualTo(0xFA / 255f).Within(0.01f), "--c-fg glyph");
             Assert.That(placed.Element.Q(className: ToastHost.CardClass).resolvedStyle.borderLeftWidth, Is.EqualTo(3f));
 
             var action = placed.Element.Q<Button>(className: ToastHost.ActionClass);

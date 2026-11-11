@@ -60,7 +60,7 @@ namespace UnityUIToolkit.Extensions.Tests
             Assert.That(background.backgroundColor.a, Is.EqualTo(0f));
             Assert.That(background.borderTopWidth, Is.EqualTo(1.5f).Within(0.5f), "1.5 px, snapped to the pixel grid at scale 1");
             Assert.That(background.borderTopColor.r, Is.EqualTo(0x52 / 255f).Within(0.01f), "--surface-border-strong");
-            Assert.That(Label(button).resolvedStyle.color.r, Is.EqualTo(0xF2 / 255f).Within(0.01f), "--surface-fg");
+            Assert.That(Label(button).resolvedStyle.color.r, Is.EqualTo(0xFA / 255f).Within(0.01f), "--surface-fg");
         }
 
         [UnityTest]

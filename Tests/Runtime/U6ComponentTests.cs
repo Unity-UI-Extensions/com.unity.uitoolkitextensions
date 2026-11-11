@@ -42,8 +42,8 @@ namespace UnityUIToolkit.Extensions.Tests
             shutter.Progress = 0.4f;
             yield return WaitFrames(2);
             Assert.That(disc.layout.width, Is.EqualTo(26f), "recording square");
-            Assert.That(shutter.resolvedStyle.borderTopColor.r, Is.EqualTo(0xC0 / 255f).Within(0.01f), "--c-record ring");
-            Assert.That(disc.resolvedStyle.backgroundColor.r, Is.EqualTo(0xC0 / 255f).Within(0.01f));
+            Assert.That(shutter.resolvedStyle.borderTopColor.r, Is.EqualTo(0xDC / 255f).Within(0.01f), "--c-record ring");
+            Assert.That(disc.resolvedStyle.backgroundColor.r, Is.EqualTo(0xDC / 255f).Within(0.01f));
 
             // Sliding off and releasing still ends the hold: the shutter keeps the pointer.
             SendPointerEvent<PointerUpEvent>(shutter, centre + new Vector2(200f, 0f));
@@ -200,12 +200,12 @@ namespace UnityUIToolkit.Extensions.Tests
             column.Add(offline);
             yield return Mount(column);
 
-            Assert.That(rec.resolvedStyle.backgroundColor.r, Is.EqualTo(0xC0 / 255f).Within(0.01f), "--c-record fill");
+            Assert.That(rec.resolvedStyle.backgroundColor.r, Is.EqualTo(0xDC / 255f).Within(0.01f), "--c-record fill");
             Assert.That(rec.Q(className: StatusChip.IndicatorClass).layout.width, Is.EqualTo(10f));
             Assert.That(rec.Q<Label>().resolvedStyle.color.g, Is.EqualTo(1f).Within(0.01f), "white text");
 
             Assert.That(offline.resolvedStyle.backgroundColor.r, Is.EqualTo(0xFB / 255f).Within(0.01f), "--c-warn fill");
-            Assert.That(offline.Q<Label>().resolvedStyle.color.r, Is.EqualTo(0x16 / 255f).Within(0.01f), "--c-on-warn text");
+            Assert.That(offline.Q<Label>().resolvedStyle.color.r, Is.EqualTo(0x18 / 255f).Within(0.01f), "--c-on-warn text");
             Assert.That(offline.Q(className: StatusChip.IconClass).resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
             Assert.That(offline.Q(className: StatusChip.IndicatorClass).resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "icon replaces the dot");
         }
