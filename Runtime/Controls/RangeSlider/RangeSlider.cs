@@ -30,6 +30,7 @@ namespace UnityUIToolkit.Extensions
         public const string TrackClass = "rangeSlider__track";
         public const string FillClass = "rangeSlider__fill";
         public const string HandleClass = "rangeSlider__handle";
+        public const string HandleKnobClass = "rangeSlider__handleKnob";
         public const string LowHandleClass = "rangeSlider__handle--low";
         public const string HighHandleClass = "rangeSlider__handle--high";
         public const string HandleActiveClass = "rangeSlider__handle--active";
@@ -79,6 +80,13 @@ namespace UnityUIToolkit.Extensions
         /// </summary>
         public event Action<float, float> OnValueChanged;
 
+        /// <summary>
+        /// Raised with the final (low, high) values when the user finishes a pointer drag that changed the range.
+        /// Use this instead of <see cref="OnValueChanged"/> for costly work, e.g. re-running a search filter.
+        /// Not raised for changes from code, or for keyboard / gamepad steps.
+        /// </summary>
+        public event Action<float, float> OnDragEnd;
+
         public RangeSlider()
         {
             this.ApplyControlStyles();
@@ -100,7 +108,7 @@ namespace UnityUIToolkit.Extensions
             RegisterCallback<PointerUpEvent>(OnPointerUp);
             RegisterCallback<PointerCancelEvent>(OnPointerCancel);
             RegisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
-            RegisterCallback<DetachFromPanelEvent>(_ => EndDrag());
+            RegisterCallback<DetachFromPanelEvent>(_ => EndDrag(notifyDragEnd: false));
 
             UpdateVisuals();
         }
@@ -321,6 +329,10 @@ namespace UnityUIToolkit.Extensions
             handle.focusable = true;
             handle.tabIndex = 0;
             handle.RegisterCallback<NavigationMoveEvent>(evt => OnHandleNavigationMove(evt, isLow));
+
+            // The handle is the (larger) touch target; the knob is the visible part.
+            var knob = UIToolkitExtensions.CreateVisualElement(handle, HandleKnobClass);
+            knob.pickingMode = PickingMode.Ignore;
             return handle;
         }
 
@@ -431,8 +443,25 @@ namespace UnityUIToolkit.Extensions
 
             if (onLowHandle && onHighHandle)
             {
-                interactionState = InteractionState.Overlapped;
-                handleDragOffset = pointerX - lowX;
+                // The touch targets overlap: take the nearer handle, and only let the drag direction decide on a tie
+                // (e.g. when both handles sit at the same value).
+                float distanceToLow = Mathf.Abs(pointerX - lowX);
+                float distanceToHigh = Mathf.Abs(pointerX - highX);
+                if (Mathf.Approximately(distanceToLow, distanceToHigh))
+                {
+                    // The grab offset is set once the drag direction picks the handle.
+                    interactionState = InteractionState.Overlapped;
+                }
+                else if (distanceToLow < distanceToHigh)
+                {
+                    interactionState = InteractionState.Low;
+                    handleDragOffset = pointerX - lowX;
+                }
+                else
+                {
+                    interactionState = InteractionState.High;
+                    handleDragOffset = pointerX - highX;
+                }
             }
             else if (onHighHandle)
             {
@@ -470,7 +499,7 @@ namespace UnityUIToolkit.Extensions
 
             if (!enabledInHierarchy)
             {
-                EndDrag();
+                EndDrag(notifyDragEnd: true);
                 return;
             }
 
@@ -485,6 +514,8 @@ namespace UnityUIToolkit.Extensions
                 }
 
                 interactionState = direction < 0f ? InteractionState.Low : InteractionState.High;
+                float pressedHandleValue = interactionState == InteractionState.Low ? pressLowValue : pressHighValue;
+                handleDragOffset = pressPointerX - Normalize(pressedHandleValue) * track.layout.width;
                 UpdateInteractionClasses();
             }
 
@@ -507,7 +538,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            EndDrag();
+            EndDrag(notifyDragEnd: true);
             evt.StopPropagation();
         }
 
@@ -518,7 +549,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            EndDrag();
+            EndDrag(notifyDragEnd: true);
         }
 
         private void OnPointerCaptureOut(PointerCaptureOutEvent evt)
@@ -528,7 +559,7 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
-            EndDrag();
+            EndDrag(notifyDragEnd: true);
         }
 
         private void DragHandle(float pointerX)
@@ -583,7 +614,7 @@ namespace UnityUIToolkit.Extensions
             return Mathf.Lerp(minValue, maxValue, normalized);
         }
 
-        private void EndDrag()
+        private void EndDrag(bool notifyDragEnd)
         {
             if (activePointerId == NoPointer && interactionState == InteractionState.None)
             {
@@ -599,6 +630,12 @@ namespace UnityUIToolkit.Extensions
             if (pointerId != NoPointer && this.HasPointerCapture(pointerId))
             {
                 this.ReleasePointer(pointerId);
+            }
+
+            bool rangeChanged = lowValue != pressLowValue || highValue != pressHighValue;
+            if (notifyDragEnd && rangeChanged)
+            {
+                OnDragEnd?.Invoke(lowValue, highValue);
             }
         }
 

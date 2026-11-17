@@ -706,10 +706,12 @@
 }
 
 /* RangeSlider
-   The horizontal padding keeps the handles (centred on the track ends) inside the control. */
+   Each handle is a transparent 44px touch target (matching the library's other tappable controls)
+   with a smaller visible knob inside. The horizontal padding keeps the knobs, which are centred on
+   the track ends, inside the control, so keep it at half the knob width. */
 .rangeSlider {
 	min-width: 120px;
-	min-height: 28px;
+	min-height: 44px;
 	padding-left: 10px;
 	padding-right: 10px;
 	justify-content: center;
@@ -732,21 +734,28 @@
 .rangeSlider__handle {
 	position: absolute;
 	top: 50%;
+	width: 44px;
+	height: 44px;
+	translate: -50% -50%;
+	align-items: center;
+	justify-content: center;
+}
+
+.rangeSlider__handleKnob {
 	width: 20px;
 	height: 20px;
-	translate: -50% -50%;
 	border-radius: 10px;
 	border-width: 1px;
 	border-color: var(--rangeSlider-handle-border-color, rgba(0, 0, 0, 0.25));
 	background-color: var(--rangeSlider-handle-color, #ffffff);
 }
 
-.rangeSlider__handle:hover,
-.rangeSlider__handle--active {
+.rangeSlider__handle:hover > .rangeSlider__handleKnob,
+.rangeSlider__handle--active > .rangeSlider__handleKnob {
 	background-color: var(--rangeSlider-handle-active-color, #d6e6f9);
 }
 
-.rangeSlider__handle:focus {
+.rangeSlider__handle:focus > .rangeSlider__handleKnob {
 	border-width: 2px;
 	border-color: var(--rangeSlider-focus-color, #7B68EE);
 }
