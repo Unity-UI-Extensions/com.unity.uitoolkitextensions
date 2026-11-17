@@ -17,7 +17,8 @@ namespace UnityUIToolkit.Extensions
     /// - Drag either handle to move that end of the range; the handles cannot cross.
     /// - Drag the fill between the handles to move the whole range, keeping its size.
     /// - Press the track outside the range to jump the nearest handle to that point and keep dragging it.
-    /// - When both handles overlap, the drag direction decides which handle moves.
+    /// - Each handle has a touch target larger than its visible knob. Where targets overlap the nearer handle is
+    ///   picked, and on a tie (e.g. both handles at the same value) the drag direction decides.
     /// - Tab to a handle and use the left / right navigation keys to step it by <see cref="StepSize"/>.
     /// - Optionally, <see cref="SnapToStep"/> snaps user input to multiples of <see cref="StepSize"/>.
     /// If the low / high value sits on <see cref="MinValue"/> / <see cref="MaxValue"/> when that limit changes,
@@ -50,7 +51,7 @@ namespace UnityUIToolkit.Extensions
             Low,
             High,
             Bar,
-            /// <summary>Pressed where both handles overlap; the first drag direction picks the handle.</summary>
+            /// <summary>Pressed equally close to both handles (e.g. both at the same value); the first drag direction picks the handle.</summary>
             Overlapped
         }
 
@@ -205,8 +206,8 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
-        /// How far each keyboard / gamepad left or right step moves a handle. Does not affect dragging.
-        /// 0 (the default) uses 1% of the range. With <see cref="WholeNumbers"/>, the step is rounded to a whole number of at least 1.
+        /// How far each keyboard / gamepad left or right step moves a handle, and the interval between stops when
+        /// <see cref="SnapToStep"/> is on (otherwise dragging is unaffected). 0 (the default) uses 1% of the range. With <see cref="WholeNumbers"/>, the step is rounded to a whole number of at least 1.
         /// </summary>
         [UxmlAttribute("step-size")]
         public float StepSize
@@ -255,7 +256,7 @@ namespace UnityUIToolkit.Extensions
             set => SetValuesInternal(value.x, value.y, notify: true);
         }
 
-        // The step applied per keyboard / navigation move, resolving the automatic (0) step size.
+        // The keyboard / navigation step and snap interval, resolving the automatic (0) step size.
         private float EffectiveStepSize
         {
             get
