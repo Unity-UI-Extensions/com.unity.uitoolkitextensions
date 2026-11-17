@@ -19,6 +19,7 @@ namespace UnityUIToolkit.Extensions
     /// - Press the track outside the range to jump the nearest handle to that point and keep dragging it.
     /// - When both handles overlap, the drag direction decides which handle moves.
     /// - Tab to a handle and use the left / right navigation keys to step it by <see cref="StepSize"/>.
+    /// - Optionally, <see cref="SnapToStep"/> snaps user input to multiples of <see cref="StepSize"/>.
     /// If the low / high value sits on <see cref="MinValue"/> / <see cref="MaxValue"/> when that limit changes,
     /// it follows the new limit, so a full-range selection stays full.
     /// </remarks>
@@ -36,6 +37,8 @@ namespace UnityUIToolkit.Extensions
         public const string DraggingClass = "rangeSlider--dragging";
 
         private const int NoPointer = -1;
+        // Tolerance (in steps) so values already on a snap stop are not skipped due to float error.
+        private const float StopTolerance = 0.0001f;
 
         /// <summary>
         /// What the active pointer is currently dragging.
@@ -61,6 +64,7 @@ namespace UnityUIToolkit.Extensions
         private float highValue = 1f;
         private bool wholeNumbers;
         private float stepSize;
+        private bool snapToStep;
 
         private InteractionState interactionState = InteractionState.None;
         private int activePointerId = NoPointer;
@@ -204,6 +208,19 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
+        /// When true, user input snaps to stops every <see cref="StepSize"/> from <see cref="MinValue"/>, with <see cref="MaxValue"/>
+        /// always a stop too. Handle drags and track presses go to the nearest stop, range drags move in whole steps, and
+        /// keyboard / gamepad steps go to the next stop. Values set from code or UXML are not snapped, and changing this
+        /// at runtime does not move the current values. Off by default.
+        /// </summary>
+        [UxmlAttribute("snap-to-step")]
+        public bool SnapToStep
+        {
+            get => snapToStep;
+            set => snapToStep = value;
+        }
+
+        /// <summary>
         /// <see cref="LowValue"/> expressed as 0..1 between <see cref="MinValue"/> and <see cref="MaxValue"/>.
         /// </summary>
         public float NormalizedLowValue
@@ -238,6 +255,45 @@ namespace UnityUIToolkit.Extensions
                 float step = stepSize > 0f ? stepSize : Mathf.Abs(maxValue - minValue) * 0.01f;
                 return wholeNumbers ? Mathf.Max(1f, Mathf.Round(step)) : step;
             }
+        }
+
+        private float SnapToNearestStop(float rangeValue)
+        {
+            float step = EffectiveStepSize;
+            float lowerLimit = Mathf.Min(minValue, maxValue);
+            float upperLimit = Mathf.Max(minValue, maxValue);
+            if (!(step > 0f))
+            {
+                return rangeValue;
+            }
+
+            float stop = lowerLimit + Mathf.Round((rangeValue - lowerLimit) / step) * step;
+
+            // The upper limit is always a stop, even when the range is not a whole multiple of the step.
+            if (upperLimit - rangeValue < Mathf.Abs(stop - rangeValue))
+            {
+                stop = upperLimit;
+            }
+
+            return Mathf.Clamp(stop, lowerLimit, upperLimit);
+        }
+
+        private float GetNextStop(float rangeValue, float direction)
+        {
+            float step = EffectiveStepSize;
+            float lowerLimit = Mathf.Min(minValue, maxValue);
+            float upperLimit = Mathf.Max(minValue, maxValue);
+            if (!(step > 0f))
+            {
+                return rangeValue;
+            }
+
+            float stepsFromMin = (rangeValue - lowerLimit) / step;
+            float stop = direction > 0f
+                ? lowerLimit + (Mathf.Floor(stepsFromMin + StopTolerance) + 1f) * step
+                : lowerLimit + (Mathf.Ceil(stepsFromMin - StopTolerance) - 1f) * step;
+
+            return Mathf.Clamp(stop, lowerLimit, upperLimit);
         }
 
         /// <summary>
@@ -478,6 +534,10 @@ namespace UnityUIToolkit.Extensions
         private void DragHandle(float pointerX)
         {
             float rangeValue = TrackXToValue(pointerX - handleDragOffset);
+            if (snapToStep)
+            {
+                rangeValue = SnapToNearestStop(rangeValue);
+            }
 
             if (interactionState == InteractionState.Low)
             {
@@ -499,7 +559,12 @@ namespace UnityUIToolkit.Extensions
 
             // Move both ends by the drag delta (rather than re-centring on the pointer), keeping the range size.
             float delta = (pointerX - pressPointerX) / trackWidth * (maxValue - minValue);
-            if (wholeNumbers)
+            float step = EffectiveStepSize;
+            if (snapToStep && step > 0f)
+            {
+                delta = Mathf.Round(delta / step) * step;
+            }
+            else if (wholeNumbers)
             {
                 delta = Mathf.Round(delta);
             }
@@ -567,13 +632,18 @@ namespace UnityUIToolkit.Extensions
                 return;
             }
 
+            float current = isLow ? lowValue : highValue;
+            float target = snapToStep
+                ? GetNextStop(current, direction)
+                : current + direction * EffectiveStepSize;
+
             if (isLow)
             {
-                SetLow(lowValue + direction * EffectiveStepSize, notify: true);
+                SetLow(target, notify: true);
             }
             else
             {
-                SetHigh(highValue + direction * EffectiveStepSize, notify: true);
+                SetHigh(target, notify: true);
             }
 
             // Consume the move so it adjusts the value instead of moving focus to a neighbouring element.
