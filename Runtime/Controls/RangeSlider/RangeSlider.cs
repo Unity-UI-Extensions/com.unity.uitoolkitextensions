@@ -18,7 +18,7 @@ namespace UnityUIToolkit.Extensions
     /// - Drag the fill between the handles to move the whole range, keeping its size.
     /// - Press the track outside the range to jump the nearest handle to that point and keep dragging it.
     /// - When both handles overlap, the drag direction decides which handle moves.
-    /// - Tab to a handle and use the left / right navigation keys to step it.
+    /// - Tab to a handle and use the left / right navigation keys to step it by <see cref="StepSize"/>.
     /// If the low / high value sits on <see cref="MinValue"/> / <see cref="MaxValue"/> when that limit changes,
     /// it follows the new limit, so a full-range selection stays full.
     /// </remarks>
@@ -60,6 +60,7 @@ namespace UnityUIToolkit.Extensions
         private float lowValue;
         private float highValue = 1f;
         private bool wholeNumbers;
+        private float stepSize;
 
         private InteractionState interactionState = InteractionState.None;
         private int activePointerId = NoPointer;
@@ -192,6 +193,17 @@ namespace UnityUIToolkit.Extensions
         }
 
         /// <summary>
+        /// How far each keyboard / gamepad left or right step moves a handle. Does not affect dragging.
+        /// 0 (the default) uses 1% of the range. With <see cref="WholeNumbers"/>, the step is rounded to a whole number of at least 1.
+        /// </summary>
+        [UxmlAttribute("step-size")]
+        public float StepSize
+        {
+            get => stepSize;
+            set => stepSize = Mathf.Max(0f, value);
+        }
+
+        /// <summary>
         /// <see cref="LowValue"/> expressed as 0..1 between <see cref="MinValue"/> and <see cref="MaxValue"/>.
         /// </summary>
         public float NormalizedLowValue
@@ -218,8 +230,15 @@ namespace UnityUIToolkit.Extensions
             set => SetValuesInternal(value.x, value.y, notify: true);
         }
 
-        // Size of each keyboard / navigation step.
-        private float StepSize => wholeNumbers ? 1f : (maxValue - minValue) * 0.1f;
+        // The step applied per keyboard / navigation move, resolving the automatic (0) step size.
+        private float EffectiveStepSize
+        {
+            get
+            {
+                float step = stepSize > 0f ? stepSize : Mathf.Abs(maxValue - minValue) * 0.01f;
+                return wholeNumbers ? Mathf.Max(1f, Mathf.Round(step)) : step;
+            }
+        }
 
         /// <summary>
         /// Sets the low and high values without raising <see cref="OnValueChanged"/> or a <see cref="ChangeEvent{T}"/>.
@@ -550,11 +569,11 @@ namespace UnityUIToolkit.Extensions
 
             if (isLow)
             {
-                SetLow(lowValue + direction * StepSize, notify: true);
+                SetLow(lowValue + direction * EffectiveStepSize, notify: true);
             }
             else
             {
-                SetHigh(highValue + direction * StepSize, notify: true);
+                SetHigh(highValue + direction * EffectiveStepSize, notify: true);
             }
 
             // Consume the move so it adjusts the value instead of moving focus to a neighbouring element.
