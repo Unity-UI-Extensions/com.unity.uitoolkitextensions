@@ -86,6 +86,9 @@ namespace UnityUIToolkit.Extensions.Editor
         [MenuItem("GameObject/UI Toolkit/Extensions/Pill Selector", false, 10)]
         public static void AddPillSelector(MenuCommand menuCommand) => AddControl("PillSelector", menuCommand);
 
+        [MenuItem("GameObject/UI Toolkit/Extensions/Range Slider", false, 10)]
+        public static void AddRangeSlider(MenuCommand menuCommand) => AddControl("RangeSlider", menuCommand);
+
         [MenuItem("GameObject/UI Toolkit/Extensions/Rounded Input Field", false, 10)]
         public static void AddRoundedInputField(MenuCommand menuCommand) => AddControl("RoundedInputField", menuCommand);
 
@@ -156,6 +159,9 @@ namespace UnityUIToolkit.Extensions.Editor
 
         [MenuItem("Assets/Create/UI Toolkit/Extensions/Pill Selector Starter", false, 601)]
         public static void CreatePillSelectorStarter() => CreateStarterAsset("PillSelector");
+
+        [MenuItem("Assets/Create/UI Toolkit/Extensions/Range Slider Starter", false, 601)]
+        public static void CreateRangeSliderStarter() => CreateStarterAsset("RangeSlider");
 
         [MenuItem("Assets/Create/UI Toolkit/Extensions/Rounded Input Field Starter", false, 601)]
         public static void CreateRoundedInputFieldStarter() => CreateStarterAsset("RoundedInputField");

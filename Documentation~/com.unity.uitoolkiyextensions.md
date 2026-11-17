@@ -49,6 +49,7 @@ For a full list of the controls and how they are used, please see the [online do
 - **IconLabelButton** — Row button with a 24 × 24 icon and label, ideal for menu items and list actions.
 - **DropDownControl** — Custom dropdown selector with a scrollable list of selectable entries.
 - **SocialLinkContainer** — Editable list of platform-labelled social-link fields with add/remove and a platform picker.
+- **RangeSlider** — Two-handled slider selecting a low and high value between a min and max, with whole-number snapping and draggable range.
 
 ### Media & Images
 

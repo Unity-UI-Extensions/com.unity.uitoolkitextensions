@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## Unreleased
+
+### Added
+
+- **RangeSlider** - Two-handled slider that selects a low and high value between a min and max, e.g. for filtering search results by a price or size range. A UI Toolkit port of the uGUI Extensions `RangeSlider`, supporting whole-number snapping, dragging the range between the handles, keyboard / gamepad navigation with a configurable `step-size`, optional `snap-to-step` for user input (off by default, toggleable at runtime), and `ChangeEvent<Vector2>` / `RegisterValueChangedCallback` notifications alongside the `OnValueChanged(low, high)` event, plus an `OnDragEnd(low, high)` event for reacting once a drag has finished (e.g. re-running a search filter). Handles have 44px touch targets, matching the library's other tappable controls.
+- **Range Slider editor menu entries** - `GameObject/UI Toolkit/Extensions/Range Slider` and `Assets/Create/UI Toolkit/Extensions/Range Slider Starter`, with a starter template.
+
+### Contributors
+
+[@Dover8](https://github.com/Dover8)
+
 ## Release 1.0.0 - Launch - 2026/09
 
 The first release of **Unity UI Toolkit Extensions** - a brand-new companion to the long-running uGUI Extensions library, built from the ground up for Unity 6 and the UI Toolkit (UITK) system.

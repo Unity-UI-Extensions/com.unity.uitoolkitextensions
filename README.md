@@ -61,7 +61,7 @@ All funds go to support the project, no matter the amount. **Donations in code a
 
 ## [Controls and extensions listed in this project](https://unity-ui-extensions.github.io/uitoolkit/#controls)
 
-The package ships **25 controls** across navigation, layout, forms, media, toggles and feedback, plus reusable utilities, and **12 ready-to-run sample scenes**. Everything lives in the `Unity.UI.Extensions` namespace.
+The package ships **26 controls** across navigation, layout, forms, media, toggles and feedback, plus reusable utilities, and **12 ready-to-run sample scenes**. Everything lives in the `Unity.UI.Extensions` namespace.
 
 Browse the full, searchable list with API references and code examples:
 

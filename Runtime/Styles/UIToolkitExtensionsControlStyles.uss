@@ -5,6 +5,12 @@
 	--quadrantStepper-overlay-color: #458398;
 	--quadrantStepper-icon-size: 50px;
 	--quadrantStepper-border-radius-medium: 30px;
+	--rangeSlider-track-color: rgba(128, 128, 128, 0.35);
+	--rangeSlider-fill-color: #4A90E2;
+	--rangeSlider-handle-color: #ffffff;
+	--rangeSlider-handle-border-color: rgba(0, 0, 0, 0.25);
+	--rangeSlider-handle-active-color: #d6e6f9;
+	--rangeSlider-focus-color: #7B68EE;
 }
 
 /* ScrollSnap */
@@ -697,6 +703,65 @@
 
 .stepProgressBar__fill {
 	height: 100%;
+}
+
+/* RangeSlider
+   Each handle is a transparent 44px touch target (matching the library's other tappable controls)
+   with a smaller visible knob inside. The horizontal padding keeps the knobs, which are centred on
+   the track ends, inside the control, so keep it at half the knob width. */
+.rangeSlider {
+	min-width: 120px;
+	min-height: 44px;
+	padding-left: 10px;
+	padding-right: 10px;
+	justify-content: center;
+}
+
+.rangeSlider__track {
+	height: 6px;
+	border-radius: 3px;
+	background-color: var(--rangeSlider-track-color, rgba(128, 128, 128, 0.35));
+}
+
+.rangeSlider__fill {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	border-radius: 3px;
+	background-color: var(--rangeSlider-fill-color, #4A90E2);
+}
+
+.rangeSlider__handle {
+	position: absolute;
+	top: 50%;
+	width: 44px;
+	height: 44px;
+	translate: -50% -50%;
+	align-items: center;
+	justify-content: center;
+}
+
+.rangeSlider__handleKnob {
+	width: 20px;
+	height: 20px;
+	border-radius: 10px;
+	border-width: 1px;
+	border-color: var(--rangeSlider-handle-border-color, rgba(0, 0, 0, 0.25));
+	background-color: var(--rangeSlider-handle-color, #ffffff);
+}
+
+.rangeSlider__handle:hover > .rangeSlider__handleKnob,
+.rangeSlider__handle--active > .rangeSlider__handleKnob {
+	background-color: var(--rangeSlider-handle-active-color, #d6e6f9);
+}
+
+.rangeSlider__handle:focus > .rangeSlider__handleKnob {
+	border-width: 2px;
+	border-color: var(--rangeSlider-focus-color, #7B68EE);
+}
+
+.rangeSlider:disabled {
+	opacity: 0.5;
 }
 
 /* PillButton */
